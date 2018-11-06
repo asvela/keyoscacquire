@@ -37,7 +37,8 @@ def getTraces_connect_each_time_loop(fname, ext, instrument=VISA_ADDRESS, timeou
     while sys.stdin.read(1) != 'q': # breaks the loop if q+enter is given as input. For any other character (incl. enter)
         x, y, id, channels = acq.connect_and_getTrace(channel_nums, source_type, instrument, timeout, acq_type, num_averages, p_mode, num_points)
         acq.plotTrace(x, y, channels, fname=fname+str(n))
-        acq.saveTrace(fname+str(n)+ext, x, y, fileheader=id+"time,"+str(channels)+"\n")
+        channelstring = ", ".join([channel for channel in channels]) # make string of sources
+        acq.saveTrace(fname+str(n)+ext, x, y, fileheader=id+"time,"+channelstring+"\n")
         n += 1
     print("Quit")
 

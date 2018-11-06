@@ -53,8 +53,8 @@ def getTraces_single_connection_loop(fname, ext, instrument=VISA_ADDRESS, timeou
     while sys.stdin.read(1) != 'q': # breaks the loop if q+enter is given as input. For any other character (incl. enter)
         raw, measurement_time = acq.capture_and_read(inst, sources, sourcesstring)
         x, y = acq.process_data(raw, measurement_time) # capture, read and process data
-        acq.plotTrace(x, y, channels, fname=fname+str(n))                    # plot trace and save png
-        acq.saveTrace(fname+str(n)+ext, x, y, fileheader=id+"time,"+str(channels)+"\n") # save trace to ext file
+        acq.plotTrace(x, y, channel_nums, fname=fname+str(n))                    # plot trace and save png
+        acq.saveTrace(fname+str(n)+ext, x, y, fileheader=id+"time,"+sourcesstring+"\n") # save trace to ext file
         n += 1
 
     print("Quit")

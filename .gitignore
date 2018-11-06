@@ -1,2 +1,4 @@
 *.csv
 *.png
+Thumbs.db
+__pycache__
