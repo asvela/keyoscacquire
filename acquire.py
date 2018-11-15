@@ -58,7 +58,7 @@ def initialise(instrument, timeout, acq_type='HRESolution', num_averages=2, p_mo
         inst.write(':ACQuire:COUNt ' + str(num_averages))
 
     ## Set options for waveform export
-    inst.write(':WAVeform:FORMat ASCii') # values are transferred as ASCii digits in floating point notation, separated by commas
+    inst.write(':WAVeform:FORMat BYTE') # values are transferred
     inst.write(':WAVeform:POINts:MODE ' + p_mode)
     #print("Max number of points for mode %s: %s" % (p_mode, inst.query(':WAVeform:POINts? MAXimum')))
     if num_points != 0: #if number of points has been specified
@@ -131,7 +131,7 @@ def connect_and_getTrace(channel_nums=[''], source_type='CHANnel', instrument=VI
     print("Acquire from sources", sourcesstring)
 
     ## Capture, read and process data
-    raw, measurement_time= capture_and_read(inst, sources, sourcesstring)
+    raw, measurement_time = capture_and_read(inst, sources, sourcesstring)
     x, y = process_data(raw, measurement_time)
 
     # Set the oscilloscope running before closing the connection
