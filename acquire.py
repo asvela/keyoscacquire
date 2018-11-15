@@ -67,38 +67,56 @@ def initialise(instrument, timeout, acq_type='HRESolution', num_averages=2, p_mo
     return inst, id
 
 def capture_and_read(inst, sources, sourcesstring):
+    """
+    Capture and read data and metadata from sources of the oscilloscope inst
+    Output: raw data and comma separated
+    """
     ## Capture data
     print("Start acquisition..")
     start_time = time.time() # time the acquiring process
     inst.write(':DIGitize ' + sourcesstring) # DIGitize is a specialized RUN command.
                                              # Waveforms are acquired according to the settings of the :ACQuire commands.
                                              # When acquisition is complete, the instrument is stopped.
-    ## Read out data
+    ## Read out meta data and data
+    preambles = []
     raw = [] # initialise array for storing data
     for source in sources: # loop through all the sources
         inst.write(':WAVeform:SOURce ' + source) # selects the channel for which the succeeding WAVeform commands applies to
         try:
-            raw.append(inst.query(':WAVeform:DATA?')) # read out data for this source
+            preambles.append(inst.query(':WAVeform:PREamble?')) # comma separated metadata values for processing of raw data for this source
+            raw.append(inst.query_binary_values(':WAVeform:DATA?', datatype='B')) # read out data for this source
         except visa.Error as ex:
             print("Failed to obtain waveform, have you checked that the TIMEOUT is sufficently long? Currently %d ms" % TIMEOUT)
             sys.exit()
     end_time = time.time()
     print("Elapsed time:", end_time-start_time)
-    measurement_time = float(inst.query(':TIMebase:RANGe?')) # returns the current full-scale range value for the main window
+    #measurement_time = float(inst.query(':TIMebase:RANGe?')) # returns the current full-scale range value for the main window
 
-    return raw, measurement_time
+    return raw, preambles
 
-def process_data(raw, measurement_time):
+def process_data(raw, preambles):
+    preamble = preambles[0].split(',')  # values separated by commas
+    # 0 FORMAT : int16 - 0 = BYTE, 1 = WORD, 4 = ASCII.
+    # 1 TYPE : int16 - 0 = NORMAL, 1 = PEAK DETECT, 2 = AVERAGE
+    num_samples = int(preamble[2])    # POINTS : int32 - number of data points transferred.
+    # 3 COUNT : int32 - 1 and is always 1.
+    xIncr = float(preamble[4])        # XINCREMENT : float64 - time difference between data points.
+    xOrig = float(preamble[5])        # XORIGIN : float64 - always the first data point in memory.
+    xRef = int(preamble[6])           # XREFERENCE : int32 - specifies the data point associated with x-origin.
+    # 7 YINCREMENT : float32 - voltage diff between data points.
+    # 8 YORIGIN : float32 - value is the voltage at center screen.
+    # 9 YREFERENCE : int32 - specifies the data point where y-origin occurs.
+
     y = []
-    for data in raw:
-        data = data.split(data[:10])[1] # remove first 10 characters (is this a quick but not so intuitive way?)
-        data = data.split(',') # samples separated by commas
-        data = np.array([float(sample) for sample in data])
-        y.append(data) # add ascii data for this channel to y array
+    for i, data in enumerate(raw):
+        preamble = preambles[i].split(',')
+        yIncr, yOrig, yRef = float(preamble[7]), float(preamble[8]), int(preamble[9])
+        data = np.array([((sample-yRef)*yIncr)+yOrig for sample in data])
+        y.append(data) # add the voltage values for this channel to y array
 
     y = np.transpose(np.array(y))
-    num_samples = np.shape(y)[0] # number of samples captured per channel
-    x = np.linspace(0, measurement_time, num_samples) # compute x-values
+    x = data = np.array([((sample-xRef)*xIncr)+xOrig for sample in range(num_samples)]) # compute x-values
+    print(x)
     x = np.vstack(x) # make list vertical
     print("Points captured per channel: ", num_samples)
     return x, y
@@ -131,8 +149,8 @@ def connect_and_getTrace(channel_nums=[''], source_type='CHANnel', instrument=VI
     print("Acquire from sources", sourcesstring)
 
     ## Capture, read and process data
-    raw, measurement_time = capture_and_read(inst, sources, sourcesstring)
-    x, y = process_data(raw, measurement_time)
+    raw, preambles = capture_and_read(inst, sources, sourcesstring)
+    x, y = process_data(raw, preambles)
 
     # Set the oscilloscope running before closing the connection
     inst.write(':RUN')
