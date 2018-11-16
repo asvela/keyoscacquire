@@ -20,15 +20,16 @@ import time, datetime # for measuring elapsed time and adding current date and t
 
 # Default options
 VISA_ADDRESS = 'USB0::2391::6038::MY57233636::INSTR' # address of instrument
-DEFAULT_FILENAME = "data" # default base filename of all traces and pngs exported, a number is appended to the base
+DEFAULT_FILENAME = "data"   # default base filename of all traces and pngs exported, a number is appended to the base
 FILETYPE = ".csv"   # filetype of exported data, can also be txt/dat etc.
 EXPORT_PNG = True   # export png of plot of obtained trace
 SHOW_PLOT = False   # show each plot when generated (program pauses until it is closed)
 TIMEOUT = 15000     #ms timeout for the instrument connection
 
-def initialise(instrument, timeout, acq_type='HRESolution', num_averages=2, p_mode='RAW', num_points=0):
+def initialise(instrument, timeout=TIMEOUT, acq_type='HRESolution', num_averages=2, p_mode='RAW', num_points=0):
     """
-    Open a connection to instrument and choose settings for the connection and acquisition.
+    Open a connection to instrument and choose settings for the connection and acquisitionself.
+    Output: instrument object, identity of the instrument
     Some alternative settings are listed.
     instrument = {'USB0::2391::6038::MY57233636::INSTR' | 'TCPIP0::192.168.20.30::4000::SOCKET'}
     acq_type = {'HRESolution' | 'NORMal'}
@@ -41,7 +42,7 @@ def initialise(instrument, timeout, acq_type='HRESolution', num_averages=2, p_mo
         rm = visa.ResourceManager()
         inst = rm.open_resource(instrument)
     except visa.Error as ex:
-        print('Couldn\'t connect to \'%s\', exiting now...' % instrument)
+        print('Could not connect to \'%s\', exiting now...' % instrument)
         sys.exit()
     # For TCP/IP socket connections enable the read Termination Character, or reads will timeout
     if inst.resource_name.endswith('SOCKET'):
@@ -58,7 +59,7 @@ def initialise(instrument, timeout, acq_type='HRESolution', num_averages=2, p_mo
         inst.write(':ACQuire:COUNt ' + str(num_averages))
 
     ## Set options for waveform export
-    inst.write(':WAVeform:FORMat BYTE') # values are transferred
+    inst.write(':WAVeform:FORMat BYTE') # values are transferred as 8 bits per sample value
     inst.write(':WAVeform:POINts:MODE ' + p_mode)
     #print("Max number of points for mode %s: %s" % (p_mode, inst.query(':WAVeform:POINts? MAXimum')))
     if num_points != 0: #if number of points has been specified
@@ -69,7 +70,7 @@ def initialise(instrument, timeout, acq_type='HRESolution', num_averages=2, p_mo
 def capture_and_read(inst, sources, sourcesstring):
     """
     Capture and read data and metadata from sources of the oscilloscope inst
-    Output: raw data and comma separated
+    Output: array of raw data, array of preamble metadata (ascii comma separated values)
     """
     ## Capture data
     print("Start acquisition..")
@@ -78,9 +79,8 @@ def capture_and_read(inst, sources, sourcesstring):
                                              # Waveforms are acquired according to the settings of the :ACQuire commands.
                                              # When acquisition is complete, the instrument is stopped.
     ## Read out meta data and data
-    preambles = []
-    raw = [] # initialise array for storing data
-    for source in sources: # loop through all the sources
+    raw, preambles = [], []
+    for source in sources:
         inst.write(':WAVeform:SOURce ' + source) # selects the channel for which the succeeding WAVeform commands applies to
         try:
             preambles.append(inst.query(':WAVeform:PREamble?')) # comma separated metadata values for processing of raw data for this source
@@ -88,13 +88,15 @@ def capture_and_read(inst, sources, sourcesstring):
         except visa.Error as ex:
             print("Failed to obtain waveform, have you checked that the TIMEOUT is sufficently long? Currently %d ms" % TIMEOUT)
             sys.exit()
-    end_time = time.time()
-    print("Elapsed time:", end_time-start_time)
+    print("Elapsed time:", time.time()-start_time)
     #measurement_time = float(inst.query(':TIMebase:RANGe?')) # returns the current full-scale range value for the main window
-
     return raw, preambles
 
 def process_data(raw, preambles):
+    """
+    Process raw 8-bit data to time x values and y voltage values.
+    Output: numpy array x containing time values, numpy array y containing
+    """
     preamble = preambles[0].split(',')  # values separated by commas
     # 0 FORMAT : int16 - 0 = BYTE, 1 = WORD, 4 = ASCII.
     # 1 TYPE : int16 - 0 = NORMAL, 1 = PEAK DETECT, 2 = AVERAGE
@@ -107,6 +109,7 @@ def process_data(raw, preambles):
     # 8 YORIGIN : float32 - value is the voltage at center screen.
     # 9 YREFERENCE : int32 - specifies the data point where y-origin occurs.
 
+    print("Points captured per channel: ", num_samples)
     y = []
     for i, data in enumerate(raw):
         preamble = preambles[i].split(',')
@@ -114,11 +117,9 @@ def process_data(raw, preambles):
         data = np.array([((sample-yRef)*yIncr)+yOrig for sample in data])
         y.append(data) # add the voltage values for this channel to y array
 
-    y = np.transpose(np.array(y))
-    x = data = np.array([((sample-xRef)*xIncr)+xOrig for sample in range(num_samples)]) # compute x-values
-    print(x)
-    x = np.vstack(x) # make list vertical
-    print("Points captured per channel: ", num_samples)
+    y = np.transpose(np.array(y)) # convert y to np array and transpose for vertical channel columns in csv file
+    x = np.array([((sample-xRef)*xIncr)+xOrig for sample in range(num_samples)]) # compute x-values
+    x = np.vstack(x) # make x values vertical
     return x, y
 
 def connect_and_getTrace(channel_nums=[''], source_type='CHANnel', instrument=VISA_ADDRESS,  timeout=TIMEOUT, acq_type='HRESolution', num_averages=2, p_mode='RAW', num_points=0):
@@ -135,7 +136,7 @@ def connect_and_getTrace(channel_nums=[''], source_type='CHANnel', instrument=VI
                  | 50000 | 100000 | 200000 | 500000 | 1000000}: optional command when p_mode (POINTs:MODE) is specified. Use 0 to let p_mode control the number of points.
     """
 
-    ## Initialise
+    ## Connect to instrument and specify acquiring settings
     inst, id = initialise(instrument, timeout, acq_type, num_averages, p_mode, num_points)
 
     ## Select sources
