@@ -29,14 +29,14 @@ EXPORT_PNG = True   # export png of plot of obtained trace
 SHOW_PLOT = False   # show each plot when generated (program pauses until it is closed)
 TIMEOUT = 15000     #ms timeout for the instrument connection
 
-def initialise(instrument, timeout=TIMEOUT, format=WAVEFORM_FORMAT, acq_type='HRESolution', num_averages=2, p_mode='RAW', num_points=0):
+def initialise(instrument, timeout=TIMEOUT, wav_format=WAVEFORM_FORMAT, acq_type='HRESolution', num_averages=2, p_mode='RAW', num_points=0):
     """
     Open a connection to instrument and choose settings for the connection and acquisitionself.
     Output: instrument object, identity of the instrument
     Some alternative settings are listed.
     instrument = {'USB0::2391::6038::MY57233636::INSTR' | 'TCPIP0::192.168.20.30::4000::SOCKET'}
     timeout = ms before timeout on the channel to the instrument
-    format = {'BYTE' | 'ASCii'}
+    wav_format = {'BYTE' | 'ASCii'}
     acq_type = {'HRESolution' | 'NORMal'}
     num_averages = 2 to 65536: applies only to the NORMal mode
     p_mode = {'RAW' | 'MAXimum'}: RAW gives up to 1e6 points. Use MAXimum for sources that are not analogue or digital (functions and math)
@@ -64,7 +64,7 @@ def initialise(instrument, timeout=TIMEOUT, format=WAVEFORM_FORMAT, acq_type='HR
         inst.write(':ACQuire:COUNt ' + str(num_averages))
 
     ## Set options for waveform export
-    inst.write(':WAVeform:FORMat ' + format) # choose format for the transmitted waveform
+    inst.write(':WAVeform:FORMat ' +  wav_format) # choose format for the transmitted waveform
     inst.write(':WAVeform:POINts:MODE ' + p_mode)
     #print("Max number of points for mode %s: %s" % (p_mode, inst.query(':WAVeform:POINts? MAXimum')))
     if num_points != 0: #if number of points has been specified
@@ -72,13 +72,13 @@ def initialise(instrument, timeout=TIMEOUT, format=WAVEFORM_FORMAT, acq_type='HR
         print("Number of points set to: ", num_points)
     return inst, id
 
-def capture_and_read(inst, sources, sourcestring, format=WAVEFORM_FORMAT):
-    if format[:3] == 'BYT':
+def capture_and_read(inst, sources, sourcestring,  wav_format=WAVEFORM_FORMAT):
+    if wav_format[:3] == 'BYT':
         return capture_and_read_byte(inst, sources, sourcestring)
-    elif format[:3] == 'ASC':
+    elif wav_format[:3] == 'ASC':
         return capture_and_read_ascii(inst, sources, sourcestring)
     else:
-        print("Cannot capture and read data, format %s unknown" % format)
+        raise Exception("Could not capture and read data, waveform format \'{}\' is unknown.\nExiting..\n".format(wav_format))
         sys.exit()
 
 def capture_and_read_byte(inst, sources, sourcesstring):
@@ -129,13 +129,13 @@ def capture_and_read_ascii(inst, sources, sourcesstring):
     measurement_time = float(inst.query(':TIMebase:RANGe?')) # returns the current full-scale range value for the main window
     return raw, measurement_time
 
-def process_data(raw, metadata, format=WAVEFORM_FORMAT):
-    if format[:3] == 'BYT':
+def process_data(raw, metadata,  wav_format=WAVEFORM_FORMAT):
+    if wav_format[:3] == 'BYT':
         return process_data_byte(raw, metadata)
-    elif format[:3] == 'ASC':
+    elif wav_format[:3] == 'ASC':
         return process_data_ascii(raw, metadata)
     else:
-        print("Cannot process data, format %s unknown" % format)
+        raise Exception("Could not process data, waveform format \'{}\' is unknown.\nExiting..\n".format(wav_format))
         sys.exit()
 
 def process_data_byte(raw, preambles):
@@ -188,14 +188,14 @@ def process_data_ascii(raw, measurement_time):
     return x, y
 
 def connect_and_getTrace(channel_nums=[''], source_type='CHANnel', instrument=VISA_ADDRESS, timeout=TIMEOUT,
-                         format=WAVEFORM_FORMAT, acq_type='HRESolution', num_averages=2, p_mode='RAW', num_points=0):
+                          wav_format=WAVEFORM_FORMAT, acq_type='HRESolution', num_averages=2, p_mode='RAW', num_points=0):
     """
     Get trace from channels of instrument. Returns one numpy array of the x time values and one numpy array of y values.
     Some alternative settings are listed.
     channelnum = list of chars, e.g. ['1', '3']. Use a list with an empty string [''] to capture all currently displayed channels
     source_type = {'CHANnel' | 'MATH' | 'FUNCtion'}: MATH is an alias for FUNCtion
     timeout = ms before timeout on the channel to the instrument
-    format = {'BYTE' | 'ASCii'}
+    wav_format = {'BYTE' | 'ASCii'}
     instrument = {'USB0::2391::6038::MY57233636::INSTR' | 'TCPIP0::192.168.20.30::4000::SOCKET'}
     acq_type = {'HRESolution' | 'NORMal'}
     num_averages = 2 to 65536: applies only to the NORMal mode
@@ -205,7 +205,7 @@ def connect_and_getTrace(channel_nums=[''], source_type='CHANnel', instrument=VI
     """
 
     ## Connect to instrument and specify acquiring settings
-    inst, id = initialise(instrument, timeout, format, acq_type, num_averages, p_mode, num_points)
+    inst, id = initialise(instrument, timeout,  wav_format, acq_type, num_averages, p_mode, num_points)
 
     ## Select sources
     if channel_nums == ['']: # if no channels specified, find the channels currently active and acquire from those
@@ -218,8 +218,8 @@ def connect_and_getTrace(channel_nums=[''], source_type='CHANnel', instrument=VI
     print("Acquire from sources", sourcesstring)
 
     ## Capture, read and process data
-    raw, preambles = capture_and_read(inst, sources, sourcesstring, format)
-    x, y = process_data(raw, preambles, format)
+    raw, preambles = capture_and_read(inst, sources, sourcesstring,  wav_format)
+    x, y = process_data(raw, preambles,  wav_format)
 
     # Set the oscilloscope running before closing the connection
     inst.write(':RUN')

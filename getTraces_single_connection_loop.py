@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Obtain traces, save to files and export raw plots from oscilloscopes using pyVISA.
+Obtain traces, save to files and export raw plots from (Keysight) oscilloscopes using pyVISA.
 Traces are stored as .csv files and will by default be accompanied by a .png too.
 
 This program consists of ''''''''''''loop in which the program connects to the oscilloscope,
@@ -28,14 +28,19 @@ import numpy as np
 
 # Default options
 VISA_ADDRESS = 'USB0::2391::6038::MY57233636::INSTR' # address of instrument
+WAVEFORM_FORMAT = 'BYTE'    # BYTE formatted data is transferred as 8-bit bytes.
+                            # ASCii formatted data converts the internal integer data values to real Y-axis values.
+                            #       Values are transferred as ASCii digits in floating point notation, separated by commas.
 CH_NUMS=['']        # list of chars, e.g. ['1', '3']. Use a list with an empty string [''] to capture all currently displayed channels
 DEFAULT_FILENAME = "data" # default base filename of all traces and pngs exported, a number is appended to the base
 FILETYPE = ".csv"   # filetype of exported data, can also be txt/dat etc.
 TIMEOUT = 15000     #ms timeout for the instrument connection
 
-def getTraces_single_connection_loop(fname, ext, instrument=VISA_ADDRESS, timeout=TIMEOUT, channel_nums=CH_NUMS, source_type='CHANnel', acq_type='HRESolution', num_averages=2, p_mode='RAW', num_points=0):
+def getTraces_single_connection_loop(fname, ext, instrument=VISA_ADDRESS, timeout=TIMEOUT, wav_format=WAVEFORM_FORMAT,
+                                     channel_nums=CH_NUMS, source_type='CHANnel', acq_type='HRESolution',
+                                     num_averages=2, p_mode='RAW', num_points=0):
     ## Initialise
-    inst, id = acq.initialise(instrument, timeout, acq_type, num_averages, p_mode, num_points)
+    inst, id = acq.initialise(instrument, timeout, wav_format, acq_type, num_averages, p_mode, num_points)
 
     ## Select sources
     if channel_nums == ['']: # if no channels specified, find the channels currently active and acquire from those
@@ -51,8 +56,8 @@ def getTraces_single_connection_loop(fname, ext, instrument=VISA_ADDRESS, timeou
     print("where <n> increases by one for each captured trace. Press 'q'+'enter' to quit the programme.")
     print("Acquire from sources", sourcesstring)
     while sys.stdin.read(1) != 'q': # breaks the loop if q+enter is given as input. For any other character (incl. enter)
-        raw, measurement_time = acq.capture_and_read(inst, sources, sourcesstring)
-        x, y = acq.process_data(raw, measurement_time) # capture, read and process data
+        raw, metadata = acq.capture_and_read(inst, sources, sourcesstring, wav_format)
+        x, y = acq.process_data(raw, metadata, wav_format) # capture, read and process data
         acq.plotTrace(x, y, channel_nums, fname=fname+str(n))                    # plot trace and save png
         acq.saveTrace(fname+str(n)+ext, x, y, fileheader=id+"time,"+sourcesstring+"\n") # save trace to ext file
         n += 1
