@@ -21,7 +21,8 @@ The command line programmes will by default save traces in the programme folder 
 ```python
 # default options
 VISA_ADDRESS = 'USB0::2391::6038::MY57233636::INSTR' # address of instrument
-WAVEFORM_FORMAT = 'BYTE'    # BYTE formatted data is transferred as 8-bit bytes.
+WAVEFORM_FORMAT = 'WORD'    # WORD formatted data is transferred as 16-bit uint.
+                            # BYTE formatted data is transferred as 8-bit uint.
                             # ASCii formatted data converts the internal integer data values to real Y-axis values.
                             #       Values are transferred as ASCii digits in floating point notation, separated by commas.
 CH_NUMS=['']        # list of chars, e.g. ['1', '3']. Use a list with an empty string [''] to capture all currently displayed channels
@@ -30,6 +31,6 @@ FILETYPE = ".csv"   # filetype of exported data, can also be txt/dat etc.
 TIMEOUT = 15000     #ms timeout for the instrument connection
 ```
 
-The `WAVEFORM_FORMAT` dictates whether 8 bit raw values or comma separated ascii voltage values should be transferred when the waveform is queried for (the output file will be ascii anyway, this is simply a question of how it is transferred to and processed on the computer). Raw values format is approx 10x faster than ascii.
+The `WAVEFORM_FORMAT` dictates whether 16/8 bit raw values or comma separated ascii voltage values should be transferred when the waveform is queried for (the output file will be ascii anyway, this is simply a question of how it is transferred to and processed on the computer). Raw values format is approx 10x faster than ascii.
 
 Furthermore, both programmes takes in an optional string argument that is set as the base file name, i.e. the command line code `python getTraces_single_connection_loop.py "measurement"` will give output files `measurement<n>.csv` and `measurement<n>.png`.

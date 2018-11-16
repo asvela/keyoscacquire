@@ -20,7 +20,8 @@ import time, datetime # for measuring elapsed time and adding current date and t
 
 # Default options
 VISA_ADDRESS = 'USB0::2391::6038::MY57233636::INSTR' # address of instrument
-WAVEFORM_FORMAT = 'BYTE'    # BYTE formatted data is transferred as 8-bit bytes.
+WAVEFORM_FORMAT = 'WORD'    # WORD formatted data is transferred as 16-bit uint.
+                            # BYTE formatted data is transferred as 8-bit uint.
                             # ASCii formatted data converts the internal integer data values to real Y-axis values.
                             #       Values are transferred as ASCii digits in floating point notation, separated by commas.
 DEFAULT_FILENAME = "data"   # default base filename of all traces and pngs exported, a number is appended to the base
@@ -72,18 +73,21 @@ def initialise(instrument, timeout=TIMEOUT, wav_format=WAVEFORM_FORMAT, acq_type
         print("Number of points set to: ", num_points)
     return inst, id
 
-def capture_and_read(inst, sources, sourcestring,  wav_format=WAVEFORM_FORMAT):
-    if wav_format[:3] == 'BYT':
-        return capture_and_read_byte(inst, sources, sourcestring)
+def capture_and_read(inst, sources, sourcestring, wav_format=WAVEFORM_FORMAT):
+    if wav_format[:3] == 'WOR':
+        return capture_and_read_binary(inst, sources, sourcestring, datatype='H')
+    elif wav_format[:3] == 'BYT':
+        return capture_and_read_binary(inst, sources, sourcestring, datatype='B')
     elif wav_format[:3] == 'ASC':
         return capture_and_read_ascii(inst, sources, sourcestring)
     else:
         raise Exception("Could not capture and read data, waveform format \'{}\' is unknown.\nExiting..\n".format(wav_format))
         sys.exit()
 
-def capture_and_read_byte(inst, sources, sourcesstring):
+def capture_and_read_binary(inst, sources, sourcesstring, datatype='H'):
     """
-    Capture and read data and metadata from sources of the oscilloscope inst when waveform format is BYTE
+    Capture and read data and metadata from sources of the oscilloscope inst when waveform format is WORD or BYTE
+    Datatype is 'H' for 16 bit unsigned int (WORD), 'B' for 8 bit unsigned bit (BYTE)
     Output: array of raw data, array of preamble metadata (ascii comma separated values)
     """
     ## Capture data
@@ -98,7 +102,7 @@ def capture_and_read_byte(inst, sources, sourcesstring):
         inst.write(':WAVeform:SOURce ' + source) # selects the channel for which the succeeding WAVeform commands applies to
         try:
             preambles.append(inst.query(':WAVeform:PREamble?')) # comma separated metadata values for processing of raw data for this source
-            raw.append(inst.query_binary_values(':WAVeform:DATA?', datatype='B')) # read out data for this source
+            raw.append(inst.query_binary_values(':WAVeform:DATA?', datatype=datatype)) # read out data for this source
         except visa.Error as ex:
             print("Failed to obtain waveform, have you checked that the TIMEOUT is sufficently long? Currently %d ms" % TIMEOUT)
             sys.exit()
@@ -130,17 +134,17 @@ def capture_and_read_ascii(inst, sources, sourcesstring):
     return raw, measurement_time
 
 def process_data(raw, metadata,  wav_format=WAVEFORM_FORMAT):
-    if wav_format[:3] == 'BYT':
-        return process_data_byte(raw, metadata)
+    if wav_format[:3] == 'WOR' or wav_format[:3] == 'BYT':
+        return process_data_binary(raw, metadata)
     elif wav_format[:3] == 'ASC':
         return process_data_ascii(raw, metadata)
     else:
         raise Exception("Could not process data, waveform format \'{}\' is unknown.\nExiting..\n".format(wav_format))
         sys.exit()
 
-def process_data_byte(raw, preambles):
+def process_data_binary(raw, preambles):
     """
-    Process raw 8-bit data to time x values and y voltage values.
+    Process raw 8/16-bit data to time x values and y voltage values.
     Output: numpy array x containing time values, numpy array y containing voltages for caputred channels
     """
     preamble = preambles[0].split(',')  # values separated by commas
