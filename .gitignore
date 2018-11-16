@@ -1,4 +1,5 @@
 *.csv
 *.png
 Thumbs.db
+Keysight Manual and Examples
 __pycache__
