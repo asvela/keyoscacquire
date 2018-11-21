@@ -37,7 +37,7 @@ TIMEOUT = 15000     #ms timeout for the instrument connection
 
 def getTraces_single_connection_loop(fname, ext, instrument=VISA_ADDRESS, timeout=TIMEOUT, wav_format=WAVEFORM_FORMAT,
                                      channel_nums=CH_NUMS, source_type='CHANnel', acq_type='HRESolution',
-                                     num_averages=2, p_mode='RAW', num_points=0):
+                                     num_averages=2, p_mode='RAW', num_points=0, start_num=0):
     ## Initialise
     inst, id = acq.initialise(instrument, timeout, wav_format, acq_type, num_averages, p_mode, num_points)
 
@@ -50,7 +50,8 @@ def getTraces_single_connection_loop(fname, ext, instrument=VISA_ADDRESS, timeou
     sources = [source_type+channel for channel in channel_nums] # build list of sources
     sourcesstring = ", ".join([source_type+channel for channel in channel_nums]) # make string of sources
 
-    n = 0
+    n = start_num
+    fname = acq.check_file(fname, ext, num=str(n)) # check that file does not exist from before, append to name if it does
     print("Running a loop where at every 'enter' oscilloscope traces will be saved as %s<n>%s," % (fname, ext))
     print("where <n> increases by one for each captured trace. Press 'q'+'enter' to quit the programme.")
     print("Acquire from sources", sourcesstring)
@@ -73,5 +74,4 @@ if __name__ == '__main__':
     else:
         fname = DEFAULT_FILENAME
     ext = FILETYPE
-    fname = acq.check_file(fname, ext) # check that file does not exist from before, append to name if it does
     getTraces_single_connection_loop(fname, ext)
