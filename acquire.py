@@ -93,7 +93,7 @@ def capture_and_read_binary(inst, sources, sourcesstring, datatype='H'):
     ## Capture data
     print("Start acquisition..")
     start_time = time.time() # time the acquiring process
-    #inst.write(':DIGitize ' + sourcesstring) # DIGitize is a specialized RUN command.
+    inst.write(':DIGitize ' + sourcesstring) # DIGitize is a specialized RUN command.
                                              # Waveforms are acquired according to the settings of the :ACQuire commands.
                                              # When acquisition is complete, the instrument is stopped.
     ## Read out meta data and data
