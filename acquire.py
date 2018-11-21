@@ -13,7 +13,7 @@ See Keysight's Programmer's Guide for reference.
 Andreas Svela 2018
 """
 
-import sys  # required for reading user input and command line arguments
+import sys, os  # required for reading user input and command line arguments
 import visa # instrument communication
 import numpy as np, matplotlib.pyplot as plt
 import time, datetime # for measuring elapsed time and adding current date and time to exported files
@@ -93,7 +93,7 @@ def capture_and_read_binary(inst, sources, sourcesstring, datatype='H'):
     ## Capture data
     print("Start acquisition..")
     start_time = time.time() # time the acquiring process
-    inst.write(':DIGitize ' + sourcesstring) # DIGitize is a specialized RUN command.
+    #inst.write(':DIGitize ' + sourcesstring) # DIGitize is a specialized RUN command.
                                              # Waveforms are acquired according to the settings of the :ACQuire commands.
                                              # When acquisition is complete, the instrument is stopped.
     ## Read out meta data and data
@@ -192,7 +192,7 @@ def process_data_ascii(raw, measurement_time):
     return x, y
 
 def connect_and_getTrace(channel_nums=[''], source_type='CHANnel', instrument=VISA_ADDRESS, timeout=TIMEOUT,
-                          wav_format=WAVEFORM_FORMAT, acq_type='HRESolution', num_averages=2, p_mode='RAW', num_points=0):
+                         wav_format=WAVEFORM_FORMAT, acq_type='HRESolution', num_averages=2, p_mode='RAW', num_points=0):
     """
     Get trace from channels of instrument. Returns one numpy array of the x time values and one numpy array of y values.
     Some alternative settings are listed.
@@ -207,7 +207,6 @@ def connect_and_getTrace(channel_nums=[''], source_type='CHANnel', instrument=VI
     num_points = {0 | 100 | 250 | 500 | 1000 | 2000 | 5000 | 10000 | 20000
                  | 50000 | 100000 | 200000 | 500000 | 1000000}: optional command when p_mode (POINTs:MODE) is specified. Use 0 to let p_mode control the number of points.
     """
-
     ## Connect to instrument and specify acquiring settings
     inst, id = initialise(instrument, timeout,  wav_format, acq_type, num_averages, p_mode, num_points)
 
@@ -229,6 +228,17 @@ def connect_and_getTrace(channel_nums=[''], source_type='CHANnel', instrument=VI
     inst.write(':RUN')
     inst.close()
     return x, y, id, channel_nums
+
+def check_file(fname, ext, num=""):
+    """
+    Checking if file fname+num+ext exists. If it does the user is prompted
+    for a string to append to fname until a unique fname is found.
+    Output: new fname.
+    """
+    while os.path.exists(fname+num+ext):
+        append = input("File \'%s\' exists! Append to filename \'%s\' before saving: " % (fname+num+ext, fname))
+        fname += append
+    return fname
 
 def saveTrace(filename, x, y, fileheader=""):
     """
@@ -263,6 +273,7 @@ if __name__ == '__main__':
     else:
         fname = DEFAULT_FILENAME
     ext = FILETYPE
+    fname = check_file(fname, ext)
     x, y, id, channel_nums = connect_and_getTrace()
     plotTrace(x, y, channel_nums, fname=fname)
     saveTrace(fname+ext, x, y, fileheader=id+"time,"+str(channel_nums)+"\n")

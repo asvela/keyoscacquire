@@ -73,4 +73,5 @@ if __name__ == '__main__':
     else:
         fname = DEFAULT_FILENAME
     ext = FILETYPE
+    fname = acq.check_file(fname, ext) # check that file does not exist from before, append to name if it does
     getTraces_single_connection_loop(fname, ext)
