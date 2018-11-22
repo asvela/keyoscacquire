@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Obtain traces, save to files and export raw plots from (Keysight) oscilloscopes using pyVISA.
-Traces are stored as .csv files and will by default be accompanied by a .png too.
+Traces are stored as csv files and will by default be accompanied by a png plot too.
 
 This program connects to the oscilloscope, sets options for the acquisition and then
 enters a loop in which the program captures and stores traces each time 'enter' is pressed.

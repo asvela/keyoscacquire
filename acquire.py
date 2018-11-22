@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 """
+See README.md
+
 Obtain traces, save to files and export raw plots from (Keysight) oscilloscopes using pyVISA.
-Traces are stored as .csv files and will by default be accompanied by a .png too.
+Traces are stored as csv files and will by default be accompanied by a png plot too.
 
 This script can be called resulting in one trace being captured and stored.
 Optional argument from the command line: string setting the base filename of the output files.
@@ -93,9 +95,14 @@ def capture_and_read_binary(inst, sources, sourcesstring, datatype='H'):
     ## Capture data
     print("Start acquisition..")
     start_time = time.time() # time the acquiring process
-    inst.write(':DIGitize ' + sourcesstring) # DIGitize is a specialized RUN command.
-                                             # Waveforms are acquired according to the settings of the :ACQuire commands.
-                                             # When acquisition is complete, the instrument is stopped.
+    reg = int(inst.query(':OPERegister:CONDition?')) # The third bit of the operation register is 1 if the instrument is running
+        # If the instrument is not running, we presumably want the data on the screen and hence don't want
+        # to use DIGitize as digitize will obtain a new trace.
+    if (reg & 8) == 8: # If the third bit is 1 (ie. instrument is running)
+        inst.write(':DIGitize ' + sourcesstring) # DIGitize is a specialized RUN command.
+                                                 # Waveforms are acquired according to the settings of the :ACQuire commands.
+                                                 # When acquisition is complete, the instrument is stopped.
+
     ## Read out meta data and data
     raw, preambles = [], []
     for source in sources:
@@ -107,6 +114,7 @@ def capture_and_read_binary(inst, sources, sourcesstring, datatype='H'):
             print("Failed to obtain waveform, have you checked that the TIMEOUT is sufficently long? Currently %d ms" % TIMEOUT)
             sys.exit()
     print("Elapsed time:", time.time()-start_time)
+    inst.write(':RUN') # set the oscilloscope running again
     return raw, preambles
 
 def capture_and_read_ascii(inst, sources, sourcesstring):
@@ -117,9 +125,13 @@ def capture_and_read_ascii(inst, sources, sourcesstring):
     ## Capture data
     print("Start acquisition..")
     start_time = time.time() # time the acquiring process
-    inst.write(':DIGitize ' + sourcesstring) # DIGitize is a specialized RUN command.
-                                             # Waveforms are acquired according to the settings of the :ACQuire commands.
-                                             # When acquisition is complete, the instrument is stopped.
+    reg = int(inst.query(':OPERegister:CONDition?')) # The third bit of the operation register is 1 if the instrument is running
+        # If the instrument is not running, we presumably want the data on the screen and hence don't want
+        # to use DIGitize as digitize will obtain a new trace.
+    if (reg & 8) == 8: # If the third bit is 1 (ie. instrument is running)
+        inst.write(':DIGitize ' + sourcesstring) # DIGitize is a specialized RUN command.
+                                                 # Waveforms are acquired according to the settings of the :ACQuire commands.
+                                                 # When acquisition is complete, the instrument is stopped.
     ## Read out data
     raw = []
     for source in sources: # loop through all the sources
@@ -131,6 +143,7 @@ def capture_and_read_ascii(inst, sources, sourcesstring):
             sys.exit()
     print("Elapsed time:", time.time()-start_time)
     measurement_time = float(inst.query(':TIMebase:RANGe?')) # returns the current full-scale range value for the main window
+    inst.write(':RUN') # set the oscilloscope running again
     return raw, measurement_time
 
 def process_data(raw, metadata,  wav_format=WAVEFORM_FORMAT):
@@ -224,8 +237,7 @@ def connect_and_getTrace(channel_nums=[''], source_type='CHANnel', instrument=VI
     raw, preambles = capture_and_read(inst, sources, sourcesstring,  wav_format)
     x, y = process_data(raw, preambles,  wav_format)
 
-    # Set the oscilloscope running before closing the connection
-    inst.write(':RUN')
+    ## Closing the connection
     inst.close()
     return x, y, id, channel_nums
 
