@@ -32,6 +32,8 @@ EXPORT_PNG = True   # export png of plot of obtained trace
 SHOW_PLOT = False   # show each plot when generated (program pauses until it is closed)
 TIMEOUT = 15000     #ms timeout for the instrument connection
 
+##============================================================================##
+
 def initialise(instrument, timeout=TIMEOUT, wav_format=WAVEFORM_FORMAT, acq_type='HRESolution', num_averages=2, p_mode='RAW', num_points=0):
     """
     Open a connection to instrument and choose settings for the connection and acquisitionself.
@@ -50,7 +52,7 @@ def initialise(instrument, timeout=TIMEOUT, wav_format=WAVEFORM_FORMAT, acq_type
         rm = visa.ResourceManager()
         inst = rm.open_resource(instrument)
     except visa.Error as ex:
-        print('Could not connect to \'%s\', exiting now...' % instrument)
+        print('\nVisaError: Could not connect to \'%s\', exiting now...' % instrument)
         sys.exit()
     # For TCP/IP socket connections enable the read Termination Character, or reads will timeout
     if inst.resource_name.endswith('SOCKET'):
@@ -63,12 +65,21 @@ def initialise(instrument, timeout=TIMEOUT, wav_format=WAVEFORM_FORMAT, acq_type
 
     #inst.write(':ACQuire:COMPlete 100') # completion criteria for acquisition: 100 percent of the time buckets must be full for the acquisition to be complete (100 is only value possible)
     inst.write(':ACQuire:TYPE ' + acq_type)
-    if acq_type[:4] == 'NORM': # averaging only applies for the NORMal mode
+    print("Acquiring type ", acq_type, end='')
+    if acq_type[:4] == 'NORM' or acq_type[:4] == 'AVER': # averaging applies for NORMal and AVERage modes only
+        #inst.write(':ACQuire:MODE RTIME')
         inst.write(':ACQuire:COUNt ' + str(num_averages))
+        print(", number of averages ", num_averages)
+    else:
+        print("") #newline
 
     ## Set options for waveform export
     inst.write(':WAVeform:FORMat ' +  wav_format) # choose format for the transmitted waveform
-    inst.write(':WAVeform:POINts:MODE ' + p_mode)
+    if acq_type[:4] == 'AVER' and p_mode[:4] != 'NORM':
+        inst.write(':WAVeform:POINts:MODE NORMal')
+        print(":WAVeform:POINts:MODE overridden (from %s) to NORMal due to :ACQuire:TYPE:AVERage." % p_mode)
+    else:
+        inst.write(':WAVeform:POINts:MODE ' + p_mode)
     #print("Max number of points for mode %s: %s" % (p_mode, inst.query(':WAVeform:POINts? MAXimum')))
     if num_points != 0: #if number of points has been specified
         inst.write(':WAVeform:POINts ' + str(num_points))
@@ -83,7 +94,7 @@ def capture_and_read(inst, sources, sourcestring, wav_format=WAVEFORM_FORMAT):
     elif wav_format[:3] == 'ASC':
         return capture_and_read_ascii(inst, sources, sourcestring)
     else:
-        raise Exception("Could not capture and read data, waveform format \'{}\' is unknown.\nExiting..\n".format(wav_format))
+        raise Exception("\nError: Could not capture and read data, waveform format \'{}\' is unknown.\nExiting..\n".format(wav_format))
         sys.exit()
 
 def capture_and_read_binary(inst, sources, sourcesstring, datatype='H'):
@@ -110,8 +121,11 @@ def capture_and_read_binary(inst, sources, sourcesstring, datatype='H'):
         try:
             preambles.append(inst.query(':WAVeform:PREamble?')) # comma separated metadata values for processing of raw data for this source
             raw.append(inst.query_binary_values(':WAVeform:DATA?', datatype=datatype)) # read out data for this source
-        except visa.Error as ex:
-            print("Failed to obtain waveform, have you checked that the TIMEOUT is sufficently long? Currently %d ms" % TIMEOUT)
+        except visa.Error as err:
+            print("\nError: Failed to obtain waveform, have you checked that the TIMEOUT (currently %d ms) is sufficently long?" % TIMEOUT)
+            print(err)
+            print("\nExiting..\n")
+            inst.write(':RUN')
             sys.exit()
     print("Elapsed time:", time.time()-start_time)
     inst.write(':RUN') # set the oscilloscope running again
@@ -138,8 +152,11 @@ def capture_and_read_ascii(inst, sources, sourcesstring):
         inst.write(':WAVeform:SOURce ' + source) # selects the channel for which the succeeding WAVeform commands applies to
         try:
             raw.append(inst.query(':WAVeform:DATA?')) # read out data for this source
-        except visa.Error as ex:
-            print("Failed to obtain waveform, have you checked that the TIMEOUT is sufficently long? Currently %d ms" % TIMEOUT)
+        except visa.Error as err:
+            print("\nVisaError: Failed to obtain waveform, have you checked that the TIMEOUT (currently %d ms) is sufficently long?" % TIMEOUT)
+            print(err)
+            print("\nExiting..\n")
+            inst.write(':RUN')
             sys.exit()
     print("Elapsed time:", time.time()-start_time)
     measurement_time = float(inst.query(':TIMebase:RANGe?')) # returns the current full-scale range value for the main window
@@ -152,7 +169,7 @@ def process_data(raw, metadata,  wav_format=WAVEFORM_FORMAT):
     elif wav_format[:3] == 'ASC':
         return process_data_ascii(raw, metadata)
     else:
-        raise Exception("Could not process data, waveform format \'{}\' is unknown.\nExiting..\n".format(wav_format))
+        raise Exception("\nError: Could not process data, waveform format \'{}\' is unknown.\nExiting..\n".format(wav_format))
         sys.exit()
 
 def process_data_binary(raw, preambles):
@@ -277,6 +294,10 @@ def plotTrace(x, y, channel_nums, fname="", show=SHOW_PLOT, savepng=EXPORT_PNG):
     if show: plt.show()
     plt.close()
 
+
+##============================================================================##
+##                           MAIN FUNCTION                                    ##
+##============================================================================##
 
 ## Main function, runs only if the script is called from the command line
 if __name__ == '__main__':
