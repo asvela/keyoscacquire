@@ -225,8 +225,8 @@ def process_data_ascii(raw, measurement_time):
     return x, y
 
 def getTrace(inst, sources, sourcesstring, wav_format=WAVEFORM_FORMAT):
-    raw, metadata = acq.capture_and_read(inst, sources, sourcesstring, wav_format)
-    x, y = acq.process_data(raw, metadata, wav_format) # capture, read and process data
+    raw, metadata = capture_and_read(inst, sources, sourcesstring, wav_format)
+    x, y = process_data(raw, metadata, wav_format) # capture, read and process data
     return x, y
 
 def connect_and_getTrace(channel_nums=[''], source_type='CHANnel', instrument=VISA_ADDRESS, timeout=TIMEOUT,
