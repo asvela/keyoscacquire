@@ -22,7 +22,7 @@ Andreas Svela 2018
 """
 
 import sys
-import acquire as acq
+import keysightoscacq as acq
 
 # Default options
 VISA_ADDRESS = 'USB0::2391::6038::MY57233636::INSTR' # address of instrument

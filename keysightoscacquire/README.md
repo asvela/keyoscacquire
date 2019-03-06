@@ -1,4 +1,4 @@
-## pyVISA oscilloscope trace acquiring
+## KeysightOscilloscopeAcquiring package
 
 22th November 2018
 
@@ -10,7 +10,7 @@ The code in this repository connects to (Keysight) oscilloscopes through a VISA 
 
 #### Usage
 
-The code is structured as a module `acquire.py`, and two command line programmes `getTraces_connect_each_time_loop.py` and `getTraces_single_connection_loop.py` that loads the module and uses its functions. **In order to connect to a VISA instrument, NI MAX or similar must be running on the computer.** The VISA address of the instrument can be found in NI MAX, and should be set as the  `VISA_ADDRESS` variable, see below. 
+The code is structured as a module `acquire.py`, and two command line programmes `getTraces_connect_each_time_loop.py` and `getTraces_single_connection_loop.py` that loads the module and uses its functions. **In order to connect to a VISA instrument, NI MAX or similar must be running on the computer.** The VISA address of the instrument can be found in NI MAX, and should be set as the  `VISA_ADDRESS` variable, see below.
 
 Both programmes are loops for which every time enter is hit a trace will be obtained and exported as csv and png files with successive numbering. By default all active channels on the oscilloscope will be captured (this can be changed, see below). The difference between the two is that the first programme is establishing a new connection to the instrument each time a trace is captured, whereas the second opens a connection to start with and does not close the connection until the program is quit. The second programme only checks which channels are active when it connects, i.e. the first programme will save only the currently active channels for each saved trace; the first will each time save the channels that were active at the time of starting the programme.
 

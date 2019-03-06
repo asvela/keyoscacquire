@@ -25,7 +25,7 @@ Andreas Svela 2018
 """
 
 import sys
-import acquire as acq
+import keysightoscacq as acq
 import numpy as np
 
 # Default options
