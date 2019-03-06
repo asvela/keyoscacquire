@@ -275,9 +275,9 @@ def saveTrace(fname, x, y, fileheader="", ext=FILETYPE):
     Current date and time is automatically added to the header.
     """
     date_time = str(datetime.datetime.now()) # get current date and time
-    print("Saving trace to ", filename)
+    print("Saving trace to ", fname+ext)
     data = np.append(x, y, axis=1) # make one array with coloumns x y1 y2 ..
-    np.savetxt(filename, data, delimiter=",", header=fileheader+date_time)
+    np.savetxt(fname+ext, data, delimiter=",", header=fileheader+date_time)
     print("\n")
 
 def plotTrace(x, y, channel_nums, fname="", show=SHOW_PLOT, savepng=EXPORT_PNG):
