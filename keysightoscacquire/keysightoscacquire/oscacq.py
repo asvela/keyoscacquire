@@ -75,6 +75,20 @@ def initialise(instrument, timeout=TIMEOUT, wav_format=WAVEFORM_FORMAT, acq_type
         print("Number of points set to: ", num_points)
     return inst, id
 
+def build_sourcesstring(inst, source_type='CHANnel', channel_nums=CH_NUMS):
+    """Builds the sources string from channel_nums, a list of the channel numbers to be used.
+    If channel_nums is contains only one empty string, the active channels on the oscilloscope
+    are used."""
+    if channel_nums == ['']: # if no channels specified, find the channels currently active and acquire from those
+        channels = np.array(['1', '2', '3', '4'])
+        displayed_channels = [inst.query(':CHANnel'+channel+':DISPlay?')[0] for channel in channels] # querying DISP for each channel to determine which channels are currently displayed
+        channel_mask = np.array([bool(int(i)) for i in displayed_channels]) # get a mask of bools for the channels that are on [need the int() as int('0') = True]
+        channel_nums = channels[channel_mask] # apply mask to the channel list
+    sources = [source_type+channel for channel in channel_nums] # build list of sources
+    sourcesstring = ", ".join([source_type+channel for channel in channel_nums]) # make string of sources
+    print("Acquire from sources", sourcesstring)
+    return sourcesstring, sources
+
 def capture_and_read(inst, sources, sourcestring, wav_format=WAVEFORM_FORMAT):
     if wav_format[:3] == 'WOR':
         return capture_and_read_binary(inst, sources, sourcestring, datatype='H')
@@ -210,6 +224,11 @@ def process_data_ascii(raw, measurement_time):
     print("Points captured per channel: ", num_samples)
     return x, y
 
+def getTrace(inst, sources, sourcesstring, wav_format=WAVEFORM_FORMAT):
+    raw, metadata = acq.capture_and_read(inst, sources, sourcesstring, wav_format)
+    x, y = acq.process_data(raw, metadata, wav_format) # capture, read and process data
+    return x, y
+
 def connect_and_getTrace(channel_nums=[''], source_type='CHANnel', instrument=VISA_ADDRESS, timeout=TIMEOUT,
                          wav_format=WAVEFORM_FORMAT, acq_type='HRESolution', num_averages=2, p_mode='RAW', num_points=0):
     """
@@ -230,24 +249,16 @@ def connect_and_getTrace(channel_nums=[''], source_type='CHANnel', instrument=VI
     inst, id = initialise(instrument, timeout,  wav_format, acq_type, num_averages, p_mode, num_points)
 
     ## Select sources
-    if channel_nums == ['']: # if no channels specified, find the channels currently active and acquire from those
-        channels = np.array(['1', '2', '3', '4'])
-        displayed_channels = [inst.query(':CHANnel'+channel+':DISPlay?')[0] for channel in channels] # querying DISP for each channel to determine which channels are currently displayed
-        channel_mask = np.array([bool(int(i)) for i in displayed_channels]) # get a mask of bools for the channels that are on [need the int() as int('0') = True]
-        channel_nums = channels[channel_mask] # apply mask to the channel list
-    sources = [source_type+channel for channel in channel_nums] # build list of sources
-    sourcesstring = ", ".join([source_type+channel for channel in channel_nums]) # make string of sources
-    print("Acquire from sources", sourcesstring)
+    sourcesstring, sources = build_sourcesstring(inst, source_type=source_type, channel_nums=channel_nums)
 
     ## Capture, read and process data
-    raw, preambles = capture_and_read(inst, sources, sourcesstring,  wav_format)
-    x, y = process_data(raw, preambles,  wav_format)
+    x, y = getTrace(inst, sources, sourcesstring, wav_format=wav_format)
 
     ## Closing the connection
     inst.close()
     return x, y, id, channel_nums
 
-def check_file(fname, ext, num=""):
+def check_file(fname, ext=FILETYPE, num=""):
     """
     Checking if file fname+num+ext exists. If it does the user is prompted
     for a string to append to fname until a unique fname is found.
@@ -258,9 +269,9 @@ def check_file(fname, ext, num=""):
         fname += append
     return fname
 
-def saveTrace(filename, x, y, fileheader=""):
+def saveTrace(fname, x, y, fileheader="", ext=FILETYPE):
     """
-    Saves the trace with x values and y values as a txt/csv/dat etc specified by the filename string containing the extension.
+    Saves the trace with x values and y values as a txt/csv/dat etc specified by 'ext'.
     Current date and time is automatically added to the header.
     """
     date_time = str(datetime.datetime.now()) # get current date and time
@@ -298,4 +309,4 @@ if __name__ == '__main__':
     fname = check_file(fname, ext)
     x, y, id, channel_nums = connect_and_getTrace()
     plotTrace(x, y, channel_nums, fname=fname)
-    saveTrace(fname+ext, x, y, fileheader=id+"time,"+str(channel_nums)+"\n")
+    saveTrace(fname, x, y, fileheader=id+"time,"+str(channel_nums)+"\n", ext=ext)

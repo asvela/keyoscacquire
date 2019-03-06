@@ -1,8 +1,8 @@
 ## KeysightOscilloscopeAcquiring package
 
-March 2019
+Andreas Svela // March 2019
 
-This package (Keysight) oscilloscopes through a VISA interface and exports traces as a chosen ASCII format file (default csv) and a png of the trace plot. The Python library `visa` is used for communication. The code has been tested on a Keysight DSO2024A model using a USB connection.
+This package gives functionality for acquiring traces from Keysight oscilloscopes through a VISA interface and exports traces as a chosen ASCII format file (default csv) and a png of the trace plot. The Python library `visa` is used for communication. The code has been tested on a Keysight DSO2024A model using a USB connection.
 
 #### Known issues
 
