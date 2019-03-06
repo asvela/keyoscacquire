@@ -1,8 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 """
-See README.md
-
 Obtain traces, save to files and export raw plots from (Keysight) oscilloscopes using pyVISA.
 Traces are stored as csv files and will by default be accompanied by a png plot too.
 
@@ -21,17 +19,7 @@ import visa # instrument communication
 import numpy as np, matplotlib.pyplot as plt
 import time, datetime # for measuring elapsed time and adding current date and time to exported files
 
-# Default options
-VISA_ADDRESS = 'USB0::2391::6038::MY57233636::INSTR' # address of instrument
-WAVEFORM_FORMAT = 'WORD'    # WORD formatted data is transferred as 16-bit uint.
-                            # BYTE formatted data is transferred as 8-bit uint.
-                            # ASCii formatted data converts the internal integer data values to real Y-axis values.
-                            #       Values are transferred as ASCii digits in floating point notation, separated by commas.
-DEFAULT_FILENAME = "data"   # default base filename of all traces and pngs exported, a number is appended to the base
-FILETYPE = ".csv"   # filetype of exported data, can also be txt/dat etc.
-EXPORT_PNG = True   # export png of plot of obtained trace
-SHOW_PLOT = False   # show each plot when generated (program pauses until it is closed)
-TIMEOUT = 15000     #ms timeout for the instrument connection
+from keysightoscacquire.default_options import VISA_ADDRESS, WAVEFORM_FORMAT, CH_NUMS, ACQ_TYPE, NUM_AVG, FILENAME, FILETYPE, TIMEOUT, EXPORT_PNG, SHOW_PLOT # local file with default options
 
 ##============================================================================##
 
@@ -305,7 +293,7 @@ if __name__ == '__main__':
     if len(sys.argv) == 2: #if optional argument is supplied on the command line
         fname = sys.argv[1] # use this as the filename base
     else:
-        fname = DEFAULT_FILENAME
+        fname = FILENAME
     ext = FILETYPE
     fname = check_file(fname, ext)
     x, y, id, channel_nums = connect_and_getTrace()

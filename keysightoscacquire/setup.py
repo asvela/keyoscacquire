@@ -19,13 +19,16 @@ if __name__ == '__main__':
           author_email='andreas.svela@npl.co.uk',
           license='MIT',
           packages=['keysightoscacquire'],
-          scripts=[
-          'bin/getTraces_connect_each_time_loop',
-          'bin/getTraces_single_connection_loop'
-          ],
+          entry_points={
+            'console_scripts' : [
+                'getTraces_connect_each_time=keysightoscacquire.installed_command_line_funcs:connect_each_time_command_line',
+                'getTraces_single_connection=keysightoscacquire.installed_command_line_funcs:single_connection_command_line'
+            ],
+          },
           install_requires=[
-          'visa'
-          'numpy',
-          'matplotlib'
-          ],
+              'visa',
+              'argparse',
+              'numpy',
+              'matplotlib'
+              ],
           zip_safe=False)
