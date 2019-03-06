@@ -87,7 +87,7 @@ def build_sourcesstring(inst, source_type='CHANnel', channel_nums=CH_NUMS):
     sources = [source_type+channel for channel in channel_nums] # build list of sources
     sourcesstring = ", ".join([source_type+channel for channel in channel_nums]) # make string of sources
     print("Acquire from sources", sourcesstring)
-    return sourcesstring, sources, channel_num
+    return sourcesstring, sources, channel_nums
 
 def capture_and_read(inst, sources, sourcestring, wav_format=WAVEFORM_FORMAT):
     if wav_format[:3] == 'WOR':
