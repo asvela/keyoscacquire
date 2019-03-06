@@ -53,13 +53,7 @@ def getTraces_single_connection_loop(fname, ext, instrument=VISA_ADDRESS, timeou
     inst, id = acq.initialise(instrument, timeout, wav_format, acq_type, num_averages, p_mode, num_points)
 
     ## Select sources
-    if channel_nums == ['']: # if no channels specified, find the channels currently active and acquire from those
-        channels = np.array(['1', '2', '3', '4'])
-        displayed_channels = [inst.query(':CHANnel'+channel+':DISPlay?')[0] for channel in channels] # querying DISP for each channel to determine which channels are currently displayed
-        channel_mask = np.array([bool(int(i)) for i in displayed_channels]) # get a mask of bools for the channels that are on [need the int() as int('0') = True]
-        channel_nums = channels[channel_mask] # apply mask to the channel list
-    sources = [source_type+channel for channel in channel_nums] # build list of sources
-    sourcesstring = ", ".join([source_type+channel for channel in channel_nums]) # make string of sources
+    sourcesstring, sources = build_sourcesstring(inst, source_type=source_type, channel_nums=channel_nums)
 
     n = start_num
     fnum = file_delim+str(n)
@@ -69,8 +63,7 @@ def getTraces_single_connection_loop(fname, ext, instrument=VISA_ADDRESS, timeou
     print("Acquire from sources", sourcesstring)
     while sys.stdin.read(1) != 'q': # breaks the loop if q+enter is given as input. For any other character (incl. enter)
         fnum = file_delim+str(n)
-        raw, metadata = acq.capture_and_read(inst, sources, sourcesstring, wav_format)
-        x, y = acq.process_data(raw, metadata, wav_format) # capture, read and process data
+        x, y = acq.getTrace(inst, sources, sourcesstring, wav_format)
         acq.plotTrace(x, y, channel_nums, fname=fname+fnum)                    # plot trace and save png
         acq.saveTrace(fname+fnum+ext, x, y, fileheader=id+"time,"+sourcesstring+"\n") # save trace to ext file
         n += 1
