@@ -87,7 +87,7 @@ def build_sourcesstring(inst, source_type='CHANnel', channel_nums=CH_NUMS):
     sources = [source_type+channel for channel in channel_nums] # build list of sources
     sourcesstring = ", ".join([source_type+channel for channel in channel_nums]) # make string of sources
     print("Acquire from sources", sourcesstring)
-    return sourcesstring, sources
+    return sourcesstring, sources, channel_num
 
 def capture_and_read(inst, sources, sourcestring, wav_format=WAVEFORM_FORMAT):
     if wav_format[:3] == 'WOR':
@@ -249,7 +249,7 @@ def connect_and_getTrace(channel_nums=[''], source_type='CHANnel', instrument=VI
     inst, id = initialise(instrument, timeout,  wav_format, acq_type, num_averages, p_mode, num_points)
 
     ## Select sources
-    sourcesstring, sources = build_sourcesstring(inst, source_type=source_type, channel_nums=channel_nums)
+    sourcesstring, sources, channel_nums = build_sourcesstring(inst, source_type=source_type, channel_nums=channel_nums)
 
     ## Capture, read and process data
     x, y = getTrace(inst, sources, sourcesstring, wav_format=wav_format)
