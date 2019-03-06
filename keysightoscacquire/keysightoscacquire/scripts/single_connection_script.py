@@ -34,4 +34,4 @@ import keysightoscacquire.oscacq as acq
 
 ## Main function, runs only if the script is called from the command line
 if __name__ == '__main__':
-    acq.run_program("single_connection", sys.argv)
+    acq.run_programme("single_connection", sys.argv)

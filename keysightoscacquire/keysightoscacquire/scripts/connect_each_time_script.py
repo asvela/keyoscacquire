@@ -31,4 +31,4 @@ import keysightoscacquire.programmes as acq
 
 ## Main function, runs only if the script is called from the command line
 if __name__ == '__main__':
-    acq.run_program("connect_each_time", sys.argv)
+    acq.run_programme("connect_each_time", sys.argv)
