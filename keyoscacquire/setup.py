@@ -20,9 +20,9 @@ if __name__ == '__main__':
     setup(name='keysightoscilloscopeacquire',
           version=__version__,
           description='Obtain traces, save to files and export raw plots from Keysight oscilloscopes using pyVISA.',
-          long_description=README,
+          long_description=open('README.md').read(),
           long_description_content_type="text/markdown",
-          url='none',
+          url='http://www.npl.co.uk',
           author='Andreas Svela',
           author_email='andreas.svela@npl.co.uk',
           license='MIT',
@@ -40,4 +40,5 @@ if __name__ == '__main__':
               'numpy',
               'matplotlib'
               ],
+          include_package_data=True,
           zip_safe=False)

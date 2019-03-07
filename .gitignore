@@ -1,3 +1,12 @@
+# setuptools distribution folder
+/dist/
+
+# python egg metadata
+/*.egg
+/*.egg-info
+
+# files generated when running the module and others
+__pycache__
 *.csv
 *.png
 *.pdf
@@ -5,5 +14,3 @@
 *.xlsx
 *.txt
 Thumbs.db
-Keysight Manual and Examples
-__pycache__
