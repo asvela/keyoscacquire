@@ -30,14 +30,9 @@ class Oscilloscope():
         """
         Open a connection to instrument and choose settings for the connection and acquisition.
         Some alternative settings are listed.
-        instrument = {'USB0::2391::6038::MY57233636::INSTR' | 'TCPIP0::192.168.20.30::4000::SOCKET'}
+        address = {'USB0::2391::6038::MY57233636::INSTR' | 'TCPIP0::192.168.20.30::4000::SOCKET'}
         timeout = ms before timeout on the channel to the instrument
-        wav_format = {'WORD' | 'BYTE' | 'ASCii'}
-        acq_type = {'HRESolution' | 'NORMal' | 'AVERage'}
-        num_averages = 2 to 65536: applies only to the NORMal and AVERage modes
-        p_mode = {'RAW' | 'MAXimum'}: RAW gives up to 1e6 points. Use MAXimum for sources that are not analogue or digital (functions and math)
-        num_points = {0 | 100 | 250 | 500 | 1000 | 2000 | 5000 | 10000 | 20000
-                     | 50000 | 100000 | 200000 | 500000 | 1000000}: optional command when p_mode (POINTs:MODE) is specified. Use 0 to let p_mode control the number of points.
+        debug = {True, False} should extra debug information be printed
         """
         self.debug_print = debug; self.timeout = timeout
 
@@ -58,16 +53,26 @@ class Oscilloscope():
         print('Connected to ', self.id)
 
     def close(self):
+        """Set the oscilloscope to run and close the connection"""
         # Set the oscilloscope running before closing the connection
         self.inst.write(':RUN')
         self.inst.close()
         self.debugPrint("Closed connection to %s" % self.id)
 
     def debugPrint(self, message):
+        """Debug message printed if self.debug_print is True"""
         print(message) if self.debug_print else None
 
     def set_acquiring_options(self, wav_format=WAVEFORM_FORMAT, acq_type=ACQ_TYPE,
                              num_averages=NUM_AVG, p_mode='RAW', num_points=0):
+        """Sets the options for acquisition from the oscilloscope
+        wav_format = {'WORD' | 'BYTE' | 'ASCii'}
+        acq_type = {'HRESolution' | 'NORMal' | 'AVERage' | 'AVER<m>'} <m> will be used as num_averages if supplied
+        num_averages = 2 to 65536: applies only to the NORMal and AVERage modes
+        p_mode = {'RAW' | 'MAXimum'}: RAW gives up to 1e6 points. Use MAXimum for sources that are not analogue or digital (functions and math)
+        num_points = {0 | 100 | 250 | 500 | 1000 | 2000 | 5000 | 10000 | 20000
+                     | 50000 | 100000 | 200000 | 500000 | 1000000}: optional command when p_mode (POINTs:MODE) is specified. Use 0 to let p_mode control the number of points.
+        """
         self.wav_format = wav_format; self.acq_type = acq_type[:4]
         self.p_mode = p_mode; self.num_points = num_points
 
@@ -155,12 +160,12 @@ class Oscilloscope():
             try:
                 preambles.append(self.inst.query(':WAVeform:PREamble?')) # comma separated metadata values for processing of raw data for this source
                 raw.append(self.inst.query_binary_values(':WAVeform:DATA?', datatype=datatype)) # read out data for this source
-            except visa.Error as err:
+            except visa.Error:
                 print("\nError: Failed to obtain waveform, have you checked that the TIMEOUT (currently %d ms) is sufficently long?" % self.timeout)
                 print(err)
                 print("\nExiting..\n")
-                self.inst.write(':RUN')
-                sys.exit()
+                self.close()
+                raise
         print("Elapsed time:", time.time()-start_time)
         self.inst.write(':RUN') # set the oscilloscope running again
         return raw, preambles
@@ -168,7 +173,7 @@ class Oscilloscope():
     def capture_and_read_ascii(self, sources, sourcesstring):
         """
         Capture and read data and metadata from sources of the oscilloscope inst when waveform format is ASCii
-        Output: array of raw data (commaseparated ascii values), time range of the measurement
+        Output: array of raw data (comma separated ascii values), time range of the measurement
         """
         ## Capture data
         print("Start acquisition..")
@@ -186,12 +191,11 @@ class Oscilloscope():
             self.inst.write(':WAVeform:SOURce ' + source) # selects the channel for which the succeeding WAVeform commands applies to
             try:
                 raw.append(self.inst.query(':WAVeform:DATA?')) # read out data for this source
-            except visa.Error as err:
+            except visa.Error:
                 print("\nVisaError: Failed to obtain waveform, have you checked that the TIMEOUT (currently %d ms) is sufficently long?" % self.timeout)
-                print(err)
                 print("\nExiting..\n")
-                inst.write(':RUN')
-                sys.exit()
+                self.close()
+                raise
         print("Elapsed time:", time.time()-start_time)
         measurement_time = float(self.inst.query(':TIMebase:RANGe?')) # returns the current full-scale range value for the main window
         self.inst.write(':RUN') # set the oscilloscope running again
@@ -213,7 +217,7 @@ class Oscilloscope():
         channelnum = list of chars, e.g. ['1', '3']. Use a list with an empty string [''] to capture all currently displayed channels
         source_type = {'CHANnel' | 'MATH' | 'FUNCtion'}: MATH is an alias for FUNCtion
         wav_format = {'WORD' | 'BYTE' | 'ASCii'}
-        acq_type = {'HRESolution' | 'NORMal' | 'AVERage'}
+        acq_type = {'HRESolution' | 'NORMal' | 'AVERage' | 'AVER<m>'} <m> will be used as num_averages if supplied
         num_averages = 2 to 65536: applies only to the NORMal and AVERage modes
         p_mode = {'RAW' | 'MAXimum'}: RAW gives up to 1e6 points. Use MAXimum for sources that are not analogue or digital (functions and math)
         num_points = {0 | 100 | 250 | 500 | 1000 | 2000 | 5000 | 10000 | 20000
@@ -234,11 +238,12 @@ class Oscilloscope():
         """
         Get trace, close connection and saves the trace to a csv and png.
         Some alternative settings are listed.
+        fname = base filename, e.g. "trace"
+        ext = {'.csv' | '.dat'}: the filetype for saving the ascii table values
         channelnum = list of chars, e.g. ['1', '3']. Use a list with an empty string [''] to capture all currently displayed channels
         source_type = {'CHANnel' | 'MATH' | 'FUNCtion'}: MATH is an alias for FUNCtion
-        wav_format = {'WORD' | 'ASCii'}
-        instrument = {'USB0::2391::6038::MY57233636::INSTR' | 'TCPIP0::192.168.20.30::4000::SOCKET'}
-        acq_type = {'HRESolution' | 'NORMal' | 'AVERage'}
+        wav_format = {'WORD' | 'BYTE' | 'ASCii'}
+        acq_type = {'HRESolution' | 'NORMal' | 'AVERage' | 'AVER<m>'} <m> will be used as num_averages if supplied
         num_averages = 2 to 65536: applies only to the NORMal and AVERage modes
         p_mode = {'RAW' | 'MAXimum'}: RAW gives up to 1e6 points. Use MAXimum for sources that are not analogue or digital (functions and math)
         num_points = {0 | 100 | 250 | 500 | 1000 | 2000 | 5000 | 10000 | 20000
