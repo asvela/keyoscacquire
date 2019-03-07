@@ -16,7 +16,7 @@ Install the package with pip:
 pip install keysightoscilloscopeacquire
 ```
 
-or download locally and install with `python setup.py install` or by running `install.bat`. 
+or download locally and install with `python setup.py install` or by running `install.bat`.
 
 #### Default options
 
@@ -40,7 +40,7 @@ SHOW_PLOT = False       # show each plot when generated (program pauses until it
 TIMEOUT = 15000         #ms timeout for the instrument connection
 ```
 
-For changes to these defaults to take effect, the package must be reinstalled locally after doing the changes in `default_options.py`, simply by navigating to the directory containing `setup.py` and running `python setup.py install`. **Note** that none of the functions access the global variables directly, but they are feed them as default arguments.
+For changes to these defaults to take effect, the package must be reinstalled locally after doing the changes in `default_options.py`, simply by navigating to the directory containing `setup.py` and running `python setup.py install` or `install.bat`. **Note** that none of the functions access the global variables directly, but they are feed them as default arguments.
 
 The `WAVEFORM_FORMAT` dictates whether 16/8 bit raw values or comma separated ascii voltage values should be transferred when the waveform is queried for (the output file will be ascii anyway, this is simply a question of how the data is transferred to and processed on the computer). Raw values format is approx. 10x faster than ascii.
 

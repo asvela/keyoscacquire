@@ -46,7 +46,7 @@ def getTraces_connect_each_time_loop(fname=FILENAME, ext=FILETYPE, instrument=VI
         x, y, id, channels = acq.connect_and_getTrace(channel_nums, source_type, instrument, timeout, wav_format, acq_type, num_averages, p_mode, num_points)
         acq.plotTrace(x, y, channels, fname=fname+fnum)
         channelstring = ", ".join([channel for channel in channels]) # make string of sources
-        acq.saveTrace(fname+fnum+ext, x, y, fileheader=id+"time,"+channelstring+"\n")
+        acq.saveTrace(fname+fnum, x, y, fileheader=id+"time,"+channelstring+"\n", ext=ext)
         n += 1
     print("Quit")
 
@@ -64,7 +64,7 @@ def getTraces_single_connection_loop(fname=FILENAME, ext=FILETYPE, instrument=VI
     inst, id = acq.initialise(instrument, timeout, wav_format, acq_type, num_averages, p_mode, num_points)
 
     ## Select sources
-    sourcesstring, sources, channel_nums = build_sourcesstring(inst, source_type=source_type, channel_nums=channel_nums)
+    sourcesstring, sources, channel_nums = acq.build_sourcesstring(inst, source_type=source_type, channel_nums=channel_nums)
 
     n = start_num
     fnum = file_delim+str(n)
@@ -76,7 +76,7 @@ def getTraces_single_connection_loop(fname=FILENAME, ext=FILETYPE, instrument=VI
         fnum = file_delim+str(n)
         x, y = acq.getTrace(inst, sources, sourcesstring, wav_format)
         acq.plotTrace(x, y, channel_nums, fname=fname+fnum)                    # plot trace and save png
-        acq.saveTrace(fname+fnum+ext, x, y, fileheader=id+"time,"+sourcesstring+"\n") # save trace to ext file
+        acq.saveTrace(fname+fnum, x, y, fileheader=id+"time,"+sourcesstring+"\n", ext=ext) # save trace to ext file
         n += 1
 
     print("Quit")
