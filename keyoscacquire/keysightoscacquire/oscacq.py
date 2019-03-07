@@ -19,7 +19,7 @@ import visa # instrument communication
 import numpy as np, matplotlib.pyplot as plt
 import time, datetime # for measuring elapsed time and adding current date and time to exported files
 
-from keysightoscacquire.default_options import VISA_ADDRESS, WAVEFORM_FORMAT, CH_NUMS, ACQ_TYPE, NUM_AVG, FILENAME, FILETYPE, TIMEOUT, EXPORT_PNG, SHOW_PLOT # local file with default options
+from keyoscacquire.default_options import VISA_ADDRESS, WAVEFORM_FORMAT, CH_NUMS, ACQ_TYPE, NUM_AVG, FILENAME, FILETYPE, TIMEOUT, EXPORT_PNG, SHOW_PLOT # local file with default options
 
 ##============================================================================##
 
@@ -90,6 +90,7 @@ def build_sourcesstring(inst, source_type='CHANnel', channel_nums=CH_NUMS):
     return sourcesstring, sources, channel_nums
 
 def capture_and_read(inst, sources, sourcestring, wav_format=WAVEFORM_FORMAT):
+    """Wrapper function for choosing the correct capture_and_read function according to wav_format"""
     if wav_format[:3] == 'WOR':
         return capture_and_read_binary(inst, sources, sourcestring, datatype='H')
     elif wav_format[:3] == 'BYT':
@@ -167,6 +168,7 @@ def capture_and_read_ascii(inst, sources, sourcesstring):
     return raw, measurement_time
 
 def process_data(raw, metadata,  wav_format=WAVEFORM_FORMAT):
+    """Wrapper function for choosing the correct process_data function according to wav_format"""
     if wav_format[:3] == 'WOR' or wav_format[:3] == 'BYT':
         return process_data_binary(raw, metadata)
     elif wav_format[:3] == 'ASC':
@@ -237,10 +239,10 @@ def connect_and_getTrace(channel_nums=[''], source_type='CHANnel', instrument=VI
     channelnum = list of chars, e.g. ['1', '3']. Use a list with an empty string [''] to capture all currently displayed channels
     source_type = {'CHANnel' | 'MATH' | 'FUNCtion'}: MATH is an alias for FUNCtion
     timeout = ms before timeout on the channel to the instrument
-    wav_format = {'BYTE' | 'ASCii'}
+    wav_format = {'WORD' | 'ASCii'}
     instrument = {'USB0::2391::6038::MY57233636::INSTR' | 'TCPIP0::192.168.20.30::4000::SOCKET'}
-    acq_type = {'HRESolution' | 'NORMal'}
-    num_averages = 2 to 65536: applies only to the NORMal mode
+    acq_type = {'HRESolution' | 'NORMal' | 'AVERage'}
+    num_averages = 2 to 65536: applies only to the NORMal and AVERage modes
     p_mode = {'RAW' | 'MAXimum'}: RAW gives up to 1e6 points. Use MAXimum for sources that are not analogue or digital (functions and math)
     num_points = {0 | 100 | 250 | 500 | 1000 | 2000 | 5000 | 10000 | 20000
                  | 50000 | 100000 | 200000 | 500000 | 1000000}: optional command when p_mode (POINTs:MODE) is specified. Use 0 to let p_mode control the number of points.
@@ -257,6 +259,28 @@ def connect_and_getTrace(channel_nums=[''], source_type='CHANnel', instrument=VI
     ## Closing the connection
     inst.close()
     return x, y, id, channel_nums
+
+def connect_getTrace_save(fname=FILENAME, ext=FILETYPE, channel_nums=[''], source_type='CHANnel', instrument=VISA_ADDRESS, timeout=TIMEOUT,
+                          wav_format=WAVEFORM_FORMAT, acq_type='HRESolution', num_averages=2, p_mode='RAW', num_points=0):
+    """
+    Get trace from channels of instrument. Saves the trace to a csv and png.
+    Some alternative settings are listed.
+    channelnum = list of chars, e.g. ['1', '3']. Use a list with an empty string [''] to capture all currently displayed channels
+    source_type = {'CHANnel' | 'MATH' | 'FUNCtion'}: MATH is an alias for FUNCtion
+    timeout = ms before timeout on the channel to the instrument
+    wav_format = {'WORD' | 'ASCii'}
+    instrument = {'USB0::2391::6038::MY57233636::INSTR' | 'TCPIP0::192.168.20.30::4000::SOCKET'}
+    acq_type = {'HRESolution' | 'NORMal' | 'AVERage'}
+    num_averages = 2 to 65536: applies only to the NORMal and AVERage modes
+    p_mode = {'RAW' | 'MAXimum'}: RAW gives up to 1e6 points. Use MAXimum for sources that are not analogue or digital (functions and math)
+    num_points = {0 | 100 | 250 | 500 | 1000 | 2000 | 5000 | 10000 | 20000
+                 | 50000 | 100000 | 200000 | 500000 | 1000000}: optional command when p_mode (POINTs:MODE) is specified. Use 0 to let p_mode control the number of points.
+    """
+    fname = check_file(fname, ext)
+    x, y, id, channel_nums = connect_and_getTrace(channel_nums=channel_nums, source_type=source_type, instrument=instrument, timeout=timeout,
+                             wav_format=wav_format, acq_type=acq_type, num_averages=num_averages, p_mode=p_mode, num_points=num_points)
+    plotTrace(x, y, channel_nums, fname=fname)
+    saveTrace(fname, x, y, fileheader=id+"time,"+str(channel_nums)+"\n", ext=ext)
 
 def check_file(fname, ext=FILETYPE, num=""):
     """
@@ -306,7 +330,4 @@ if __name__ == '__main__':
     else:
         fname = FILENAME
     ext = FILETYPE
-    fname = check_file(fname, ext)
-    x, y, id, channel_nums = connect_and_getTrace()
-    plotTrace(x, y, channel_nums, fname=fname)
-    saveTrace(fname, x, y, fileheader=id+"time,"+str(channel_nums)+"\n", ext=ext)
+    connect_getTrace_save(fname, ext)

@@ -1,4 +1,4 @@
-## KeysightOscilloscopeAcquiring package
+## Keysight Oscilloscope Acquire package
 
 Andreas Svela // March 2019
 
@@ -14,9 +14,9 @@ This package gives functionality for acquiring traces from Keysight oscilloscope
 
 Install the package with `python setup.py install` on the command line.
 
-The code is structured as a module `oscacq.py` containing the engine doing the work. Two command line programmes `getTraces_connect_each_time` and `getTraces_single_connection` that can be ran directly from the command line after installation (i.e. no need for `python [...].py`. and from whatever folder). 
+The code is structured as a module `oscacq.py` containing the engine doing the work. Two command line programmes `get_single_trace`, `getTraces_connect_each_time` and `getTraces_single_connection` that can be ran directly from the command line after installation (i.e. from whatever folder and no need for `python [...].py`).
 
-Both programmes are loops for which every time `enter` is hit a trace will be obtained and exported as csv and png files with successive numbering. By default all active channels on the oscilloscope will be captured (this can be changed, see below). The difference between the two programmes is that the first programme is establishing a new connection to the instrument each time a trace is to be captured, whereas the second opens a connection to start with and does not close the connection until the program is quit. The second programme only checks which channels are active when it connects, i.e. the first programme will save only the currently active channels for each saved trace; the second will each time save the channels that were active at the time of starting the programme.
+The two latter programmes are loops for which every time `enter` is hit a trace will be obtained and exported as csv and png files with successive numbering. By default all active channels on the oscilloscope will be captured (this can be changed, see below). The difference between the two programmes is that the first programme is establishing a new connection to the instrument each time a trace is to be captured, whereas the second opens a connection to start with and does not close the connection until the program is quit. The second programme only checks which channels are active when it connects, i.e. the first programme will save only the currently active channels for each saved trace; the second will each time save the channels that were active at the time of starting the programme.
 
 ##### Default options
 

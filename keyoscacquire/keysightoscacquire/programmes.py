@@ -1,23 +1,34 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 """
+One programme for taking a single trace and saving it.
 Two programmes for taking multiple traces, see descriptions for each function.
 The run_programme function is a wrapper function for scripts and installed functions
 calling the programmes with optional command line arguments.
 
-Andreas Svela 2018
+Andreas Svela // 2019
 """
 
 
 import sys
-import keysightoscacquire.oscacq as acq
+import keyoscacquire.oscacq as acq
 import numpy as np
 
-from keysightoscacquire.default_options import VISA_ADDRESS, WAVEFORM_FORMAT, CH_NUMS, ACQ_TYPE, NUM_AVG, FILENAME, FILETYPE, TIMEOUT # local file with default options
+from keyoscacquire.default_options import VISA_ADDRESS, WAVEFORM_FORMAT, CH_NUMS, ACQ_TYPE, NUM_AVG, FILENAME, FILETYPE, TIMEOUT # local file with default options
 
-def getTraces_connect_each_time_loop(fname, ext, instrument=VISA_ADDRESS, timeout=TIMEOUT, wav_format=WAVEFORM_FORMAT,
-                                     channel_nums=CH_NUMS, source_type='CHANnel', acq_type='HRESolution',
-                                     num_averages=2, p_mode='RAW', num_points=0, start_num=0, file_delim=" f"):
+def get_single_trace(fname=FILENAME, ext=FILETYPE, instrument=VISA_ADDRESS, timeout=TIMEOUT, wav_format=WAVEFORM_FORMAT,
+                     channel_nums=CH_NUMS, source_type='CHANnel', acq_type=ACQ_TYPE,
+                     num_averages=NUM_AVG, p_mode='RAW', num_points=0, start_num=0):
+    """This programme captures and stores a trace."""
+    connect_getTrace_save(fname=fname, ext=ext, instrument=instrument, timeout=timeout, wav_format=wav_format,
+                          channel_nums=Cchannel_nums, source_type=source_type, acq_type=acq_type,
+                          num_averages=num_averages, p_mode=p_mode, num_points=num_points, start_num=start_num)
+    print("Done")
+
+
+def getTraces_connect_each_time_loop(fname=FILENAME, ext=FILETYPE, instrument=VISA_ADDRESS, timeout=TIMEOUT, wav_format=WAVEFORM_FORMAT,
+                                     channel_nums=CH_NUMS, source_type='CHANnel', acq_type=ACQ_TYPE,
+                                     num_averages=NUM_AVG, p_mode='RAW', num_points=0, start_num=0, file_delim=" f"):
     """This program consists of a loop in which the program connects to the oscilloscope,
     a trace from the active channels are captured and stored for each loop. This permits
     the active channels to be changing thoughout the measurements, but has larger
@@ -39,8 +50,8 @@ def getTraces_connect_each_time_loop(fname, ext, instrument=VISA_ADDRESS, timeou
         n += 1
     print("Quit")
 
-def getTraces_single_connection_loop(fname, ext, instrument=VISA_ADDRESS, timeout=TIMEOUT, wav_format=WAVEFORM_FORMAT,
-                                     channel_nums=CH_NUMS, source_type='CHANnel', acq_type='HRESolution',
+def getTraces_single_connection_loop(fname=FILENAME, ext=FILETYPE, instrument=VISA_ADDRESS, timeout=TIMEOUT, wav_format=WAVEFORM_FORMAT,
+                                     channel_nums=CH_NUMS, source_type='CHANnel', acq_type=ACQ_TYPE,
                                      num_averages=NUM_AVG, p_mode='RAW', num_points=0, start_num=0, file_delim=" f"):
     """This program connects to the oscilloscope, sets options for the acquisition and then
     enters a loop in which the program captures and stores traces each time 'enter' is pressed.
@@ -89,10 +100,12 @@ def run_programme(name, args):
         fname += " " + a_type
     else:
         num_avg = NUM_AVG # not relevant unless AVERage
-    names = ["connect_each_time", "single_connection"]
+    names = ["single_trace", "connect_each_time", "single_connection"]
     if name == names[0]:
-        getTraces_connect_each_time_loop(fname, ext, acq_type=a_type, num_averages=num_avg)
+        get_single_trace(fname, ext, acq_type=a_type, num_averages=num_avg)
     elif name == names[1]:
+        getTraces_connect_each_time_loop(fname, ext, acq_type=a_type, num_averages=num_avg)
+    elif name == names[2]:
         getTraces_single_connection_loop(fname, ext, acq_type=a_type, num_averages=num_avg)
     else:
         raise ValueError("\nUnknown name \'%s\' of program to run. Available programmes %s." % (name, str(names)))

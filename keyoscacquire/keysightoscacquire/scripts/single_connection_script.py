@@ -25,7 +25,7 @@ Andreas Svela 2018
 """
 
 import sys
-import keysightoscacquire.programmes as acq
+import keyoscacquire.programmes as acq
 
 
 ##============================================================================##

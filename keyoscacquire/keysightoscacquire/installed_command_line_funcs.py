@@ -22,7 +22,7 @@ Andreas Svela 2018
 """
 
 import sys, argparse
-import keysightoscacquire.programmes as acqprog
+import keyoscacquire.programmes as acqprog
 
 
 ##============================================================================##
@@ -30,22 +30,32 @@ import keysightoscacquire.programmes as acqprog
 ##============================================================================##
 
 def connect_each_time_command_line():
-    """When the installed function is called from the command line"""
+    """Function installed on the command line: Obtains and stores multiple traces,
+    connecting to the oscilloscope each time."""
     parser = argparse.ArgumentParser(usage=acqprog.getTraces_connect_each_time_loop.__doc__)
     parser.add_argument('-f', nargs='?', help='Specify filename base')
     parser.add_argument('-a', nargs='?', help='Specify acquire type: {HRESolution, NORMal, AVER<m>} where <m> is the number of averages in range [1, 65536]')
     args = parser.parse_args()
 
-    print(args)
-
     acqprog.run_programme("connect_each_time", ['', args.f, args.a])
 
 
 def single_connection_command_line():
-    """When the installed function is called from the command line"""
+    """Function installed on the command line: Obtains and stores multiple traces,
+    keeping a the same connection to the oscilloscope open all the time."""
     parser = argparse.ArgumentParser(usage=acqprog.getTraces_single_connection_loop.__doc__)
     parser.add_argument('-f', nargs='?', help='Specify filename base')
     parser.add_argument('-a', nargs='?', help='Specify acquire type: {HRESolution, NORMal, AVER<m>} where <m> is the number of averages in range [1, 65536]')
     args = parser.parse_args()
 
     acqprog.run_programme("single_connection", ['', args.f, args.a])
+
+
+def single_trace_command_line():
+    """Function installed on the command line: Obtains and stores a single trace."""
+    parser = argparse.ArgumentParser(usage=acqprog.get_single_trace.__doc__)
+    parser.add_argument('-f', nargs='?', help='Specify filename base')
+    parser.add_argument('-a', nargs='?', help='Specify acquire type: {HRESolution, NORMal, AVER<m>} where <m> is the number of averages in range [1, 65536]')
+    args = parser.parse_args()
+
+    acqprog.run_programme("single_trace", ['', args.f, args.a])
