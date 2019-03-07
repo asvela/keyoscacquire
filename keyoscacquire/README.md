@@ -1,12 +1,13 @@
 # Keysight oscilloscope acquire package
 
-Andreas Svela // March 2019
+
+v1.0.0 // March 2019 // Andreas Svela
 
 ## Overview
 
 This package gives functionality for acquiring traces from Keysight oscilloscopes through a VISA interface, and exports traces as a chosen ASCII format file (default csv) and a png of the trace plot. The Python library `visa` is used for communication. The code has been tested on a Keysight DSO2024A model using a USB connection.
 
-The code is structured as a module `keyoscacquire/oscacq.py` containing the engine doing `visa` interfacing, and the programmes are located in `keyoscacquire/programmes.py` .  Default options are found in `keyoscacq/default_options.py`, the files in `/scripts` can be ran from the command line and are essentially the same running the installed executables.
+The code is structured as a module `keyoscacquire/oscacq.py` containing the engine doing `visa` interfacing in a class `Oscilloscope`, and support functions for data processing/saving. Programmes are located in `keyoscacquire/programmes.py` .  Default options are found in `keyoscacq/default_options.py`, the files in `/scripts` can be ran from the command line and are essentially the same running the installed executables.
 
 ## Installation
 
@@ -37,7 +38,8 @@ FILE_DELIMITER = " n"   # delimiter used between FILENAME and filenumber (before
 FILETYPE = ".csv"       # filetype of exported data, can also be txt/dat etc.
 EXPORT_PNG = True       # export png of plot of obtained trace
 SHOW_PLOT = False       # show each plot when generated (program pauses until it is closed)
-TIMEOUT = 15000         #ms timeout for the instrument connection
+TIMEOUT = 15000         # ms timeout for the instrument connection
+DEBUG = False           # print more details
 ```
 
 For changes to these defaults to take effect, the package must be reinstalled locally after doing the changes in `default_options.py`, simply by navigating to the directory containing `setup.py` and running `python setup.py install` or `install.bat`. **Note** that none of the functions access the global variables directly, but they are feed them as default arguments.
@@ -49,7 +51,6 @@ The command line programmes will save traces in the folder from where they are r
 ## Known issues/suggested improvements
 
 - Add optional argument to supply visa address of instrument to command line executables and scripts
-- Restructure to object oriented code. This will make simultaneous connections to several oscilloscopes possible and make life easier.
 
 ## Usage
 

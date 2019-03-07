@@ -72,7 +72,6 @@ def getTraces_single_connection_loop(fname=FILENAME, ext=FILETYPE, address=VISA_
     scope.set_acquiring_options(wav_format=wav_format, acq_type=acq_type,
                                num_averages=num_averages, p_mode=p_mode,
                                num_points=num_points)
-
     ## Select sources
     sourcesstring, sources, channel_nums = scope.build_sourcesstring(source_type=source_type, channel_nums=channel_nums)
     fhead = scope.id+" "+scope.acq_type+str(scope.num_averages)+" time,"+sourcesstring+"\n"
@@ -104,7 +103,8 @@ def run_programme(name, args):
     a_type = args[2] if (len(args) >= 3 and args[2] != None) else ACQ_TYPE #if 2nd optional argument is supplied on the command line use acquiring mode
     if a_type[:4] == 'AVER':
         fname += " " + a_type
-    names = ["single_trace", "connect_each_time", "single_connection"]
+
+    names = ["single_trace", "connect_each_time", "single_connection"] # possible programme names
     if name == names[0]:
         get_single_trace(fname, ext, acq_type=a_type)
     elif name == names[1]:
