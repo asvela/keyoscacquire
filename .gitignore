@@ -1,5 +1,6 @@
 # setuptools distribution folder
 /keyoscacquire/dist/
+/keyoscacquire/build/
 
 # python egg metadata
 /keyoscacquire/*.egg

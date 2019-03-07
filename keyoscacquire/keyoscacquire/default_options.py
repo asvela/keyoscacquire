@@ -12,4 +12,5 @@ FILE_DELIMITER = " n"   # delimiter used between FILENAME and filenumber (before
 FILETYPE = ".csv"       # filetype of exported data, can also be txt/dat etc.
 EXPORT_PNG = True       # export png of plot of obtained trace
 SHOW_PLOT = False       # show each plot when generated (program pauses until it is closed)
-TIMEOUT = 15000         #ms timeout for the instrument connection
+TIMEOUT = 15000         # ms timeout for the instrument connection
+DEBUG = False           # print more details

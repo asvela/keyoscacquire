@@ -4,11 +4,10 @@
 Andreas Svela // 2019
 """
 
-__version__ = '0.6.0'
+__version__ = '1.0.0'
 
 
 # Default options
 from keyoscacquire.default_options import *
 
-import keyoscacquire.oscacq
-#import keyoscacquire.programmes
+from keyoscacquire.oscacq import Oscilloscope

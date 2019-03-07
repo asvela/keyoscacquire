@@ -49,8 +49,7 @@ The command line programmes will save traces in the folder from where they are r
 ## Known issues/suggested improvements
 
 - Add optional argument to supply visa address of instrument to command line executables and scripts
-- Restructure to an object oriented code. This will make simultaneous connections to several oscilloscopes possible and make life easier.
-- :no_good:
+- Restructure to object oriented code. This will make simultaneous connections to several oscilloscopes possible and make life easier.
 
 ## Usage
 
