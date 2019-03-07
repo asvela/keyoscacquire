@@ -18,11 +18,11 @@ from keyoscacquire.default_options import VISA_ADDRESS, WAVEFORM_FORMAT, CH_NUMS
 
 def get_single_trace(fname=FILENAME, ext=FILETYPE, instrument=VISA_ADDRESS, timeout=TIMEOUT, wav_format=WAVEFORM_FORMAT,
                      channel_nums=CH_NUMS, source_type='CHANnel', acq_type=ACQ_TYPE,
-                     num_averages=NUM_AVG, p_mode='RAW', num_points=0, start_num=0):
+                     num_averages=NUM_AVG, p_mode='RAW', num_points=0):
     """This programme captures and stores a trace."""
-    connect_getTrace_save(fname=fname, ext=ext, instrument=instrument, timeout=timeout, wav_format=wav_format,
-                          channel_nums=Cchannel_nums, source_type=source_type, acq_type=acq_type,
-                          num_averages=num_averages, p_mode=p_mode, num_points=num_points, start_num=start_num)
+    acq.connect_getTrace_save(fname=fname, ext=ext, instrument=instrument, timeout=timeout, wav_format=wav_format,
+                          channel_nums=channel_nums, source_type=source_type, acq_type=acq_type,
+                          num_averages=num_averages, p_mode=p_mode, num_points=num_points)
     print("Done")
 
 

@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 """
-Install the KeysightOscilloscopeAcquire library.
+Install the Keysight Oscilloscope Acquire library.
 
 Andreas Svela // 2019
 """

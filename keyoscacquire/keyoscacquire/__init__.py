@@ -8,7 +8,7 @@ __version__ = '0.5.0'
 
 
 # Default options
-from keyoscacquire.defaul_options import *
+from keyoscacquire.default_options import *
 
 import keyoscacquire.oscacq
 #import keyoscacquire.programmes
