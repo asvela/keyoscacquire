@@ -14,7 +14,7 @@ import sys
 import keyoscacquire.oscacq as acq
 import numpy as np
 
-from keyoscacquire.default_options import VISA_ADDRESS, WAVEFORM_FORMAT, CH_NUMS, ACQ_TYPE, NUM_AVG, FILENAME, FILETYPE, TIMEOUT # local file with default options
+from keyoscacquire.default_options import VISA_ADDRESS, WAVEFORM_FORMAT, CH_NUMS, ACQ_TYPE, NUM_AVG, FILENAME, FILETYPE, FILE_DELIMITER, TIMEOUT # local file with default options
 
 def get_single_trace(fname=FILENAME, ext=FILETYPE, instrument=VISA_ADDRESS, timeout=TIMEOUT, wav_format=WAVEFORM_FORMAT,
                      channel_nums=CH_NUMS, source_type='CHANnel', acq_type=ACQ_TYPE,
@@ -28,7 +28,7 @@ def get_single_trace(fname=FILENAME, ext=FILETYPE, instrument=VISA_ADDRESS, time
 
 def getTraces_connect_each_time_loop(fname=FILENAME, ext=FILETYPE, instrument=VISA_ADDRESS, timeout=TIMEOUT, wav_format=WAVEFORM_FORMAT,
                                      channel_nums=CH_NUMS, source_type='CHANnel', acq_type=ACQ_TYPE,
-                                     num_averages=NUM_AVG, p_mode='RAW', num_points=0, start_num=0, file_delim=" f"):
+                                     num_averages=NUM_AVG, p_mode='RAW', num_points=0, start_num=0, file_delim=FILE_DELIMITER):
     """This program consists of a loop in which the program connects to the oscilloscope,
     a trace from the active channels are captured and stored for each loop. This permits
     the active channels to be changing thoughout the measurements, but has larger
@@ -52,7 +52,7 @@ def getTraces_connect_each_time_loop(fname=FILENAME, ext=FILETYPE, instrument=VI
 
 def getTraces_single_connection_loop(fname=FILENAME, ext=FILETYPE, instrument=VISA_ADDRESS, timeout=TIMEOUT, wav_format=WAVEFORM_FORMAT,
                                      channel_nums=CH_NUMS, source_type='CHANnel', acq_type=ACQ_TYPE,
-                                     num_averages=NUM_AVG, p_mode='RAW', num_points=0, start_num=0, file_delim=" f"):
+                                     num_averages=NUM_AVG, p_mode='RAW', num_points=0, start_num=0, file_delim=FILE_DELIMITER):
     """This program connects to the oscilloscope, sets options for the acquisition and then
     enters a loop in which the program captures and stores traces each time 'enter' is pressed.
     Alternatively one can input n-1 characters before hitting 'enter' to capture n traces

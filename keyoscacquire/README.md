@@ -1,68 +1,88 @@
-## Keysight Oscilloscope Acquire package
+# Keysight oscilloscope acquire package
 
 Andreas Svela // March 2019
 
-This package gives functionality for acquiring traces from Keysight oscilloscopes through a VISA interface and exports traces as a chosen ASCII format file (default csv) and a png of the trace plot. The Python library `visa` is used for communication. The code has been tested on a Keysight DSO2024A model using a USB connection.
+## Overview
 
-#### Known issues
+This package gives functionality for acquiring traces from Keysight oscilloscopes through a VISA interface, and exports traces as a chosen ASCII format file (default csv) and a png of the trace plot. The Python library `visa` is used for communication. The code has been tested on a Keysight DSO2024A model using a USB connection.
 
-- The code does not work with the Tektronix oscilloscope in the lab as Tektronix uses slightly different VISA commands :no_good:
+The code is structured as a module `keyoscacquire/oscacq.py` containing the engine doing `visa` interfacing, and the programmes are located in `keyoscacquire/programmes.py` .  Default options are found in `keyoscacq/default_options.py`, the files in `/scripts` can be ran from the command line and are essentially the same running the installed executables.
 
-#### Usage
+## Installation
 
-**In order to connect to a VISA instrument, NI MAX or similar must be running on the computer.** The VISA address of the instrument can be found in NI MAX, and should be set as the  `VISA_ADDRESS` variable, see below, before installation.
+Install the package with pip:
 
-Install the package with `python setup.py install` on the command line.
-
-The code is structured as a module `oscacq.py` containing the engine doing the work. Two command line programmes `get_single_trace`, `getTraces_connect_each_time` and `getTraces_single_connection` that can be ran directly from the command line after installation (i.e. from whatever folder and no need for `python [...].py`).
-
-The two latter programmes are loops for which every time `enter` is hit a trace will be obtained and exported as csv and png files with successive numbering. By default all active channels on the oscilloscope will be captured (this can be changed, see below). The difference between the two programmes is that the first programme is establishing a new connection to the instrument each time a trace is to be captured, whereas the second opens a connection to start with and does not close the connection until the program is quit. The second programme only checks which channels are active when it connects, i.e. the first programme will save only the currently active channels for each saved trace; the second will each time save the channels that were active at the time of starting the programme.
-
-##### Default options
-
-The command line programmes will by default save traces in the folder from where they are ran as `data<n>.csv`and `data<n>.png`; however, the trace file type and base file name and other options can be set in the global[^1] variables in `default_options.py` file:
-
-[^1]: None of the functions access the global variables directly, but they are feed them as default arguments.
-
-```python
-# default options
-VISA_ADDRESS = 'USB0::2391::6038::MY57233636::INSTR' # address of instrument
-WAVEFORM_FORMAT = 'WORD'    # WORD formatted data is transferred as 16-bit uint.
-                            # BYTE formatted data is transferred as 8-bit uint.
-                            # ASCii formatted data converts the internal integer data values to real Y-axis values.
-                            #       Values are transferred as ASCii digits in floating point notation, separated by commas.
-CH_NUMS=['']        # list of chars, e.g. ['1', '3']. Use a list with an empty string [''] to capture all currently displayed channels
-DEFAULT_FILENAME = "data" # default base filename of all traces and pngs exported, a number is appended to the base
-FILETYPE = ".csv"   # filetype of exported data, can also be txt/dat etc.
-TIMEOUT = 15000     #ms timeout for the instrument connection
+```bash
+pip install keysightoscilloscopeacquire
 ```
 
-If the default options are changed, reinstall the package simply by `python setup.py install`.
+or download locally and install with `python setup.py install` or by running `install.bat`. 
+
+#### Default options
+
+The package is installed with a set of default options found in `keyoscacq/default_options.py`:
+
+```python
+# Default options
+VISA_ADDRESS = 'USB0::2391::6038::MY57233636::INSTR' # address of instrument
+WAVEFORM_FORMAT = 'WORD'        # WORD formatted data is transferred as 16-bit uint.
+                                # BYTE formatted data is transferred as 8-bit uint.
+                                # ASCii formatted data converts the internal integer data values to real Y-axis values.
+                                #       Values are transferred as ASCii digits in floating point notation, separated by commas.
+CH_NUMS = ['']                  # list of chars, e.g. ['1', '3']. Use a list with an empty string [''] to capture all currently displayed channels
+ACQ_TYPE = "HRESolution"# {HRESolution, NORMal, AVER<m>} where <m> is the number of averages in range [1, 65536]
+NUM_AVG = 2             # default number of averages used if only AVER is given as acquisition type
+FILENAME = "data"       # default base filename of all traces and pngs exported, a number is appended to the base
+FILE_DELIMITER = " n"   # delimiter used between FILENAME and filenumber (before FILETYPE)
+FILETYPE = ".csv"       # filetype of exported data, can also be txt/dat etc.
+EXPORT_PNG = True       # export png of plot of obtained trace
+SHOW_PLOT = False       # show each plot when generated (program pauses until it is closed)
+TIMEOUT = 15000         #ms timeout for the instrument connection
+```
+
+For changes to these defaults to take effect, the package must be reinstalled locally after doing the changes in `default_options.py`, simply by navigating to the directory containing `setup.py` and running `python setup.py install`. **Note** that none of the functions access the global variables directly, but they are feed them as default arguments.
 
 The `WAVEFORM_FORMAT` dictates whether 16/8 bit raw values or comma separated ascii voltage values should be transferred when the waveform is queried for (the output file will be ascii anyway, this is simply a question of how the data is transferred to and processed on the computer). Raw values format is approx. 10x faster than ascii.
 
+The command line programmes will save traces in the folder from where they are ran as`FILENAME+FILEDELIMITER+<n>+FILETYPE` , i.e. by default as `data n<n>.csv`and `data n<n>.png`.
 
-##### Optional argument sets file name, check if file already exists
+## Known issues/suggested improvements
+
+- Add optional argument to supply visa address of instrument to command line executables and scripts
+- Restructure to an object oriented code. This will make simultaneous connections to several oscilloscopes possible and make life easier.
+- :no_good:
+
+## Usage
+
+**In order to connect to a VISA instrument, NI MAX or similar must be running on the computer.** The VISA address of the instrument can be found in NI MAX, and should be set as the  `VISA_ADDRESS` variable, see below, before installation.
+
+Three command line programmes `get_single_trace`, `getTraces_connect_each_time` and `getTraces_single_connection`  can be ran directly from the command line after installation (i.e. from whatever folder and no need for `python [...].py`).
+
+The two latter programmes are loops for which every time `enter` is hit a trace will be obtained and exported as csv and png files with successive numbering. By default all active channels on the oscilloscope will be captured (this can be changed, see below). The difference between the two programmes is that the first programme is establishing a new connection to the instrument each time a trace is to be captured, whereas the second opens a connection to start with and does not close the connection until the program is quit. The second programme only checks which channels are active when it connects, i.e. the first programme will save only the currently active channels for each saved trace; the second will each time save the channels that were active at the time of starting the programme.
+
+
+### Optional command line argument sets base filename or acquiring mode
 
 Furthermore, both programmes takes up to two optional arguments:
-`-f "customFilename"` set as the base file name
-`-a "AVER8"` acquiring type
+`-f "customFilename"` set as the base filename to "customFilename"
+`-a "AVER8"` sets acquiring type to average with eight traces
 
 ```bash
-$ getTraces_single_connection_loop -f "measurement"
+getTraces_single_connection_loop -f "measurement"
 ```
-will give output files `measurement<n>.csv` and `measurement<n>.png`.  The programmes will check if the file `"measurement0"+FILETYPE` exists, and if it does, prompt the user for something to append to `measurement` until `"measurement"+appended+"0"+FILETYPE` is not an existing file. *The same checking procedure applies also when no base filename is supplied and `DEFAULT_FILENAME` is used.*
+will give output files `measurement n<n>.csv` and `measurement n<n>.png`.  The programmes will check if the file `"measurement"+delim+num+FILETYPE` exists, and if it does, prompt the user for something to append to `measurement` until `"measurement"+appended+"0"+FILETYPE` is not an existing file. *The same checking procedure applies also when no base filename is supplied and `DEFAULT_FILENAME` is used.*
 
-##### Obtaining single traces
+### Obtaining single traces
 
-Also `oscacq.py` can be run from the command line, resulting in one trace being obtained from the active channels. This provides a way to specify directly the filename of each trace, rather than having consecutive numbering appended to a base filename. The filename check is used here as well, but now without appending the zero to the base name before checking.
+Running the module with `python -m keyoscacquire` obtains and saves a trace with default options being used. Alternatively, the filename and acquisition type can be specified as per the paragraph above using the  executable, e.g. `get_single_trace -f "fname" -a "AVER"`.
 
-##### Obtaining traces when the scope is running vs when stopped
+### Obtaining traces when the scope is running vs when stopped
 
 When the scope **is running** the `capture_and_read` functions will obtain a trace by running `:DIGitize`, causing the instrument to acquire a trace and then stop the oscilloscope. When the scope **is stopped** the current trace on the screen of the oscilloscope will be captured (*Warning:* This might mean the settings specified with `:ACQire` are not used, i.e. acquiring mode and number of points to be captured).
 
 The scope will always be set to running after a trace is captured.
 
-##### Scrips in ./scripts
 
-These can be ran as command line scripts from that folder with `python [script].py`. Optional arguments can be used such as `python [script].py "otherFileName"`, or `python [script].py "otherFileName" "AVER8"`.
+### Scripts in ./scripts
+
+These can be ran as command line scripts from the folder with `python [script].py`. Optional arguments  for filename and acquisition mode can be used, such as `python [script].py "otherFileName"`, or `python [script].py "otherFileName" "AVER8"`. Note, no flag specifiers are needed (or allowed) and the sequence of arguments is fixed.

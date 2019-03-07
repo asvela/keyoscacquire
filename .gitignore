@@ -1,9 +1,9 @@
 # setuptools distribution folder
-/dist/
+/keyoscacquire/dist/
 
 # python egg metadata
-/*.egg
-/*.egg-info
+/keyoscacquire/*.egg
+/keyoscacquire/*.egg-info
 
 # files generated when running the module and others
 __pycache__
