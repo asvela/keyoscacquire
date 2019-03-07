@@ -53,7 +53,7 @@ def getTraces_single_connection_loop(fname, ext, instrument=VISA_ADDRESS, timeou
     inst, id = acq.initialise(instrument, timeout, wav_format, acq_type, num_averages, p_mode, num_points)
 
     ## Select sources
-    sourcesstring, sources = build_sourcesstring(inst, source_type=source_type, channel_nums=channel_nums)
+    sourcesstring, sources, channel_nums = build_sourcesstring(inst, source_type=source_type, channel_nums=channel_nums)
 
     n = start_num
     fnum = file_delim+str(n)
