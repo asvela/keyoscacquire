@@ -54,7 +54,7 @@ The command line programmes will save traces in the folder from where they are r
 
 ## Usage
 
-**In order to connect to a VISA instrument, NI MAX or similar must be running on the computer.** The VISA address of the instrument can be found in NI MAX, and should be set as the  `VISA_ADDRESS` variable, see below, before installation.
+**In order to connect to a VISA instrument, NI MAX or similar might need to be running on the computer.** The VISA address of the instrument can be found in NI MAX, and should be set as the  `VISA_ADDRESS` variable, see below, before installation.
 
 Three command line programmes `get_single_trace`, `getTraces_connect_each_time` and `getTraces_single_connection`  can be ran directly from the command line after installation (i.e. from whatever folder and no need for `python [...].py`).
 

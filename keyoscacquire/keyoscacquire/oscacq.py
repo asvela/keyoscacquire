@@ -35,6 +35,7 @@ class Oscilloscope():
         debug = {True, False} should extra debug information be printed
         """
         self.debug_print = debug; self.timeout = timeout
+        self.acquire_print = True
 
         try:
             rm = visa.ResourceManager()
@@ -49,7 +50,7 @@ class Oscilloscope():
 
         self.inst.timeout = self.timeout
         self.inst.write('*CLS')  # clears the status data structures, the device-defined error queue, and the Request-for-OPC flag
-        self.id = self.inst.query('*IDN?') # get the id of the connected device
+        self.id = self.inst.query('*IDN?').strip() # get the id of the connected device
         print('Connected to ', self.id)
 
     def close(self):
@@ -57,14 +58,18 @@ class Oscilloscope():
         # Set the oscilloscope running before closing the connection
         self.inst.write(':RUN')
         self.inst.close()
-        self.debugPrint("Closed connection to %s" % self.id)
+        self.debug_prnt("Closed connection to %s" % self.id)
 
-    def debugPrint(self, message):
+    def set_acquire_print(self, value):
+        """Control attribute which decides whether to print information while acquiring"""
+        self.acquire_print = value
+
+    def debug_prnt(self, message):
         """Debug message printed if self.debug_print is True"""
         print(message) if self.debug_print else None
 
     def set_acquiring_options(self, wav_format=WAVEFORM_FORMAT, acq_type=ACQ_TYPE,
-                             num_averages=NUM_AVG, p_mode='RAW', num_points=0):
+                             num_averages=NUM_AVG, p_mode='RAW', num_points=0, acq_print=None):
         """Sets the options for acquisition from the oscilloscope
         wav_format = {'WORD' | 'BYTE' | 'ASCii'}
         acq_type = {'HRESolution' | 'NORMal' | 'AVERage' | 'AVER<m>'} <m> will be used as num_averages if supplied
@@ -75,6 +80,9 @@ class Oscilloscope():
         """
         self.wav_format = wav_format; self.acq_type = acq_type[:4]
         self.p_mode = p_mode; self.num_points = num_points
+
+        if acq_print != None:
+            self.acquire_print = acq_print #set acquiring_print only if not None
 
         self.inst.write(':ACQuire:TYPE ' + self.acq_type)
         print("Acquiring type ", self.acq_type, end='')
@@ -101,11 +109,11 @@ class Oscilloscope():
         self.inst.write(':WAVeform:FORMat ' +  self.wav_format) # choose format for the transmitted waveform
         if self.acq_type == 'AVER' and self.p_mode[:4] != 'NORM':
             self.p_mode = 'NORM'
-            self.debugPrint(":WAVeform:POINts:MODE overridden (from %s) to NORMal due to :ACQuire:TYPE:AVERage." % p_mode)
+            self.debug_prnt(":WAVeform:POINts:MODE overridden (from %s) to NORMal due to :ACQuire:TYPE:AVERage." % p_mode)
         else:
             self.p_mode = p_mode
         self.inst.write(':WAVeform:POINts:MODE ' + self.p_mode)
-        self.debugPrint("Max number of points for mode %s: %s" % (self.p_mode, self.inst.query(':WAVeform:POINts?')))
+        self.debug_prnt("Max number of points for mode %s: %s" % (self.p_mode, self.inst.query(':WAVeform:POINts?')))
         if self.num_points != 0: #if number of points has been specified
             inst.write(':WAVeform:POINts ' + str(self.num_points))
             print("Number of points set to: ", self.num_points)
@@ -121,7 +129,7 @@ class Oscilloscope():
             channel_nums = channels[channel_mask] # apply mask to the channel list
         sources = [source_type+channel for channel in channel_nums] # build list of sources
         sourcesstring = ", ".join([source_type+channel for channel in channel_nums]) # make string of sources
-        print("Acquire from sources", sourcesstring)
+        print("Acquire from sources", sourcesstring) if self.acquire_print else None
         return sourcesstring, sources, channel_nums
 
     def capture_and_read(self, sources, sourcestring):
@@ -143,7 +151,7 @@ class Oscilloscope():
         Output: array of raw data, array of preamble metadata (ascii comma separated values)
         """
         ## Capture data
-        print("Start acquisition..")
+        print("Start acquisition..") if self.acquire_print else None
         start_time = time.time() # time the acquiring process
         reg = int(self.inst.query(':OPERegister:CONDition?')) # The third bit of the operation register is 1 if the instrument is running
             # If the instrument is not running, we presumably want the data on the screen and hence don't want
@@ -165,7 +173,7 @@ class Oscilloscope():
                 print("\nExiting..\n")
                 self.close()
                 raise
-        print("Elapsed time:", time.time()-start_time)
+        self.debug_prnt("Elapsed time: %.3f" % float(time.time()-start_time))
         self.inst.write(':RUN') # set the oscilloscope running again
         return raw, preambles
 
@@ -175,7 +183,7 @@ class Oscilloscope():
         Output: array of raw data (comma separated ascii values), time range of the measurement
         """
         ## Capture data
-        print("Start acquisition..")
+        print("Start acquisition..") if self.acquire_print else None
         start_time = time.time() # time the acquiring process
         reg = int(self.inst.query(':OPERegister:CONDition?')) # The third bit of the operation register is 1 if the instrument is running
             # If the instrument is not running, we presumably want the data on the screen and hence don't want
@@ -195,7 +203,7 @@ class Oscilloscope():
                 print("\nExiting..\n")
                 self.close()
                 raise
-        print("Elapsed time:", time.time()-start_time)
+        self.debug_prnt("Elapsed time: %.3f" %  float(time.time()-start_time))
         measurement_time = float(self.inst.query(':TIMebase:RANGe?')) # returns the current full-scale range value for the main window
         self.inst.write(':RUN') # set the oscilloscope running again
         return raw, measurement_time
@@ -204,7 +212,7 @@ class Oscilloscope():
 
     def getTrace(self, sources, sourcesstring):
         raw, metadata = self.capture_and_read(sources, sourcesstring)
-        x, y = process_data(raw, metadata, self.wav_format) # capture, read and process data
+        x, y = process_data(raw, metadata, self.wav_format, acquire_print=self.acquire_print) # capture, read and process data
         return x, y
 
     def set_options_getTrace(self, channel_nums=[''], source_type='CHANnel',
@@ -253,7 +261,7 @@ class Oscilloscope():
                                                            wav_format=wav_format, acq_type=acq_type, num_averages=num_averages,
                                                            p_mode=p_mode, num_points=num_points)
         plotTrace(x, y, channel_nums, fname=fname)
-        saveTrace(fname, x, y, fileheader=self.id+"time,"+str(channel_nums)+"\n", ext=ext)
+        saveTrace(fname, x, y, fileheader=self.id+"time,"+str(channel_nums)+"\n", ext=ext, acquire_print=self.acquire_print)
 
 
 
@@ -261,17 +269,17 @@ class Oscilloscope():
 ##                           DATA PROCESSING                                  ##
 ##============================================================================##
 
-def process_data(raw, metadata, wav_format):
+def process_data(raw, metadata, wav_format, acquire_print=True):
         """Wrapper function for choosing the correct process_data function according to wav_format"""
         if wav_format[:3] == 'WOR' or wav_format[:3] == 'BYT':
-            return process_data_binary(raw, metadata)
+            return process_data_binary(raw, metadata, acquire_print)
         elif wav_format[:3] == 'ASC':
-            return process_data_ascii(raw, metadata)
+            return process_data_ascii(raw, metadata, acquire_print)
         else:
             raise Exception("\nError: Could not process data, waveform format \'{}\' is unknown.\nExiting..\n".format(wav_format))
             sys.exit()
 
-def process_data_binary(raw, preambles):
+def process_data_binary(raw, preambles, acquire_print):
     """
     Process raw 8/16-bit data to time x values and y voltage values.
     Output: numpy array x containing time values, numpy array y containing voltages for caputred channels
@@ -288,7 +296,7 @@ def process_data_binary(raw, preambles):
     # 8 YORIGIN : float32 - value is the voltage at center screen.
     # 9 YREFERENCE : int32 - specifies the data point where y-origin occurs.
 
-    print("Points captured per channel: ", num_samples)
+    print("Points captured per channel: ", num_samples) if acquire_print else None
     y = []
     for i, data in enumerate(raw):
         preamble = preambles[i].split(',')
@@ -301,7 +309,7 @@ def process_data_binary(raw, preambles):
     x = np.vstack(x) # make x values vertical
     return x, y
 
-def process_data_ascii(raw, measurement_time):
+def process_data_ascii(raw, measurement_time, acquire_print):
     """
     Process raw comma separated ascii data to time x values and y voltage values.
     Output: numpy array x containing time values, numpy array y containing voltages for caputred channels
@@ -317,7 +325,7 @@ def process_data_ascii(raw, measurement_time):
     num_samples = np.shape(y)[0] # number of samples captured per channel
     x = np.linspace(0, measurement_time, num_samples) # compute x-values
     x = np.vstack(x) # make list vertical
-    print("Points captured per channel: ", num_samples)
+    print("Points captured per channel: ", num_samples) if acquire_print else None
     return x, y
 
 ##============================================================================##
@@ -335,16 +343,16 @@ def check_file(fname, ext=FILETYPE, num=""):
         fname += append
     return fname
 
-def saveTrace(fname, x, y, fileheader="", ext=FILETYPE):
+def saveTrace(fname, x, y, fileheader="", ext=FILETYPE, acquire_print=True):
     """
     Saves the trace with x values and y values as a txt/csv/dat etc specified by 'ext'.
     Current date and time is automatically added to the header.
     """
     date_time = str(datetime.datetime.now()) # get current date and time
-    print("Saving trace to ", fname+ext)
+    print("Saving trace to ", fname+ext) if acquire_print else None
     data = np.append(x, y, axis=1) # make one array with coloumns x y1 y2 ..
     np.savetxt(fname+ext, data, delimiter=",", header=fileheader+date_time)
-    print("\n")
+    print("") if acquire_print else None
 
 def plotTrace(x, y, channel_nums, fname="", show=SHOW_PLOT, savepng=EXPORT_PNG):
     """
