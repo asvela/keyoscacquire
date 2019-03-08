@@ -1,7 +1,7 @@
 # Keysight oscilloscope acquire package
 
 
-v1.0.0 // March 2019 // Andreas Svela
+v1.0.1 // March 2019 // Andreas Svela
 
 ## Overview
 
@@ -14,10 +14,10 @@ The code is structured as a module `keyoscacquire/oscacq.py` containing the engi
 Install the package with pip:
 
 ```bash
-pip install keysightoscilloscopeacquire
+$ pip install keysightoscilloscopeacquire
 ```
 
-or download locally and install with `python setup.py install` or by running `install.bat`.
+or download locally and install with `$ python setup.py install` or by running `install.bat`.
 
 #### Default options
 
@@ -42,7 +42,7 @@ TIMEOUT = 15000         # ms timeout for the instrument connection
 DEBUG = False           # print more details
 ```
 
-For changes to these defaults to take effect, the package must be reinstalled locally after doing the changes in `default_options.py`, simply by navigating to the directory containing `setup.py` and running `python setup.py install` or `install.bat`. **Note** that none of the functions access the global variables directly, but they are feed them as default arguments.
+For changes to these defaults to take effect, the package must be reinstalled locally after doing the changes in `default_options.py`, simply by navigating to the directory containing `setup.py` and running `$ python setup.py install` or `install.bat`. **Note** that none of the functions access the global variables directly, but they are feed them as default arguments.
 
 The `WAVEFORM_FORMAT` dictates whether 16/8 bit raw values or comma separated ascii voltage values should be transferred when the waveform is queried for (the output file will be ascii anyway, this is simply a question of how the data is transferred to and processed on the computer). Raw values format is approx. 10x faster than ascii.
 
@@ -56,7 +56,7 @@ The command line programmes will save traces in the folder from where they are r
 
 **In order to connect to a VISA instrument, NI MAX or similar might need to be running on the computer.** The VISA address of the instrument can be found in NI MAX, and should be set as the  `VISA_ADDRESS` variable, see below, before installation.
 
-Three command line programmes `get_single_trace`, `getTraces_connect_each_time` and `getTraces_single_connection`  can be ran directly from the command line after installation (i.e. from whatever folder and no need for `python [...].py`).
+Three command line programmes `get_single_trace`, `getTraces_connect_each_time` and `getTraces_single_connection`  can be ran directly from the command line after installation (i.e. from whatever folder and no need for `$ python [...].py`).
 
 The two latter programmes are loops for which every time `enter` is hit a trace will be obtained and exported as csv and png files with successive numbering. By default all active channels on the oscilloscope will be captured (this can be changed, see below). The difference between the two programmes is that the first programme is establishing a new connection to the instrument each time a trace is to be captured, whereas the second opens a connection to start with and does not close the connection until the program is quit. The second programme only checks which channels are active when it connects, i.e. the first programme will save only the currently active channels for each saved trace; the second will each time save the channels that were active at the time of starting the programme.
 
@@ -68,13 +68,13 @@ Furthermore, both programmes takes up to two optional arguments:
 `-a "AVER8"` sets acquiring type to average with eight traces
 
 ```bash
-getTraces_single_connection_loop -f "measurement"
+$ getTraces_single_connection_loop -f "measurement"
 ```
 will give output files `measurement n<n>.csv` and `measurement n<n>.png`.  The programmes will check if the file `"measurement"+delim+num+FILETYPE` exists, and if it does, prompt the user for something to append to `measurement` until `"measurement"+appended+"0"+FILETYPE` is not an existing file. *The same checking procedure applies also when no base filename is supplied and `DEFAULT_FILENAME` is used.*
 
 ### Obtaining single traces
 
-Running the module with `python -m keyoscacquire` obtains and saves a trace with default options being used. Alternatively, the filename and acquisition type can be specified as per the paragraph above using the  executable, e.g. `get_single_trace -f "fname" -a "AVER"`.
+Running the module with `$ python -m keyoscacquire` obtains and saves a trace with default options being used. Alternatively, the filename and acquisition type can be specified as per the paragraph above using the  executable, e.g. `$ get_single_trace -f "fname" -a "AVER"`.
 
 ### Obtaining traces when the scope is running vs when stopped
 
@@ -85,4 +85,4 @@ The scope will always be set to running after a trace is captured.
 
 ### Scripts in ./scripts
 
-These can be ran as command line scripts from the folder with `python [script].py`. Optional arguments  for filename and acquisition mode can be used, such as `python [script].py "otherFileName"`, or `python [script].py "otherFileName" "AVER8"`. Note, no flag specifiers are needed (or allowed) and the sequence of arguments is fixed.
+These can be ran as command line scripts from the folder with `$ python [script].py`. Optional arguments for filename and acquisition mode can be used, such as `$ python [script].py "otherFileName"`, or `$ python [script].py "otherFileName" "AVER8"`. Note, no flag specifiers are needed (or allowed) and the sequence of arguments is fixed.

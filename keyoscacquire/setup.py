@@ -6,7 +6,7 @@ Install the Keysight Oscilloscope Acquire library.
 Andreas Svela // 2019
 """
 
-__version__ = '1.0.0'
+__version__ = '1.0.1'
 
 import os
 from setuptools import setup
@@ -19,7 +19,7 @@ with open(os.path.join(current_dir, "README.md")) as fid:
 if __name__ == '__main__':
     setup(name='keysightoscilloscopeacquire',
           version=__version__,
-          description='Obtain traces, save to files and export raw plots from Keysight oscilloscopes using pyVISA.',
+          description='Obtain traces, save to files and export raw plots from Keysight oscilloscopes using PyVISA.',
           long_description=open('README.md').read(),
           long_description_content_type="text/markdown",
           url='http://www.npl.co.uk',

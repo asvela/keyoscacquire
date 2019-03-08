@@ -4,7 +4,7 @@
 Andreas Svela // 2019
 """
 
-__version__ = '1.0.0'
+__version__ = '1.0.1'
 
 
 # Default options
