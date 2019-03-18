@@ -66,7 +66,7 @@ class Oscilloscope():
 
     def debug_prnt(self, message):
         """Debug message printed if self.debug_print is True"""
-        print(message) if self.debug_print else None
+        if self.debug_print: print(message)
 
     def set_acquiring_options(self, wav_format=WAVEFORM_FORMAT, acq_type=ACQ_TYPE,
                              num_averages=NUM_AVG, p_mode='RAW', num_points=0, acq_print=None):
@@ -129,7 +129,7 @@ class Oscilloscope():
             channel_nums = channels[channel_mask] # apply mask to the channel list
         sources = [source_type+channel for channel in channel_nums] # build list of sources
         sourcesstring = ", ".join([source_type+channel for channel in channel_nums]) # make string of sources
-        print("Acquire from sources", sourcesstring) if self.acquire_print else None
+        if self.acquire_print: print("Acquire from sources", sourcesstring)
         return sourcesstring, sources, channel_nums
 
     def capture_and_read(self, sources, sourcestring):
@@ -151,7 +151,7 @@ class Oscilloscope():
         Output: array of raw data, array of preamble metadata (ascii comma separated values)
         """
         ## Capture data
-        print("Start acquisition..") if self.acquire_print else None
+        if self.acquire_print: print("Start acquisition..")
         start_time = time.time() # time the acquiring process
         reg = int(self.inst.query(':OPERegister:CONDition?')) # The third bit of the operation register is 1 if the instrument is running
             # If the instrument is not running, we presumably want the data on the screen and hence don't want
@@ -183,7 +183,7 @@ class Oscilloscope():
         Output: array of raw data (comma separated ascii values), time range of the measurement
         """
         ## Capture data
-        print("Start acquisition..") if self.acquire_print else None
+        if self.acquire_print: print("Start acquisition..")
         start_time = time.time() # time the acquiring process
         reg = int(self.inst.query(':OPERegister:CONDition?')) # The third bit of the operation register is 1 if the instrument is running
             # If the instrument is not running, we presumably want the data on the screen and hence don't want
@@ -296,7 +296,7 @@ def process_data_binary(raw, preambles, acquire_print):
     # 8 YORIGIN : float32 - value is the voltage at center screen.
     # 9 YREFERENCE : int32 - specifies the data point where y-origin occurs.
 
-    print("Points captured per channel: ", num_samples) if acquire_print else None
+    if acquire_print: print("Points captured per channel: ", num_samples)
     y = []
     for i, data in enumerate(raw):
         preamble = preambles[i].split(',')
@@ -325,7 +325,7 @@ def process_data_ascii(raw, measurement_time, acquire_print):
     num_samples = np.shape(y)[0] # number of samples captured per channel
     x = np.linspace(0, measurement_time, num_samples) # compute x-values
     x = np.vstack(x) # make list vertical
-    print("Points captured per channel: ", num_samples) if acquire_print else None
+    if acquire_print: print("Points captured per channel: ", num_samples)
     return x, y
 
 ##============================================================================##
@@ -349,10 +349,10 @@ def saveTrace(fname, x, y, fileheader="", ext=FILETYPE, acquire_print=True):
     Current date and time is automatically added to the header.
     """
     date_time = str(datetime.datetime.now()) # get current date and time
-    print("Saving trace to ", fname+ext) if acquire_print else None
+    if acquire_print: print("Saving trace to ", fname+ext)
     data = np.append(x, y, axis=1) # make one array with coloumns x y1 y2 ..
     np.savetxt(fname+ext, data, delimiter=",", header=fileheader+date_time)
-    print("") if acquire_print else None
+    if acquire_print: print("")
 
 def plotTrace(x, y, channel_nums, fname="", show=SHOW_PLOT, savepng=EXPORT_PNG):
     """
