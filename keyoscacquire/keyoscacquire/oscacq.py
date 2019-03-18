@@ -51,14 +51,14 @@ class Oscilloscope():
         self.inst.timeout = self.timeout
         self.inst.write('*CLS')  # clears the status data structures, the device-defined error queue, and the Request-for-OPC flag
         self.id = self.inst.query('*IDN?').strip() # get the id of the connected device
-        print('Connected to ', self.id)
+        print("Connected to \'%s\'" % self.id)
 
     def close(self):
         """Set the oscilloscope to run and close the connection"""
         # Set the oscilloscope running before closing the connection
         self.inst.write(':RUN')
         self.inst.close()
-        self.debug_prnt("Closed connection to %s" % self.id)
+        self.debug_prnt("Closed connection to \'%s\'" % self.id)
 
     def set_acquire_print(self, value):
         """Control attribute which decides whether to print information while acquiring"""
@@ -85,7 +85,7 @@ class Oscilloscope():
             self.acquire_print = acq_print #set acquiring_print only if not None
 
         self.inst.write(':ACQuire:TYPE ' + self.acq_type)
-        print("Acquiring type ", self.acq_type, end='')
+        print("\tAcquiring type:", self.acq_type, end='')
         # handle AVER<m> expressions
         if self.acq_type == 'AVER':
             try:
@@ -101,7 +101,7 @@ class Oscilloscope():
         if self.acq_type[:4] == 'NORM' or self.acq_type[:4] == 'AVER': # averaging applies for NORMal and AVERage modes only
             #self.inst.write(':ACQuire:MODE RTIME')
             self.inst.write(':ACQuire:COUNt ' + str(self.num_averages))
-            print(", number of averages ", self.num_averages)
+            print("; number of averages:", self.num_averages)
         else:
             print("") #newline
 
