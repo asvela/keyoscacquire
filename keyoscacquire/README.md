@@ -1,13 +1,13 @@
 # Keysight oscilloscope acquire package
 
 
-v1.0.1 // March 2019 // Andreas Svela
+v1.1.0 // April 2019 // Andreas Svela
 
 ## Overview
 
 This package gives functionality for acquiring traces from Keysight oscilloscopes through a VISA interface, and exports traces as a chosen ASCII format file (default csv) and a png of the trace plot. The Python library `visa` is used for communication. The code has been tested on a Keysight DSO2024A model using a USB connection.
 
-The code is structured as a module `keyoscacquire/oscacq.py` containing the engine doing `visa` interfacing in a class `Oscilloscope`, and support functions for data processing/saving. Programmes are located in `keyoscacquire/programmes.py` .  Default options are found in `keyoscacq/default_options.py`, the files in `/scripts` can be ran from the command line and are essentially the same running the installed executables.
+The code is structured as a module `keyoscacquire/oscacq.py` containing the engine doing `visa` interfacing in a class `Oscilloscope`, and support functions for data processing/saving. Programmes are located in `keyoscacquire/programmes.py`.  Default options are found in `keyoscacq/default_options.py`, the files in `/scripts` can be ran from the command line and are essentially the same running the installed executables.
 
 ## Installation
 
@@ -39,14 +39,13 @@ FILETYPE = ".csv"       # filetype of exported data, can also be txt/dat etc.
 EXPORT_PNG = True       # export png of plot of obtained trace
 SHOW_PLOT = False       # show each plot when generated (program pauses until it is closed)
 TIMEOUT = 15000         # ms timeout for the instrument connection
-DEBUG = False           # print more details
 ```
 
 For changes to these defaults to take effect, the package must be reinstalled locally after doing the changes in `default_options.py`, simply by navigating to the directory containing `setup.py` and running `$ python setup.py install` or `install.bat`. **Note** that none of the functions access the global variables directly, but they are feed them as default arguments.
 
 The `WAVEFORM_FORMAT` dictates whether 16/8 bit raw values or comma separated ascii voltage values should be transferred when the waveform is queried for (the output file will be ascii anyway, this is simply a question of how the data is transferred to and processed on the computer). Raw values format is approx. 10x faster than ascii.
 
-The command line programmes will save traces in the folder from where they are ran as`FILENAME+FILEDELIMITER+<n>+FILETYPE` , i.e. by default as `data n<n>.csv`and `data n<n>.png`.
+The command line programmes will save traces in the folder from where they are ran as`FILENAME+FILEDELIMITER+<n>+FILETYPE`, i.e. by default as `data n<n>.csv`and `data n<n>.png`.
 
 ## Known issues/suggested improvements
 
@@ -56,19 +55,21 @@ The command line programmes will save traces in the folder from where they are r
 
 **In order to connect to a VISA instrument, NI MAX or similar might need to be running on the computer.** The VISA address of the instrument can be found in NI MAX, and should be set as the  `VISA_ADDRESS` variable, see below, before installation.
 
-Three command line programmes `get_single_trace`, `getTraces_connect_each_time` and `getTraces_single_connection`  can be ran directly from the command line after installation (i.e. from whatever folder and no need for `$ python [...].py`).
+Four command line programmes `get_single_trace`, `get_num_traces`, `getTraces_connect_each_time` and `getTraces_single_connection` can be ran directly from the command line after installation (i.e. from whatever folder and no need for `$ python [...].py`).
 
-The two latter programmes are loops for which every time `enter` is hit a trace will be obtained and exported as csv and png files with successive numbering. By default all active channels on the oscilloscope will be captured (this can be changed, see below). The difference between the two programmes is that the first programme is establishing a new connection to the instrument each time a trace is to be captured, whereas the second opens a connection to start with and does not close the connection until the program is quit. The second programme only checks which channels are active when it connects, i.e. the first programme will save only the currently active channels for each saved trace; the second will each time save the channels that were active at the time of starting the programme.
+The two first programmes will obtain one and a specified number of traces, respectively. The two latter programmes are loops for which every time `enter` is hit a trace will be obtained and exported as csv and png files with successive numbering. By default all active channels on the oscilloscope will be captured (this can be changed, see below). The difference between the two latter programmes is that the first programme is establishing a new connection to the instrument each time a trace is to be captured, whereas the second opens a connection to start with and does not close the connection until the program is quit. The second programme only checks which channels are active when it connects, i.e. the first programme will save only the currently active channels for each saved trace; the second will each time save the channels that were active at the time of starting the programme.
 
 
-### Optional command line argument sets base filename or acquiring mode
+### Optional command line argument sets base filename, acquiring mode or number of traces to obtain
 
 Furthermore, both programmes takes up to two optional arguments:
-`-f "customFilename"` set as the base filename to "customFilename"
-`-a "AVER8"` sets acquiring type to average with eight traces
+`-f "custom filename"` set as the base filename to "custom filename"
+`-a AVER8`  sets acquiring type to average with eight traces
+`-n 10` sets number of traces to obtain (only for `get_num_traces`)
 
+For example
 ```bash
-$ getTraces_single_connection_loop -f "measurement"
+$ getTraces_single_connection_loop -f measurement
 ```
 will give output files `measurement n<n>.csv` and `measurement n<n>.png`.  The programmes will check if the file `"measurement"+delim+num+FILETYPE` exists, and if it does, prompt the user for something to append to `measurement` until `"measurement"+appended+"0"+FILETYPE` is not an existing file. *The same checking procedure applies also when no base filename is supplied and `DEFAULT_FILENAME` is used.*
 
@@ -78,7 +79,7 @@ Running the module with `$ python -m keyoscacquire` obtains and saves a trace wi
 
 ### Obtaining traces when the scope is running vs when stopped
 
-When the scope **is running** the `capture_and_read` functions will obtain a trace by running `:DIGitize`, causing the instrument to acquire a trace and then stop the oscilloscope. When the scope **is stopped** the current trace on the screen of the oscilloscope will be captured (*Warning:* This might mean the settings specified with `:ACQire` are not used, i.e. acquiring mode and number of points to be captured).
+When the scope **is running** the `capture_and_read` functions will obtain a trace by running `:DIGitize`, causing the instrument to acquire a trace and then stop the oscilloscope. When the scope **is stopped** the current trace on the screen of the oscilloscope will be captured (*Warning:* This might mean the settings specified with `:ACQuire` are not used, i.e. acquiring mode and number of points to be captured).
 
 The scope will always be set to running after a trace is captured.
 
@@ -86,3 +87,17 @@ The scope will always be set to running after a trace is captured.
 ### Scripts in ./scripts
 
 These can be ran as command line scripts from the folder with `$ python [script].py`. Optional arguments for filename and acquisition mode can be used, such as `$ python [script].py "otherFileName"`, or `$ python [script].py "otherFileName" "AVER8"`. Note, no flag specifiers are needed (or allowed) and the sequence of arguments is fixed.
+
+
+### Logging
+
+The module gives output for debugging through `logging`. The output can be directed to the terminal by adding the following to the top level file using the keyoscacquire package
+```python
+import logging
+logging.basicConfig(level=logging.DEBUG)
+```
+or directed to a file `mylog.log` with
+```python
+import logging
+logging.basicConfig(filename='mylog.log', level=logging.DEBUG)
+```

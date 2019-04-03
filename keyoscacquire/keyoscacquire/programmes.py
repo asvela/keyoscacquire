@@ -10,12 +10,13 @@ Andreas Svela // 2019
 """
 
 
-import sys
+import sys, logging; log = logging.getLogger(__name__)
 import keyoscacquire.oscacq as acq
 import numpy as np
 from tqdm import tqdm #progressbar
 
-from keyoscacquire.default_options import VISA_ADDRESS, WAVEFORM_FORMAT, CH_NUMS, ACQ_TYPE, NUM_AVG, FILENAME, FILETYPE, FILE_DELIMITER, TIMEOUT, DEBUG # local file with default options
+# local file with default options:
+from keyoscacquire.default_options import VISA_ADDRESS, WAVEFORM_FORMAT, CH_NUMS, ACQ_TYPE, NUM_AVG, FILENAME, FILETYPE, FILE_DELIMITER, TIMEOUT, DEBUG
 
 def get_single_trace(fname=FILENAME, ext=FILETYPE, address=VISA_ADDRESS, timeout=TIMEOUT, wav_format=WAVEFORM_FORMAT,
                      channel_nums=CH_NUMS, source_type='CHANnel', acq_type=ACQ_TYPE,
@@ -131,6 +132,7 @@ def run_programme(name, args):
         fname += " " + a_type
     n = int(args[3]) if len(args) >= 4 else 1 #if 3rd optional argument is supplied on the command line use acquiring mode
 
+    log.debug("Running programme \'%s\' saving to base filename \'%s\' with extension \'%s\' and aquiring type \'%s\'" % (name, fname, ext, a_type))
     names = ["single_trace", "connect_each_time", "single_connection", "num_traces"] # possible programme names
     if name == names[0]:
         get_single_trace(fname, ext, acq_type=a_type)

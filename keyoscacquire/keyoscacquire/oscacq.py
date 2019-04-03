@@ -14,19 +14,22 @@ See Keysight's Programmer's Guide for reference.
 Andreas Svela 2018
 """
 
-import sys, os  # required for reading user input and command line arguments
-import visa # instrument communication
-import numpy as np, matplotlib.pyplot as plt
+import sys, os        # required for reading user input and command line arguments
+import visa           # instrument communication
 import time, datetime # for measuring elapsed time and adding current date and time to exported files
+import numpy as np
+import matplotlib.pyplot as plt
+import logging; log = logging.getLogger(__name__)
 
-from keyoscacquire.default_options import VISA_ADDRESS, WAVEFORM_FORMAT, CH_NUMS, ACQ_TYPE, NUM_AVG, FILENAME, FILETYPE, TIMEOUT, EXPORT_PNG, SHOW_PLOT, DEBUG # local file with default options
+# local file with default options:
+from keyoscacquire.default_options import VISA_ADDRESS, WAVEFORM_FORMAT, CH_NUMS, ACQ_TYPE, NUM_AVG, FILENAME, FILETYPE, TIMEOUT, EXPORT_PNG, SHOW_PLOT, DEBUG
 
 
 ##============================================================================##
 
 class Oscilloscope():
 
-    def __init__(self, address=VISA_ADDRESS, timeout=TIMEOUT, debug=DEBUG):
+    def __init__(self, address=VISA_ADDRESS, timeout=TIMEOUT):
         """
         Open a connection to instrument and choose settings for the connection and acquisition.
         Some alternative settings are listed.
@@ -34,14 +37,14 @@ class Oscilloscope():
         timeout = ms before timeout on the channel to the instrument
         debug = {True, False} should extra debug information be printed
         """
-        self.debug_print = debug; self.timeout = timeout
+        self.timeout = timeout
         self.acquire_print = True
 
         try:
             rm = visa.ResourceManager()
             self.inst = rm.open_resource(address)
             self.address = address
-        except visa.Error:
+        except visa.Error as err:
             print('\nVisaError: Could not connect to \'%s\', exiting now...' % address)
             raise
         # For TCP/IP socket connections enable the read Termination Character, or reads will timeout
@@ -58,18 +61,14 @@ class Oscilloscope():
         # Set the oscilloscope running before closing the connection
         self.inst.write(':RUN')
         self.inst.close()
-        self.debug_prnt("Closed connection to \'%s\'" % self.id)
+        log.debug("Closed connection to \'%s\'" % self.id)
 
     def set_acquire_print(self, value):
         """Control attribute which decides whether to print information while acquiring"""
         self.acquire_print = value
 
-    def debug_prnt(self, message):
-        """Debug message printed if self.debug_print is True"""
-        if self.debug_print: print(message)
-
     def set_acquiring_options(self, wav_format=WAVEFORM_FORMAT, acq_type=ACQ_TYPE,
-                             num_averages=NUM_AVG, p_mode='RAW', num_points=0, acq_print=None):
+                              num_averages=NUM_AVG, p_mode='RAW', num_points=0, acq_print=None):
         """Sets the options for acquisition from the oscilloscope
         wav_format = {'WORD' | 'BYTE' | 'ASCii'}
         acq_type = {'HRESolution' | 'NORMal' | 'AVERage' | 'AVER<m>'} <m> will be used as num_averages if supplied
@@ -81,7 +80,7 @@ class Oscilloscope():
         self.wav_format = wav_format; self.acq_type = acq_type[:4]
         self.p_mode = p_mode; self.num_points = num_points
 
-        if acq_print != None:
+        if not (acq_print is None):
             self.acquire_print = acq_print #set acquiring_print only if not None
 
         self.inst.write(':ACQuire:TYPE ' + self.acq_type)
@@ -91,7 +90,10 @@ class Oscilloscope():
             try:
                 self.num_averages = int(acq_type[4:]) if len(acq_type) > 4 else num_averages # if the type is longer than four characters, treat characters from fifth to end as number of averages
             except ValueError:
-                print("\nValueError: Failed to convert \'%s\' to an integer, check that acquisition type is on the form AVER or AVER<m> where <m> is an integer (currently acq. type is \'%s\').\n" % (acq_type[4:], acq_type))
+                print("\nValueError: Failed to convert \'%s\' to an integer,"
+                      " check that acquisition type is on the form AVER or AVER<m>"
+                      " where <m> is an integer (currently acq. type is \'%s\').\n"
+                       % (acq_type[4:], acq_type))
             if self.num_averages < 1 or self.num_averages > 65536: #check that self.num_averages is within acceptable range
                 raise ValueError("\nThe number of averages {} is out of range.\nExiting..\n".format(self.num_averages))
         else:
@@ -104,14 +106,16 @@ class Oscilloscope():
             print("  # of averages: ", self.num_averages)
 
         ## Set options for waveform export
-        self.inst.write(':WAVeform:FORMat ' +  self.wav_format) # choose format for the transmitted waveform
-        if self.acq_type == 'AVER' and self.p_mode[:4] != 'NORM':
+        self.inst.write(':WAVeform:FORMat ' +  self.wav_format) # choose format for the transmitted waveform]
+        a_isaver = self.acq_type == 'AVER'
+        p_isnorm = self.p_mode[:4] == 'NORM'
+        if a_isaver and not p_isnorm:
             self.p_mode = 'NORM'
-            self.debug_prnt(":WAVeform:POINts:MODE overridden (from %s) to NORMal due to :ACQuire:TYPE:AVERage." % p_mode)
+            log.debug(":WAVeform:POINts:MODE overridden (from %s) to NORMal due to :ACQuire:TYPE:AVERage." % p_mode)
         else:
             self.p_mode = p_mode
         self.inst.write(':WAVeform:POINts:MODE ' + self.p_mode)
-        #self.debug_prnt("Max number of points for mode %s: %s" % (self.p_mode, self.inst.query(':WAVeform:POINts?')))
+        #log.debug("Max number of points for mode %s: %s" % (self.p_mode, self.inst.query(':WAVeform:POINts?')))
         if self.num_points != 0: #if number of points has been specified
             inst.write(':WAVeform:POINts ' + str(self.num_points))
             print("Number of points set to: ", self.num_points)
@@ -165,13 +169,14 @@ class Oscilloscope():
             try:
                 preambles.append(self.inst.query(':WAVeform:PREamble?')) # comma separated metadata values for processing of raw data for this source
                 raw.append(self.inst.query_binary_values(':WAVeform:DATA?', datatype=datatype)) # read out data for this source
-            except visa.Error:
-                print("\nError: Failed to obtain waveform, have you checked that the TIMEOUT (currently %d ms) is sufficently long?" % self.timeout)
+            except visa.Error as err:
+                print("\nError: Failed to obtain waveform, have you checked that"
+                      " the TIMEOUT (currently %d ms) is sufficently long?" % self.timeout)
                 print(err)
                 print("\nExiting..\n")
                 self.close()
                 raise
-        self.debug_prnt("Elapsed time: %.3f" % float(time.time()-start_time))
+        log.debug("Elapsed time: %.3f" % float(time.time()-start_time))
         self.inst.write(':RUN') # set the oscilloscope running again
         return raw, preambles
 
@@ -197,11 +202,12 @@ class Oscilloscope():
             try:
                 raw.append(self.inst.query(':WAVeform:DATA?')) # read out data for this source
             except visa.Error:
-                print("\nVisaError: Failed to obtain waveform, have you checked that the TIMEOUT (currently %d ms) is sufficently long?" % self.timeout)
+                print("\nVisaError: Failed to obtain waveform, have you checked that"
+                      " the TIMEOUT (currently %d ms) is sufficently long?" % self.timeout)
                 print("\nExiting..\n")
                 self.close()
                 raise
-        self.debug_prnt("Elapsed time: %.3f" %  float(time.time()-start_time))
+        log.debug("Elapsed time: %.3f" %  float(time.time()-start_time))
         measurement_time = float(self.inst.query(':TIMebase:RANGe?')) # returns the current full-scale range value for the main window
         self.inst.write(':RUN') # set the oscilloscope running again
         return raw, measurement_time
@@ -209,12 +215,12 @@ class Oscilloscope():
     ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~##
 
     def getTrace(self, sources, sourcesstring, acquire_print=None):
-        if acquire_print != None: # possibility to override acquire_print
+        if not (acquire_print is None): # possibility to override acquire_print
             temp = self.acquire_print # store current setting
             self.acquire_print = acquire_print # set temporary setting
         raw, metadata = self.capture_and_read(sources, sourcesstring)
         x, y = process_data(raw, metadata, self.wav_format, acquire_print=self.acquire_print) # capture, read and process data
-        if acquire_print != None: self.acquire_print = temp # restore to previous setting
+        if not (acquire_print is None): self.acquire_print = temp # restore to previous setting
         return x, y
 
     def set_options_getTrace(self, channel_nums=[''], source_type='CHANnel',
@@ -260,10 +266,11 @@ class Oscilloscope():
         """
         fname = check_file(fname, ext)
         x, y, channel_nums = self.set_options_getTrace(channel_nums=channel_nums, source_type=source_type,
-                                                           wav_format=wav_format, acq_type=acq_type, num_averages=num_averages,
-                                                           p_mode=p_mode, num_points=num_points)
+                                                       wav_format=wav_format, acq_type=acq_type, num_averages=num_averages,
+                                                       p_mode=p_mode, num_points=num_points)
         plotTrace(x, y, channel_nums, fname=fname)
-        saveTrace(fname, x, y, fileheader=self.id+"time,"+str(channel_nums)+"\n", ext=ext, acquire_print=self.acquire_print)
+        head = self.id+"time,"+str(channel_nums)+"\n"
+        saveTrace(fname, x, y, fileheader=head, ext=ext, acquire_print=self.acquire_print)
 
 
 
@@ -351,10 +358,9 @@ def saveTrace(fname, x, y, fileheader="", ext=FILETYPE, acquire_print=True):
     Current date and time is automatically added to the header.
     """
     date_time = str(datetime.datetime.now()) # get current date and time
-    if acquire_print: print("Saving trace to ", fname+ext)
+    if acquire_print: print("Saving trace to %s\n" % fname+ext)
     data = np.append(x, y, axis=1) # make one array with coloumns x y1 y2 ..
     np.savetxt(fname+ext, data, delimiter=",", header=fileheader+date_time)
-    if acquire_print: print("")
 
 def plotTrace(x, y, channel_nums, fname="", show=SHOW_PLOT, savepng=EXPORT_PNG):
     """
@@ -362,10 +368,8 @@ def plotTrace(x, y, channel_nums, fname="", show=SHOW_PLOT, savepng=EXPORT_PNG):
     and saves as a png with filename 'fname'.
     """
     colors = {'1':'C1', '2':'C2', '3':'C0', '4':'C3'} # Keysight colour map
-    i = 0
-    for vals in np.transpose(y): # for each channel
+    for i, vals in enumerate(np.transpose(y)): # for each channel
         plt.plot(x, vals, color=colors[channel_nums[i]])
-        i += 1
     if savepng: plt.savefig(fname+".png", bbox_inches='tight')
     if show: plt.show()
     plt.close()
@@ -377,10 +381,7 @@ def plotTrace(x, y, channel_nums, fname="", show=SHOW_PLOT, savepng=EXPORT_PNG):
 
 ## Main function, runs only if the script is called from the command line
 if __name__ == '__main__':
-    if len(sys.argv) == 2: #if optional argument is supplied on the command line
-        fname = sys.argv[1] # use this as the filename base
-    else:
-        fname = FILENAME
+    fname = sys.argv[1] if len(sys.argv) >= 2 else FILENAME
     ext = FILETYPE
     scope = Oscilloscope()
     scope.set_options_getTrace_save(fname, ext)
