@@ -13,6 +13,7 @@ Andreas Svela // 2019
 import sys
 import keyoscacquire.oscacq as acq
 import numpy as np
+from tqdm import tqdm #progressbar
 
 from keyoscacquire.default_options import VISA_ADDRESS, WAVEFORM_FORMAT, CH_NUMS, ACQ_TYPE, NUM_AVG, FILENAME, FILETYPE, FILE_DELIMITER, TIMEOUT, DEBUG # local file with default options
 
@@ -91,6 +92,31 @@ def getTraces_single_connection_loop(fname=FILENAME, ext=FILETYPE, address=VISA_
     scope.close()
 
 
+def get_n_traces(fname=FILENAME, ext=FILETYPE, num=1, address=VISA_ADDRESS, timeout=TIMEOUT, wav_format=WAVEFORM_FORMAT,
+                 channel_nums=CH_NUMS, source_type='CHANnel', acq_type=ACQ_TYPE,
+                 num_averages=NUM_AVG, p_mode='RAW', num_points=0, start_num=0, file_delim=FILE_DELIMITER, debug=DEBUG):
+        """This program connects to the oscilloscope, sets options for the
+        acquisition, and captures num traces"""
+        ## Initialise
+        scope = acq.Oscilloscope(address=address, timeout=timeout, debug=debug)
+        scope.set_acquiring_options(wav_format=wav_format, acq_type=acq_type,
+                                   num_averages=num_averages, p_mode=p_mode,
+                                   num_points=num_points, acq_print=False)
+        ## Select sources
+        sourcesstring, sources, channel_nums = scope.build_sourcesstring(source_type=source_type, channel_nums=channel_nums)
+        fhead = scope.id+" "+scope.acq_type+str(scope.num_averages)+" time,"+sourcesstring+"\n"
+        n = start_num
+        fnum = file_delim+str(n)
+        fname = acq.check_file(fname, ext, num=fnum) # check that file does not exist from before, append to name if it does
+        for i in tqdm(range(n, n+num)):
+            fnum = file_delim+str(i)
+            x, y = scope.getTrace(sources, sourcesstring, acquire_print=(i==n))
+            #acq.plotTrace(x, y, channel_nums, fname=fname+fnum)        # plot trace and save png
+            acq.saveTrace(fname+fnum, x, y, fileheader=fhead, ext=ext, acquire_print=(i==n)) # save trace to ext file
+        print("Done")
+        scope.close()
+
+
 
 ##============================================================================##
 ##                    APPLYING OPTIONAL ARGUMENTS                             ##
@@ -103,13 +129,16 @@ def run_programme(name, args):
     a_type = args[2] if (len(args) >= 3 and args[2] != None) else ACQ_TYPE #if 2nd optional argument is supplied on the command line use acquiring mode
     if a_type[:4] == 'AVER':
         fname += " " + a_type
+    n = int(args[3]) if len(args) >= 4 else 1 #if 3rd optional argument is supplied on the command line use acquiring mode
 
-    names = ["single_trace", "connect_each_time", "single_connection"] # possible programme names
+    names = ["single_trace", "connect_each_time", "single_connection", "num_traces"] # possible programme names
     if name == names[0]:
         get_single_trace(fname, ext, acq_type=a_type)
     elif name == names[1]:
         getTraces_connect_each_time_loop(fname, ext, acq_type=a_type)
     elif name == names[2]:
         getTraces_single_connection_loop(fname, ext, acq_type=a_type)
+    elif name == names[3]:
+        get_n_traces(fname, ext, num=n, acq_type=a_type)
     else:
         raise ValueError("\nUnknown name \'%s\' of program to run. Available programmes %s." % (name, str(names)))

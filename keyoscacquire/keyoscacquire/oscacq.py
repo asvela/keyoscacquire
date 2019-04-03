@@ -85,7 +85,7 @@ class Oscilloscope():
             self.acquire_print = acq_print #set acquiring_print only if not None
 
         self.inst.write(':ACQuire:TYPE ' + self.acq_type)
-        print("\tAcquiring type:", self.acq_type, end='')
+        print("  Acquiring type:", self.acq_type)
         # handle AVER<m> expressions
         if self.acq_type == 'AVER':
             try:
@@ -101,9 +101,7 @@ class Oscilloscope():
         if self.acq_type[:4] == 'NORM' or self.acq_type[:4] == 'AVER': # averaging applies for NORMal and AVERage modes only
             #self.inst.write(':ACQuire:MODE RTIME')
             self.inst.write(':ACQuire:COUNt ' + str(self.num_averages))
-            print("; number of averages:", self.num_averages)
-        else:
-            print("") #newline
+            print("  # of averages: ", self.num_averages)
 
         ## Set options for waveform export
         self.inst.write(':WAVeform:FORMat ' +  self.wav_format) # choose format for the transmitted waveform
@@ -113,7 +111,7 @@ class Oscilloscope():
         else:
             self.p_mode = p_mode
         self.inst.write(':WAVeform:POINts:MODE ' + self.p_mode)
-        self.debug_prnt("Max number of points for mode %s: %s" % (self.p_mode, self.inst.query(':WAVeform:POINts?')))
+        #self.debug_prnt("Max number of points for mode %s: %s" % (self.p_mode, self.inst.query(':WAVeform:POINts?')))
         if self.num_points != 0: #if number of points has been specified
             inst.write(':WAVeform:POINts ' + str(self.num_points))
             print("Number of points set to: ", self.num_points)
@@ -210,9 +208,13 @@ class Oscilloscope():
 
     ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~##
 
-    def getTrace(self, sources, sourcesstring):
+    def getTrace(self, sources, sourcesstring, acquire_print=None):
+        if acquire_print != None: # possibility to override acquire_print
+            temp = self.acquire_print # store current setting
+            self.acquire_print = acquire_print # set temporary setting
         raw, metadata = self.capture_and_read(sources, sourcesstring)
         x, y = process_data(raw, metadata, self.wav_format, acquire_print=self.acquire_print) # capture, read and process data
+        if acquire_print != None: self.acquire_print = temp # restore to previous setting
         return x, y
 
     def set_options_getTrace(self, channel_nums=[''], source_type='CHANnel',
@@ -282,7 +284,7 @@ def process_data(raw, metadata, wav_format, acquire_print=True):
 def process_data_binary(raw, preambles, acquire_print):
     """
     Process raw 8/16-bit data to time x values and y voltage values.
-    Output: numpy array x containing time values, numpy array y containing voltages for caputred channels
+    Output: numpy array x containing time values, numpy array y containing voltages for captured channels
     """
     preamble = preambles[0].split(',')  # values separated by commas
     # 0 FORMAT : int16 - 0 = BYTE, 1 = WORD, 4 = ASCII.

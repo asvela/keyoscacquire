@@ -59,3 +59,13 @@ def single_trace_command_line():
     args = parser.parse_args()
 
     acqprog.run_programme("single_trace", ['', args.f, args.a])
+
+def num_traces_command_line():
+    """Function installed on the command line: Obtains and stores a single trace."""
+    parser = argparse.ArgumentParser(usage=acqprog.get_n_traces.__doc__)
+    parser.add_argument('-f', nargs='?', help='Specify filename base')
+    parser.add_argument('-a', nargs='?', help='Specify acquire type: {HRESolution, NORMal, AVER<m>} where <m> is the number of averages in range [1, 65536]')
+    parser.add_argument('-n', nargs='?', help='Specify number of traces to obtain')
+    args = parser.parse_args()
+
+    acqprog.run_programme("num_traces", ['', args.f, args.a, args.n])

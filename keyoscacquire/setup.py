@@ -31,7 +31,8 @@ if __name__ == '__main__':
             'console_scripts' : [
                 'get_single_trace=keyoscacquire.installed_command_line_funcs:single_trace_command_line',
                 'getTraces_connect_each_time=keyoscacquire.installed_command_line_funcs:connect_each_time_command_line',
-                'getTraces_single_connection=keyoscacquire.installed_command_line_funcs:single_connection_command_line'
+                'getTraces_single_connection=keyoscacquire.installed_command_line_funcs:single_connection_command_line',
+                'get_num_traces=keyoscacquire.installed_command_line_funcs:num_traces_command_line'
             ],
           },
           install_requires=[
