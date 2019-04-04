@@ -7,7 +7,7 @@ v1.1.0 // April 2019 // Andreas Svela
 
 This package gives functionality for acquiring traces from Keysight oscilloscopes through a VISA interface, and exports traces as a chosen ASCII format file (default csv) and a png of the trace plot. The Python library `visa` is used for communication. The code has been tested on a Keysight DSO2024A model using a USB connection.
 
-The code is structured as a module `keyoscacquire/oscacq.py` containing the engine doing `visa` interfacing in a class `Oscilloscope`, and support functions for data processing/saving. Programmes are located in `keyoscacquire/programmes.py`.  Default options are found in `keyoscacq/default_options.py`, the files in `/scripts` can be ran from the command line and are essentially the same running the installed executables.
+The code is structured as a module `keyoscacquire/oscacq.py` containing the engine doing `visa` interfacing in a class `Oscilloscope`, and support functions for data processing/saving. Programmes are located in `keyoscacquire/programmes.py`.  Default options are found in `keyoscacq/config.py`, the files in `/scripts` can be ran from the command line and are essentially the same running the installed executables.
 
 ## Installation
 
@@ -21,31 +21,31 @@ or download locally and install with `$ python setup.py install` or by running `
 
 #### Default options
 
-The package is installed with a set of default options found in `keyoscacq/default_options.py`:
+The package is installed with a set of default options found in `keyoscacq/config.py`:
 
 ```python
-# Default options
-VISA_ADDRESS = 'USB0::2391::6038::MY57233636::INSTR' # address of instrument
-WAVEFORM_FORMAT = 'WORD'        # WORD formatted data is transferred as 16-bit uint.
+# Default options in config.py
+_visa_address = 'USB0::2391::6038::MY57233636::INSTR' # address of instrument
+_waveform_format = 'WORD'        # WORD formatted data is transferred as 16-bit uint.
                                 # BYTE formatted data is transferred as 8-bit uint.
                                 # ASCii formatted data converts the internal integer data values to real Y-axis values.
                                 #       Values are transferred as ASCii digits in floating point notation, separated by commas.
-CH_NUMS = ['']                  # list of chars, e.g. ['1', '3']. Use a list with an empty string [''] to capture all currently displayed channels
-ACQ_TYPE = "HRESolution"# {HRESolution, NORMal, AVER<m>} where <m> is the number of averages in range [1, 65536]
-NUM_AVG = 2             # default number of averages used if only AVER is given as acquisition type
-FILENAME = "data"       # default base filename of all traces and pngs exported, a number is appended to the base
-FILE_DELIMITER = " n"   # delimiter used between FILENAME and filenumber (before FILETYPE)
-FILETYPE = ".csv"       # filetype of exported data, can also be txt/dat etc.
-EXPORT_PNG = True       # export png of plot of obtained trace
-SHOW_PLOT = False       # show each plot when generated (program pauses until it is closed)
-TIMEOUT = 15000         # ms timeout for the instrument connection
+_ch_nums = ['']                  # list of chars, e.g. ['1', '3']. Use a list with an empty string [''] to capture all currently displayed channels
+_acq_type = "HRESolution"# {HRESolution, NORMal, AVER<m>} where <m> is the number of averages in range [1, 65536]
+_num_avg = 2             # default number of averages used if only AVER is given as acquisition type
+_filename = "data"       # default base filename of all traces and pngs exported, a number is appended to the base
+_file_delimiter = " n"   # delimiter used between _filename and filenumber (before _filetype)
+_filetype = ".csv"       # filetype of exported data, can also be txt/dat etc.
+_export_png = True       # export png of plot of obtained trace
+_show_plot = False       # show each plot when generated (program pauses until it is closed)
+_timeout = 15000         # ms timeout for the instrument connection
 ```
 
-For changes to these defaults to take effect, the package must be reinstalled locally after doing the changes in `default_options.py`, simply by navigating to the directory containing `setup.py` and running `$ python setup.py install` or `install.bat`. **Note** that none of the functions access the global variables directly, but they are feed them as default arguments.
+For changes to these defaults to take effect, the package must be reinstalled locally after doing the changes in `config.py`, simply by navigating to the directory containing `setup.py` and running `$ python setup.py install` or `install.bat`. **Note** that none of the functions access the global variables directly, but they are feed them as default arguments.
 
-The `WAVEFORM_FORMAT` dictates whether 16/8 bit raw values or comma separated ascii voltage values should be transferred when the waveform is queried for (the output file will be ascii anyway, this is simply a question of how the data is transferred to and processed on the computer). Raw values format is approx. 10x faster than ascii.
+The `_waveform_format` dictates whether 16/8 bit raw values or comma separated ascii voltage values should be transferred when the waveform is queried for (the output file will be ascii anyway, this is simply a question of how the data is transferred to and processed on the computer). Raw values format is approx. 10x faster than ascii.
 
-The command line programmes will save traces in the folder from where they are ran as`FILENAME+FILEDELIMITER+<n>+FILETYPE`, i.e. by default as `data n<n>.csv`and `data n<n>.png`.
+The command line programmes will save traces in the folder from where they are ran as`_filename+_file_delimiter+<n>+_filetype`, i.e. by default as `data n<n>.csv`and `data n<n>.png`.
 
 ## Known issues/suggested improvements
 
@@ -53,7 +53,7 @@ The command line programmes will save traces in the folder from where they are r
 
 ## Usage
 
-**In order to connect to a VISA instrument, NI MAX or similar might need to be running on the computer.** The VISA address of the instrument can be found in NI MAX, and should be set as the  `VISA_ADDRESS` variable, see below, before installation.
+**In order to connect to a VISA instrument, NI MAX or similar might need to be running on the computer.** The VISA address of the instrument can be found in NI MAX, and should be set as the `_visa_address` variable, see below, before installation.
 
 Four command line programmes `get_single_trace`, `get_num_traces`, `getTraces_connect_each_time` and `getTraces_single_connection` can be ran directly from the command line after installation (i.e. from whatever folder and no need for `$ python [...].py`).
 
@@ -71,7 +71,7 @@ For example
 ```bash
 $ getTraces_single_connection_loop -f measurement
 ```
-will give output files `measurement n<n>.csv` and `measurement n<n>.png`.  The programmes will check if the file `"measurement"+delim+num+FILETYPE` exists, and if it does, prompt the user for something to append to `measurement` until `"measurement"+appended+"0"+FILETYPE` is not an existing file. *The same checking procedure applies also when no base filename is supplied and `DEFAULT_FILENAME` is used.*
+will give output files `measurement n<n>.csv` and `measurement n<n>.png`.  The programmes will check if the file `"measurement"+_file_delimiter+num+_filetype)` exists, and if it does, prompt the user for something to append to `measurement` until `"measurement"+appended+"0"+_filetype` is not an existing file. *The same checking procedure applies also when no base filename is supplied and `DEFAULT_FILENAME` is used.*
 
 ### Obtaining single traces
 

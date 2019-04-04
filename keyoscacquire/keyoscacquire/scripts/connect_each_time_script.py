@@ -13,7 +13,7 @@ The loop runs each time 'enter' is hit. Alternatively one can input n-1 characte
 'enter' to capture n traces back to back. To quit press 'q'+'enter'.
 
 Optional argument from the command line: string setting the base filename of the output files.
-Change the VISA_ADDRESS under default options to the desired instrument.
+Change the config._visa_address under default options to the desired instrument.
 
 Tested with Keysight DSOX2024A.
 See Keysight's Programmer's Guide for reference.

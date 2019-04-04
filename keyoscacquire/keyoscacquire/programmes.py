@@ -16,11 +16,11 @@ import numpy as np
 from tqdm import tqdm #progressbar
 
 # local file with default options:
-from keyoscacquire.default_options import VISA_ADDRESS, WAVEFORM_FORMAT, CH_NUMS, ACQ_TYPE, NUM_AVG, FILENAME, FILETYPE, FILE_DELIMITER, TIMEOUT, DEBUG
+import keyoscacquire.config as config
 
-def get_single_trace(fname=FILENAME, ext=FILETYPE, address=VISA_ADDRESS, timeout=TIMEOUT, wav_format=WAVEFORM_FORMAT,
-                     channel_nums=CH_NUMS, source_type='CHANnel', acq_type=ACQ_TYPE,
-                     num_averages=NUM_AVG, p_mode='RAW', num_points=0, debug=DEBUG):
+def get_single_trace(fname=config._filename, ext=config._filetype, address=config._visa_address, timeout=config._timeout, wav_format=config._waveform_format,
+                     channel_nums=config._ch_nums, source_type='CHANnel', acq_type=config._acq_type,
+                     num_averages=config._num_avg, p_mode='RAW', num_points=0, debug=DEBUG):
     """This programme captures and stores a trace."""
     scope = acq.Oscilloscope(address=address, timeout=timeout, debug=debug)
     scope.set_options_getTrace_save(fname=fname, ext=ext, wav_format=wav_format,
@@ -30,9 +30,9 @@ def get_single_trace(fname=FILENAME, ext=FILETYPE, address=VISA_ADDRESS, timeout
     print("Done")
 
 
-def getTraces_connect_each_time_loop(fname=FILENAME, ext=FILETYPE, address=VISA_ADDRESS, timeout=TIMEOUT, wav_format=WAVEFORM_FORMAT,
-                                     channel_nums=CH_NUMS, source_type='CHANnel', acq_type=ACQ_TYPE,
-                                     num_averages=NUM_AVG, p_mode='RAW', num_points=0, start_num=0, file_delim=FILE_DELIMITER, debug=DEBUG):
+def getTraces_connect_each_time_loop(fname=config._filename, ext=config._filetype, address=config._visa_address, timeout=config._timeout, wav_format=config._waveform_format,
+                                     channel_nums=config._ch_nums, source_type='CHANnel', acq_type=config._acq_type,
+                                     num_averages=config._num_avg, p_mode='RAW', num_points=0, start_num=0, file_delim=config._file_delimiter, debug=DEBUG):
     """This program consists of a loop in which the program connects to the oscilloscope,
     a trace from the active channels are captured and stored for each loop. This permits
     the active channels to be changing thoughout the measurements, but has larger
@@ -59,9 +59,9 @@ def getTraces_connect_each_time_loop(fname=FILENAME, ext=FILETYPE, address=VISA_
         n += 1
     print("Quit")
 
-def getTraces_single_connection_loop(fname=FILENAME, ext=FILETYPE, address=VISA_ADDRESS, timeout=TIMEOUT, wav_format=WAVEFORM_FORMAT,
-                                     channel_nums=CH_NUMS, source_type='CHANnel', acq_type=ACQ_TYPE,
-                                     num_averages=NUM_AVG, p_mode='RAW', num_points=0, start_num=0, file_delim=FILE_DELIMITER, debug=DEBUG):
+def getTraces_single_connection_loop(fname=config._filename, ext=config._filetype, address=config._visa_address, timeout=config._timeout, wav_format=config._waveform_format,
+                                     channel_nums=config._ch_nums, source_type='CHANnel', acq_type=config._acq_type,
+                                     num_averages=config._num_avg, p_mode='RAW', num_points=0, start_num=0, file_delim=config._file_delimiter, debug=DEBUG):
     """This program connects to the oscilloscope, sets options for the acquisition and then
     enters a loop in which the program captures and stores traces each time 'enter' is pressed.
     Alternatively one can input n-1 characters before hitting 'enter' to capture n traces
@@ -93,9 +93,9 @@ def getTraces_single_connection_loop(fname=FILENAME, ext=FILETYPE, address=VISA_
     scope.close()
 
 
-def get_n_traces(fname=FILENAME, ext=FILETYPE, num=1, address=VISA_ADDRESS, timeout=TIMEOUT, wav_format=WAVEFORM_FORMAT,
-                 channel_nums=CH_NUMS, source_type='CHANnel', acq_type=ACQ_TYPE,
-                 num_averages=NUM_AVG, p_mode='RAW', num_points=0, start_num=0, file_delim=FILE_DELIMITER, debug=DEBUG):
+def get_n_traces(fname=config._filename, ext=config._filetype, num=1, address=config._visa_address, timeout=config._timeout, wav_format=config._waveform_format,
+                 channel_nums=config._ch_nums, source_type='CHANnel', acq_type=config._acq_type,
+                 num_averages=config._num_avg, p_mode='RAW', num_points=0, start_num=0, file_delim=config._file_delimiter, debug=DEBUG):
         """This program connects to the oscilloscope, sets options for the
         acquisition, and captures num traces"""
         ## Initialise
@@ -125,9 +125,9 @@ def get_n_traces(fname=FILENAME, ext=FILETYPE, num=1, address=VISA_ADDRESS, time
 
 
 def run_programme(name, args):
-    fname = args[1] if (len(args) >= 2 and args[1] != None) else FILENAME #if optional argument is supplied on the command line use as base filename
-    ext = FILETYPE
-    a_type = args[2] if (len(args) >= 3 and args[2] != None) else ACQ_TYPE #if 2nd optional argument is supplied on the command line use acquiring mode
+    fname = args[1] if (len(args) >= 2 and not (args[1] is None)) else config._filename #if optional argument is supplied on the command line use as base filename
+    ext = config._filetype
+    a_type = args[2] if (len(args) >= 3 and (args[2] is None)) else config._acq_type #if 2nd optional argument is supplied on the command line use acquiring mode
     if a_type[:4] == 'AVER':
         fname += " " + a_type
     n = int(args[3]) if len(args) >= 4 else 1 #if 3rd optional argument is supplied on the command line use acquiring mode

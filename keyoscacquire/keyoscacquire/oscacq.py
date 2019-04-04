@@ -6,7 +6,7 @@ Traces are stored as csv files and will by default be accompanied by a png plot 
 
 This script can be called resulting in one trace being captured and stored.
 Optional argument from the command line: string setting the base filename of the output files.
-Change the VISA_ADDRESS under default options to the desired instrument.
+Change the _visa_address under in config to the desired instrument.
 
 Tested with Keysight DSOX2024A.
 See Keysight's Programmer's Guide for reference.
@@ -22,14 +22,14 @@ import matplotlib.pyplot as plt
 import logging; log = logging.getLogger(__name__)
 
 # local file with default options:
-from keyoscacquire.default_options import VISA_ADDRESS, WAVEFORM_FORMAT, CH_NUMS, ACQ_TYPE, NUM_AVG, FILENAME, FILETYPE, TIMEOUT, EXPORT_PNG, SHOW_PLOT, DEBUG
+import keyoscacquire.config as config
 
 
 ##============================================================================##
 
 class Oscilloscope():
 
-    def __init__(self, address=VISA_ADDRESS, timeout=TIMEOUT):
+    def __init__(self, address=config._visa_address, timeout=config._timeout):
         """
         Open a connection to instrument and choose settings for the connection and acquisition.
         Some alternative settings are listed.
@@ -67,8 +67,8 @@ class Oscilloscope():
         """Control attribute which decides whether to print information while acquiring"""
         self.acquire_print = value
 
-    def set_acquiring_options(self, wav_format=WAVEFORM_FORMAT, acq_type=ACQ_TYPE,
-                              num_averages=NUM_AVG, p_mode='RAW', num_points=0, acq_print=None):
+    def set_acquiring_options(self, wav_format=config._waveform_format, acq_type=config._acq_type,
+                              num_averages=config._num_avg, p_mode='RAW', num_points=0, acq_print=None):
         """Sets the options for acquisition from the oscilloscope
         wav_format = {'WORD' | 'BYTE' | 'ASCii'}
         acq_type = {'HRESolution' | 'NORMal' | 'AVERage' | 'AVER<m>'} <m> will be used as num_averages if supplied
@@ -120,7 +120,7 @@ class Oscilloscope():
             inst.write(':WAVeform:POINts ' + str(self.num_points))
             print("Number of points set to: ", self.num_points)
 
-    def build_sourcesstring(self, source_type='CHANnel', channel_nums=CH_NUMS):
+    def build_sourcesstring(self, source_type='CHANnel', channel_nums=config._ch_nums):
         """Builds the sources string from channel_nums, a list of the channel numbers to be used.
         If channel_nums is contains only one empty string, the active channels on the oscilloscope
         are used."""
@@ -171,7 +171,7 @@ class Oscilloscope():
                 raw.append(self.inst.query_binary_values(':WAVeform:DATA?', datatype=datatype)) # read out data for this source
             except visa.Error as err:
                 print("\nError: Failed to obtain waveform, have you checked that"
-                      " the TIMEOUT (currently %d ms) is sufficently long?" % self.timeout)
+                      " the timeout (currently %d ms) is sufficently long?" % self.timeout)
                 print(err)
                 print("\nExiting..\n")
                 self.close()
@@ -203,7 +203,7 @@ class Oscilloscope():
                 raw.append(self.inst.query(':WAVeform:DATA?')) # read out data for this source
             except visa.Error:
                 print("\nVisaError: Failed to obtain waveform, have you checked that"
-                      " the TIMEOUT (currently %d ms) is sufficently long?" % self.timeout)
+                      " the timeout (currently %d ms) is sufficently long?" % self.timeout)
                 print("\nExiting..\n")
                 self.close()
                 raise
@@ -224,8 +224,8 @@ class Oscilloscope():
         return x, y
 
     def set_options_getTrace(self, channel_nums=[''], source_type='CHANnel',
-                                 wav_format=WAVEFORM_FORMAT, acq_type=ACQ_TYPE,
-                                 num_averages=NUM_AVG, p_mode='RAW', num_points=0):
+                                 wav_format=config._waveform_format, acq_type=config._acq_type,
+                                 num_averages=config._num_avg, p_mode='RAW', num_points=0):
         """
         Returns one numpy array of the x time values and one numpy array of y values.
         Some alternative settings are listed.
@@ -248,8 +248,8 @@ class Oscilloscope():
         x, y = self.getTrace(sources, sourcesstring)
         return x, y, channel_nums
 
-    def set_options_getTrace_save(self, fname=FILENAME, ext=FILETYPE, channel_nums=[''], source_type='CHANnel',
-                                  wav_format=WAVEFORM_FORMAT, acq_type='HRESolution', num_averages=2, p_mode='RAW', num_points=0):
+    def set_options_getTrace_save(self, fname=config._filename, ext=config._filetype, channel_nums=[''], source_type='CHANnel',
+                                  wav_format=config._waveform_format, acq_type='HRESolution', num_averages=2, p_mode='RAW', num_points=0):
         """
         Get trace, close connection and saves the trace to a csv and png.
         Some alternative settings are listed.
@@ -341,7 +341,7 @@ def process_data_ascii(raw, measurement_time, acquire_print):
 ##                           SAVING FILES                                     ##
 ##============================================================================##
 
-def check_file(fname, ext=FILETYPE, num=""):
+def check_file(fname, ext=config._filetype, num=""):
     """
     Checking if file fname+num+ext exists. If it does the user is prompted
     for a string to append to fname until a unique fname is found.
@@ -352,7 +352,7 @@ def check_file(fname, ext=FILETYPE, num=""):
         fname += append
     return fname
 
-def saveTrace(fname, x, y, fileheader="", ext=FILETYPE, acquire_print=True):
+def saveTrace(fname, x, y, fileheader="", ext=config._filetype, acquire_print=True):
     """
     Saves the trace with x values and y values as a txt/csv/dat etc specified by 'ext'.
     Current date and time is automatically added to the header.
@@ -362,7 +362,7 @@ def saveTrace(fname, x, y, fileheader="", ext=FILETYPE, acquire_print=True):
     data = np.append(x, y, axis=1) # make one array with coloumns x y1 y2 ..
     np.savetxt(fname+ext, data, delimiter=",", header=fileheader+date_time)
 
-def plotTrace(x, y, channel_nums, fname="", show=SHOW_PLOT, savepng=EXPORT_PNG):
+def plotTrace(x, y, channel_nums, fname="", show=config._show_plot, savepng=config._export_png):
     """
     Plots the trace with channel colours according to the Keysight colourmap
     and saves as a png with filename 'fname'.
@@ -381,8 +381,8 @@ def plotTrace(x, y, channel_nums, fname="", show=SHOW_PLOT, savepng=EXPORT_PNG):
 
 ## Main function, runs only if the script is called from the command line
 if __name__ == '__main__':
-    fname = sys.argv[1] if len(sys.argv) >= 2 else FILENAME
-    ext = FILETYPE
+    fname = sys.argv[1] if len(sys.argv) >= 2 else config._filename
+    ext = config._filetype
     scope = Oscilloscope()
     scope.set_options_getTrace_save(fname, ext)
     scope.close()

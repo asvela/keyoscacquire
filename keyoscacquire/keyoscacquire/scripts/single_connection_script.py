@@ -15,7 +15,7 @@ changing thoughout the measurements.
 1st optional argument from the command line: string setting the base filename of the output files.
 2nd optional arg: acquire type {HRESolution, NORMal, AVER<m>} where <m> is the number of averages [1, 65536]
 
-Change the VISA_ADDRESS under default options to the desired instrument.
+Change the config._visa_address under default options to the desired instrument.
 
 
 Tested with Keysight DSOX2024A.

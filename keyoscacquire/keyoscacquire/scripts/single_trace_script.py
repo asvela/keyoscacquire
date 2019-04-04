@@ -7,7 +7,7 @@ Traces are stored as csv files and will by default be accompanied by a png plot 
 This program captures a single trace and stores it.
 
 Optional argument from the command line: string setting the base filename of the output files.
-Change the VISA_ADDRESS under default options to the desired instrument.
+Change the config._visa_address under default options to the desired instrument.
 
 Tested with Keysight DSOX2024A.
 See Keysight's Programmer's Guide for reference.
