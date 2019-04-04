@@ -20,9 +20,9 @@ import keyoscacquire.config as config
 
 def get_single_trace(fname=config._filename, ext=config._filetype, address=config._visa_address, timeout=config._timeout, wav_format=config._waveform_format,
                      channel_nums=config._ch_nums, source_type='CHANnel', acq_type=config._acq_type,
-                     num_averages=config._num_avg, p_mode='RAW', num_points=0, debug=DEBUG):
+                     num_averages=config._num_avg, p_mode='RAW', num_points=0):
     """This programme captures and stores a trace."""
-    scope = acq.Oscilloscope(address=address, timeout=timeout, debug=debug)
+    scope = acq.Oscilloscope(address=address, timeout=timeout)
     scope.set_options_getTrace_save(fname=fname, ext=ext, wav_format=wav_format,
                           channel_nums=channel_nums, source_type=source_type, acq_type=acq_type,
                           num_averages=num_averages, p_mode=p_mode, num_points=num_points)
@@ -32,7 +32,7 @@ def get_single_trace(fname=config._filename, ext=config._filetype, address=confi
 
 def getTraces_connect_each_time_loop(fname=config._filename, ext=config._filetype, address=config._visa_address, timeout=config._timeout, wav_format=config._waveform_format,
                                      channel_nums=config._ch_nums, source_type='CHANnel', acq_type=config._acq_type,
-                                     num_averages=config._num_avg, p_mode='RAW', num_points=0, start_num=0, file_delim=config._file_delimiter, debug=DEBUG):
+                                     num_averages=config._num_avg, p_mode='RAW', num_points=0, start_num=0, file_delim=config._file_delimiter):
     """This program consists of a loop in which the program connects to the oscilloscope,
     a trace from the active channels are captured and stored for each loop. This permits
     the active channels to be changing thoughout the measurements, but has larger
@@ -47,7 +47,7 @@ def getTraces_connect_each_time_loop(fname=config._filename, ext=config._filetyp
     print("where <n> increases by one for each captured trace. Press 'q'+'enter' to quit the programme.")
     while sys.stdin.read(1) != 'q': # breaks the loop if q+enter is given as input. For any other character (incl. enter)
         fnum = file_delim+str(n)
-        scope = acq.Oscilloscope(address=address, timeout=timeout, debug=debug)
+        scope = acq.Oscilloscope(address=address, timeout=timeout)
         x, y, channels = scope.set_options_getTrace(wav_format=wav_format,
                               channel_nums=channel_nums, source_type=source_type, acq_type=acq_type,
                               num_averages=num_averages, p_mode=p_mode, num_points=num_points)
@@ -61,7 +61,7 @@ def getTraces_connect_each_time_loop(fname=config._filename, ext=config._filetyp
 
 def getTraces_single_connection_loop(fname=config._filename, ext=config._filetype, address=config._visa_address, timeout=config._timeout, wav_format=config._waveform_format,
                                      channel_nums=config._ch_nums, source_type='CHANnel', acq_type=config._acq_type,
-                                     num_averages=config._num_avg, p_mode='RAW', num_points=0, start_num=0, file_delim=config._file_delimiter, debug=DEBUG):
+                                     num_averages=config._num_avg, p_mode='RAW', num_points=0, start_num=0, file_delim=config._file_delimiter):
     """This program connects to the oscilloscope, sets options for the acquisition and then
     enters a loop in which the program captures and stores traces each time 'enter' is pressed.
     Alternatively one can input n-1 characters before hitting 'enter' to capture n traces
@@ -70,7 +70,7 @@ def getTraces_single_connection_loop(fname=config._filename, ext=config._filetyp
     a trace is captured. The downside is that which channels are being captured cannot be
     changing thoughout the measurements."""
     ## Initialise
-    scope = acq.Oscilloscope(address=address, timeout=timeout, debug=debug)
+    scope = acq.Oscilloscope(address=address, timeout=timeout)
     scope.set_acquiring_options(wav_format=wav_format, acq_type=acq_type,
                                num_averages=num_averages, p_mode=p_mode,
                                num_points=num_points)
@@ -95,11 +95,11 @@ def getTraces_single_connection_loop(fname=config._filename, ext=config._filetyp
 
 def get_n_traces(fname=config._filename, ext=config._filetype, num=1, address=config._visa_address, timeout=config._timeout, wav_format=config._waveform_format,
                  channel_nums=config._ch_nums, source_type='CHANnel', acq_type=config._acq_type,
-                 num_averages=config._num_avg, p_mode='RAW', num_points=0, start_num=0, file_delim=config._file_delimiter, debug=DEBUG):
+                 num_averages=config._num_avg, p_mode='RAW', num_points=0, start_num=0, file_delim=config._file_delimiter):
         """This program connects to the oscilloscope, sets options for the
         acquisition, and captures num traces"""
         ## Initialise
-        scope = acq.Oscilloscope(address=address, timeout=timeout, debug=debug)
+        scope = acq.Oscilloscope(address=address, timeout=timeout)
         scope.set_acquiring_options(wav_format=wav_format, acq_type=acq_type,
                                    num_averages=num_averages, p_mode=p_mode,
                                    num_points=num_points, acq_print=False)

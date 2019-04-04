@@ -35,7 +35,6 @@ class Oscilloscope():
         Some alternative settings are listed.
         address = {'USB0::2391::6038::MY57233636::INSTR' | 'TCPIP0::192.168.20.30::4000::SOCKET'}
         timeout = ms before timeout on the channel to the instrument
-        debug = {True, False} should extra debug information be printed
         """
         self.timeout = timeout
         self.acquire_print = True
