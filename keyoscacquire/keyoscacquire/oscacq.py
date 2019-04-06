@@ -178,7 +178,6 @@ class Oscilloscope():
                 raise
         _log.debug("Elapsed time capture and read: %.3f" % float(time.time()-start_time))
         self.inst.write(':RUN') # set the oscilloscope running again
-        print(preambles[0])
         return raw, preambles
 
     def capture_and_read_ascii(self, sources, sourcesstring):
