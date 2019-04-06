@@ -125,11 +125,11 @@ def get_n_traces(fname=config._filename, ext=config._filetype, num=1, address=co
 
 
 def run_programme(name, args):
-    fname = args[1] if (len(args) >= 2 and not (args[1] is None)) else config._filename #if optional argument is supplied on the command line use as base filename
+    fname = args[1] if (len(args) >= 2 and args[1] is not None) else config._filename #if optional argument is supplied on the command line use as base filename
     ext = config._filetype
-    a_type = args[2] if (len(args) >= 3 and (args[2] is None)) else config._acq_type #if 2nd optional argument is supplied on the command line use acquiring mode
+    a_type = args[2] if (len(args) >= 3 and args[2] is not None) else config._acq_type #if 2nd optional argument is supplied on the command line use acquiring mode
     if a_type[:4] == 'AVER':
-        fname += " " + a_type
+            fname += " " + a_type
     n = int(args[3]) if len(args) >= 4 else 1 #if 3rd optional argument is supplied on the command line use acquiring mode
 
     log.debug("Running programme \'%s\' saving to base filename \'%s\' with extension \'%s\' and aquiring type \'%s\'" % (name, fname, ext, a_type))

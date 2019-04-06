@@ -79,7 +79,7 @@ class Oscilloscope():
         self.wav_format = wav_format; self.acq_type = acq_type[:4]
         self.p_mode = p_mode; self.num_points = num_points
 
-        if not (acq_print is None):
+        if acq_print is not None:
             self.acquire_print = acq_print #set acquiring_print only if not None
 
         self.inst.write(':ACQuire:TYPE ' + self.acq_type)
@@ -175,7 +175,7 @@ class Oscilloscope():
                 print("\nExiting..\n")
                 self.close()
                 raise
-        log.debug("Elapsed time: %.3f" % float(time.time()-start_time))
+        log.debug("Elapsed time capture and read: %.3f" % float(time.time()-start_time))
         self.inst.write(':RUN') # set the oscilloscope running again
         return raw, preambles
 
@@ -206,7 +206,7 @@ class Oscilloscope():
                 print("\nExiting..\n")
                 self.close()
                 raise
-        log.debug("Elapsed time: %.3f" %  float(time.time()-start_time))
+        log.debug("Elapsed time capture and read: %.3f" %  float(time.time()-start_time))
         measurement_time = float(self.inst.query(':TIMebase:RANGe?')) # returns the current full-scale range value for the main window
         self.inst.write(':RUN') # set the oscilloscope running again
         return raw, measurement_time
@@ -214,12 +214,12 @@ class Oscilloscope():
     ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~##
 
     def getTrace(self, sources, sourcesstring, acquire_print=None):
-        if not (acquire_print is None): # possibility to override acquire_print
+        if acquire_print is not None: # possibility to override acquire_print
             temp = self.acquire_print # store current setting
             self.acquire_print = acquire_print # set temporary setting
         raw, metadata = self.capture_and_read(sources, sourcesstring)
         x, y = process_data(raw, metadata, self.wav_format, acquire_print=self.acquire_print) # capture, read and process data
-        if not (acquire_print is None): self.acquire_print = temp # restore to previous setting
+        if acquire_print is not None: self.acquire_print = temp # restore to previous setting
         return x, y
 
     def set_options_getTrace(self, channel_nums=[''], source_type='CHANnel',
@@ -292,6 +292,7 @@ def process_data_binary(raw, preambles, acquire_print):
     Process raw 8/16-bit data to time x values and y voltage values.
     Output: numpy array x containing time values, numpy array y containing voltages for captured channels
     """
+    start_time = time.time() # time the processing
     preamble = preambles[0].split(',')  # values separated by commas
     # 0 FORMAT : int16 - 0 = BYTE, 1 = WORD, 4 = ASCII.
     # 1 TYPE : int16 - 0 = NORMAL, 1 = PEAK DETECT, 2 = AVERAGE
@@ -305,16 +306,16 @@ def process_data_binary(raw, preambles, acquire_print):
     # 9 YREFERENCE : int32 - specifies the data point where y-origin occurs.
 
     if acquire_print: print("Points captured per channel: ", num_samples)
-    y = []
+    y = np.empty((len(raw), num_samples))
     for i, data in enumerate(raw):
         preamble = preambles[i].split(',')
         yIncr, yOrig, yRef = float(preamble[7]), float(preamble[8]), int(preamble[9])
-        data = np.array([((sample-yRef)*yIncr)+yOrig for sample in data])
-        y.append(data) # add the voltage values for this channel to y array
+        y[i,:] = np.array([((sample-yRef)*yIncr)+yOrig for sample in data])
 
     y = np.transpose(np.array(y)) # convert y to np array and transpose for vertical channel columns in csv file
     x = np.array([((sample-xRef)*xIncr)+xOrig for sample in range(num_samples)]) # compute x-values
     x = np.vstack(x) # make x values vertical
+    log.debug("Elapsed time processing data: %.3f" % float(time.time()-start_time))
     return x, y
 
 def process_data_ascii(raw, measurement_time, acquire_print):
@@ -322,6 +323,7 @@ def process_data_ascii(raw, measurement_time, acquire_print):
     Process raw comma separated ascii data to time x values and y voltage values.
     Output: numpy array x containing time values, numpy array y containing voltages for caputred channels
     """
+    start_time = time.time() # time the processing
     y = []
     for data in raw:
         data = data.split(data[:10])[1] # remove first 10 characters (is this a quick but not so intuitive way?)
@@ -334,6 +336,7 @@ def process_data_ascii(raw, measurement_time, acquire_print):
     x = np.linspace(0, measurement_time, num_samples) # compute x-values
     x = np.vstack(x) # make list vertical
     if acquire_print: print("Points captured per channel: ", num_samples)
+    log.debug("Elapsed time processing data: %.3f" % float(time.time()-start_time))
     return x, y
 
 ##============================================================================##
@@ -357,7 +360,7 @@ def saveTrace(fname, x, y, fileheader="", ext=config._filetype, acquire_print=Tr
     Current date and time is automatically added to the header.
     """
     date_time = str(datetime.datetime.now()) # get current date and time
-    if acquire_print: print("Saving trace to %s\n" % fname+ext)
+    if acquire_print: print("Saving trace to %s\n" % (fname+ext))
     data = np.append(x, y, axis=1) # make one array with coloumns x y1 y2 ..
     np.savetxt(fname+ext, data, delimiter=",", header=fileheader+date_time)
 
