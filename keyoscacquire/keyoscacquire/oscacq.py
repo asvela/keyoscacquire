@@ -19,7 +19,7 @@ import visa           # instrument communication
 import time, datetime # for measuring elapsed time and adding current date and time to exported files
 import numpy as np
 import matplotlib.pyplot as plt
-import logging; log = logging.getLogger(__name__)
+import logging; _log = logging.getLogger(__name__)
 
 # local file with default options:
 import keyoscacquire.config as config
@@ -60,7 +60,7 @@ class Oscilloscope():
         # Set the oscilloscope running before closing the connection
         self.inst.write(':RUN')
         self.inst.close()
-        log.debug("Closed connection to \'%s\'" % self.id)
+        _log.debug("Closed connection to \'%s\'" % self.id)
 
     def set_acquire_print(self, value):
         """Control attribute which decides whether to print information while acquiring"""
@@ -110,11 +110,11 @@ class Oscilloscope():
         p_isnorm = self.p_mode[:4] == 'NORM'
         if a_isaver and not p_isnorm:
             self.p_mode = 'NORM'
-            log.debug(":WAVeform:POINts:MODE overridden (from %s) to NORMal due to :ACQuire:TYPE:AVERage." % p_mode)
+            _log.debug(":WAVeform:POINts:MODE overridden (from %s) to NORMal due to :ACQuire:TYPE:AVERage." % p_mode)
         else:
             self.p_mode = p_mode
         self.inst.write(':WAVeform:POINts:MODE ' + self.p_mode)
-        #log.debug("Max number of points for mode %s: %s" % (self.p_mode, self.inst.query(':WAVeform:POINts?')))
+        #_log.debug("Max number of points for mode %s: %s" % (self.p_mode, self.inst.query(':WAVeform:POINts?')))
         if self.num_points != 0: #if number of points has been specified
             inst.write(':WAVeform:POINts ' + str(self.num_points))
             print("Number of points set to: ", self.num_points)
@@ -143,7 +143,6 @@ class Oscilloscope():
             return self.capture_and_read_ascii(sources, sourcestring)
         else:
             raise Exception("\nError: Could not capture and read data, waveform format \'{}\' is unknown.\nExiting..\n".format(self.wav_format))
-            sys.exit()
 
     def capture_and_read_binary(self, sources, sourcesstring, datatype='H'):
         """
@@ -166,7 +165,9 @@ class Oscilloscope():
         for source in sources:
             self.inst.write(':WAVeform:SOURce ' + source) # selects the channel for which the succeeding WAVeform commands applies to
             try:
-                preambles.append(self.inst.query(':WAVeform:PREamble?')) # comma separated metadata values for processing of raw data for this source
+                # obtain comma separated metadata values for processing of raw data for this source
+                preambles.append(self.inst.query(':WAVeform:PREamble?'))
+                # obtain the data
                 raw.append(self.inst.query_binary_values(':WAVeform:DATA?', datatype=datatype)) # read out data for this source
             except visa.Error as err:
                 print("\nError: Failed to obtain waveform, have you checked that"
@@ -175,8 +176,9 @@ class Oscilloscope():
                 print("\nExiting..\n")
                 self.close()
                 raise
-        log.debug("Elapsed time capture and read: %.3f" % float(time.time()-start_time))
+        _log.debug("Elapsed time capture and read: %.3f" % float(time.time()-start_time))
         self.inst.write(':RUN') # set the oscilloscope running again
+        print(preambles[0])
         return raw, preambles
 
     def capture_and_read_ascii(self, sources, sourcesstring):
@@ -206,7 +208,7 @@ class Oscilloscope():
                 print("\nExiting..\n")
                 self.close()
                 raise
-        log.debug("Elapsed time capture and read: %.3f" %  float(time.time()-start_time))
+        _log.debug("Elapsed time capture and read: %.3f" %  float(time.time()-start_time))
         measurement_time = float(self.inst.query(':TIMebase:RANGe?')) # returns the current full-scale range value for the main window
         self.inst.write(':RUN') # set the oscilloscope running again
         return raw, measurement_time
@@ -313,9 +315,9 @@ def process_data_binary(raw, preambles, acquire_print):
         y[i,:] = np.array([((sample-yRef)*yIncr)+yOrig for sample in data])
 
     y = np.transpose(np.array(y)) # convert y to np array and transpose for vertical channel columns in csv file
-    x = np.array([((sample-xRef)*xIncr)+xOrig for sample in range(num_samples)]) # compute x-values
-    x = np.vstack(x) # make x values vertical
-    log.debug("Elapsed time processing data: %.3f" % float(time.time()-start_time))
+    x = np.array([[((sample-xRef)*xIncr)+xOrig for sample in range(num_samples)]]) # compute x-values
+    x = x.T # make x values vertical
+    _log.debug("Elapsed time processing data: %.3f" % float(time.time()-start_time))
     return x, y
 
 def process_data_ascii(raw, measurement_time, acquire_print):
@@ -333,10 +335,10 @@ def process_data_ascii(raw, measurement_time, acquire_print):
 
     y = np.transpose(np.array(y))
     num_samples = np.shape(y)[0] # number of samples captured per channel
-    x = np.linspace(0, measurement_time, num_samples) # compute x-values
-    x = np.vstack(x) # make list vertical
+    x = np.array([np.linspace(0, measurement_time, num_samples)]) # compute x-values
+    x = x.T # make list vertical
     if acquire_print: print("Points captured per channel: ", num_samples)
-    log.debug("Elapsed time processing data: %.3f" % float(time.time()-start_time))
+    _log.debug("Elapsed time processing data: %.3f" % float(time.time()-start_time))
     return x, y
 
 ##============================================================================##
