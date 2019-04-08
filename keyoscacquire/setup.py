@@ -22,9 +22,9 @@ if __name__ == '__main__':
           description='Obtain traces, save to files and export raw plots from Keysight oscilloscopes using PyVISA.',
           long_description=open('README.md').read(),
           long_description_content_type="text/markdown",
-          url='http://www.npl.co.uk',
+          url='http://microphotonics.net/',
           author='Andreas Svela',
-          author_email='andreas.svela@npl.co.uk',
+          author_email='asvela@ic.ac.uk',
           license='MIT',
           packages=['keyoscacquire'],
           entry_points={
