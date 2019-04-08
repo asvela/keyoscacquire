@@ -293,7 +293,6 @@ def process_data_binary(raw, preambles, acquire_print):
     Process raw 8/16-bit data to time x values and y voltage values.
     Output: numpy array x containing time values, numpy array y containing voltages for captured channels
     """
-    start_time = time.time() # time the processing
     preamble = preambles[0].split(',')  # values separated by commas
     # 0 FORMAT : int16 - 0 = BYTE, 1 = WORD, 4 = ASCII.
     # 1 TYPE : int16 - 0 = NORMAL, 1 = PEAK DETECT, 2 = AVERAGE
@@ -316,7 +315,6 @@ def process_data_binary(raw, preambles, acquire_print):
     y = np.transpose(np.array(y)) # convert y to np array and transpose for vertical channel columns in csv file
     x = np.array([[((sample-xRef)*xIncr)+xOrig for sample in range(num_samples)]]) # compute x-values
     x = x.T # make x values vertical
-    _log.debug("Elapsed time processing data: %.3f" % float(time.time()-start_time))
     return x, y
 
 def process_data_ascii(raw, measurement_time, acquire_print):
@@ -324,7 +322,6 @@ def process_data_ascii(raw, measurement_time, acquire_print):
     Process raw comma separated ascii data to time x values and y voltage values.
     Output: numpy array x containing time values, numpy array y containing voltages for caputred channels
     """
-    start_time = time.time() # time the processing
     y = []
     for data in raw:
         data = data.split(data[:10])[1] # remove first 10 characters (is this a quick but not so intuitive way?)
@@ -337,7 +334,6 @@ def process_data_ascii(raw, measurement_time, acquire_print):
     x = np.array([np.linspace(0, measurement_time, num_samples)]) # compute x-values
     x = x.T # make list vertical
     if acquire_print: print("Points captured per channel: ", num_samples)
-    _log.debug("Elapsed time processing data: %.3f" % float(time.time()-start_time))
     return x, y
 
 ##============================================================================##
