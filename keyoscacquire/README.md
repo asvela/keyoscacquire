@@ -1,7 +1,7 @@
 # Keysight oscilloscope acquire package
 
 
-v1.1.0 // April 2019 // Andreas Svela
+v1.1.1 // August 2019 // Andreas Svela
 
 ## Overview
 

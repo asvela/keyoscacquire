@@ -176,7 +176,10 @@ class Oscilloscope():
                 print("\nExiting..\n")
                 self.close()
                 raise
-        _log.debug("Elapsed time capture and read: %.3f" % float(time.time()-start_time))
+        if self.acquire_print:
+            _log.info("Elapsed time capture and read: %.1f ms" % ((time.time()-start_time)*1e3))
+        else:
+            _log.debug("Elapsed time capture and read: %.1f ms" % ((time.time()-start_time)*1e3))
         self.inst.write(':RUN') # set the oscilloscope running again
         return raw, preambles
 
@@ -207,7 +210,10 @@ class Oscilloscope():
                 print("\nExiting..\n")
                 self.close()
                 raise
-        _log.debug("Elapsed time capture and read: %.3f" %  float(time.time()-start_time))
+        if self.acquire_print:
+            _log.info("Elapsed time capture and read: %.1f ms" % ((time.time()-start_time)*1e3))
+        else:
+            _log.debug("Elapsed time capture and read: %.1f ms" % ((time.time()-start_time)*1e3))
         measurement_time = float(self.inst.query(':TIMebase:RANGe?')) # returns the current full-scale range value for the main window
         self.inst.write(':RUN') # set the oscilloscope running again
         return raw, measurement_time
@@ -333,7 +339,9 @@ def process_data_ascii(raw, measurement_time, acquire_print):
     num_samples = np.shape(y)[0] # number of samples captured per channel
     x = np.array([np.linspace(0, measurement_time, num_samples)]) # compute x-values
     x = x.T # make list vertical
-    if acquire_print: print("Points captured per channel: ", num_samples)
+    if acquire_print:
+        print("Points captured per channel: ", num_samples)
+        _log.info("Points captured per channel: ", num_samples)
     return x, y
 
 ##============================================================================##

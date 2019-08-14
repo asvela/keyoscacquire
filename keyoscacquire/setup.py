@@ -6,7 +6,7 @@ Install the Keysight Oscilloscope Acquire library.
 Andreas Svela // 2019
 """
 
-__version__ = '1.1.0'
+__version__ = '1.1.1'
 
 import os
 from setuptools import setup

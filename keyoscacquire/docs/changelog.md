@@ -1,5 +1,6 @@
 # Changelog
 
+- v1.1.1: Logging gives elapsed time in milliseconds, change in logging level for elapsed time
 - v1.1.0: Extra command line function, logging enabled, order of magnitude speed-up in data processing
   - Added command line function for obtaining a given number of traces consecutively
   - Former debugging print is now directed to logging.debug()
