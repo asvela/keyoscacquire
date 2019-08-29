@@ -1,7 +1,7 @@
 # Keysight oscilloscope acquire package
 
 
-v1.1.1 // August 2019 // Andreas Svela
+v2.0.0 // August 2019 // Andreas Svela
 
 ## Overview
 
@@ -26,11 +26,11 @@ The package is installed with a set of default options found in `keyoscacq/confi
 ```python
 # Default options in config.py
 _visa_address = 'USB0::XXXX::XXXX::MYXXXXXXXX::INSTR' # address of instrument
-_waveform_format = 'WORD'        # WORD formatted data is transferred as 16-bit uint.
+_waveform_format = 'WORD'       # WORD formatted data is transferred as 16-bit uint.
                                 # BYTE formatted data is transferred as 8-bit uint.
                                 # ASCii formatted data converts the internal integer data values to real Y-axis values.
                                 #       Values are transferred as ASCii digits in floating point notation, separated by commas.
-_ch_nums = ['']                  # list of chars, e.g. ['1', '3']. Use a list with an empty string [''] to capture all currently displayed channels
+_ch_nums = ['']                 # list of chars, e.g. ['1', '3']. Use a list with an empty string [''] to capture all currently displayed channels
 _acq_type = "HRESolution"# {HRESolution, NORMal, AVER<m>} where <m> is the number of averages in range [1, 65536]
 _num_avg = 2             # default number of averages used if only AVER is given as acquisition type
 _filename = "data"       # default base filename of all traces and pngs exported, a number is appended to the base
@@ -49,6 +49,7 @@ The command line programmes will save traces in the folder from where they are r
 
 ## Known issues/suggested improvements
 
+- Known issue: Sometimes `WORD` waveform does not give the correct trace data, just random noise (but switching to `ASCii` or `BYTE` gives correct traces). If this happens, open *KeySight BenchVue* and obtain one trace through the software. Now try to obtain a trace through this package -- it should now work again using `WORD`.
 - Add optional argument to supply visa address of instrument to command line executables and scripts
 
 ## Usage

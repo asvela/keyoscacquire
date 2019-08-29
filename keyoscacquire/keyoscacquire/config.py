@@ -1,10 +1,10 @@
 # Default options
 _visa_address = 'USB0::2391::6038::MY57233636::INSTR' # address of instrument
-_waveform_format = 'WORD'        # WORD formatted data is transferred as 16-bit uint.
+_waveform_format = 'WORD'       # WORD formatted data is transferred as 16-bit uint.
                                 # BYTE formatted data is transferred as 8-bit uint.
                                 # ASCii formatted data converts the internal integer data values to real Y-axis values.
                                 #       Values are transferred as ASCii digits in floating point notation, separated by commas.
-_ch_nums = ['']                  # list of chars, e.g. ['1', '3']. Use a list with an empty string [''] to capture all currently displayed channels
+_ch_nums = ['']                 # list of chars, e.g. ['1', '3']. Use a list with an empty string [''] to capture all currently displayed channels
 _acq_type = "HRESolution"# {HRESolution, NORMal, AVER<m>} where <m> is the number of averages in range [1, 65536]
 _num_avg = 2             # default number of averages used if only AVER is given as acquisition type
 _filename = "data"       # default base filename of all traces and pngs exported, a number is appended to the base

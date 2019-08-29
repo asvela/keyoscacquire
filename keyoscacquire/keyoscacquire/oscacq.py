@@ -275,7 +275,7 @@ class Oscilloscope():
                                                        wav_format=wav_format, acq_type=acq_type, num_averages=num_averages,
                                                        p_mode=p_mode, num_points=num_points)
         plotTrace(x, y, channel_nums, fname=fname)
-        head = self.id+"time,"+str(channel_nums)+"\n"
+        head = self.id+"\ntime,"+",".join(channel_nums)+"\n"
         saveTrace(fname, x, y, fileheader=head, ext=ext, acquire_print=self.acquire_print)
 
 

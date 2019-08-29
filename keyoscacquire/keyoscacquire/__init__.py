@@ -4,7 +4,7 @@
 Andreas Svela // 2019
 """
 
-__version__ = '1.1.1'
+__version__ = '2.0.0'
 
 import logging; _log = logging.getLogger(__name__)
 
