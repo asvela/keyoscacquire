@@ -24,10 +24,15 @@ def list_visa_devices():
     import pyvisa
     rm = pyvisa.ResourceManager()
     resources = rm.list_resources()
-    print("VISA devices connected")
-    print("-----------------------------------")
+    longest_name_len = max([len(r) for r in resources])
+    header = " # class  name"+" "*(longest_name_len-4)+" alias"
+    print("\nVISA devices connected:")
+    print(header)
+    print("="*(len(header)+8))
     for i, r in enumerate(resources):
-        print("%i: %s" % (i, resource_info(r)))
+        info = rm.resource_info(r)
+        alias = info.alias if info.alias is not None else "N/A"
+        print("{:>2d} {:6s} {:{num}s} {:10s}".format(i, info.resource_class, info.resource_name, alias, num=longest_name_len))
 
 
 def get_single_trace(fname=config._filename, ext=config._filetype, address=config._visa_address, timeout=config._timeout, wav_format=config._waveform_format,
