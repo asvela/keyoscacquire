@@ -62,6 +62,10 @@ class Oscilloscope():
         self.inst.close()
         _log.debug("Closed connection to \'%s\'" % self.id)
 
+    def is_running(self):
+        reg = int(self.inst.query(':OPERegister:CONDition?')) # The third bit of the operation register is 1 if the instrument is running
+        return (reg & 8) == 8
+
     def set_acquire_print(self, value):
         """Control attribute which decides whether to print information while acquiring"""
         self.acquire_print = value
@@ -153,10 +157,9 @@ class Oscilloscope():
         ## Capture data
         if self.acquire_print: print("Start acquisition..")
         start_time = time.time() # time the acquiring process
-        reg = int(self.inst.query(':OPERegister:CONDition?')) # The third bit of the operation register is 1 if the instrument is running
-            # If the instrument is not running, we presumably want the data on the screen and hence don't want
-            # to use DIGitize as digitize will obtain a new trace.
-        if (reg & 8) == 8: # If the third bit is 1 (ie. instrument is running)
+        # If the instrument is not running, we presumably want the data on the screen and hence don't want
+        # to use DIGitize as digitize will obtain a new trace.
+        if self.is_running():
             self.inst.write(':DIGitize ' + sourcesstring) # DIGitize is a specialized RUN command.
                                                      # Waveforms are acquired according to the settings of the :ACQuire commands.
                                                      # When acquisition is complete, the instrument is stopped.
