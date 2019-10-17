@@ -1,21 +1,21 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 """
-Obtain traces, save to files and export raw plots from (Keysight) oscilloscopes using pyVISA.
+Obtain traces, save to files and export raw plots from Keysight oscilloscopes using pyVISA.
 Traces are stored as csv files and will by default be accompanied by a png plot too.
 
 This script can be called resulting in one trace being captured and stored.
 Optional argument from the command line: string setting the base filename of the output files.
 Change the _visa_address under in config to the desired instrument.
 
-Tested with Keysight DSOX2024A.
+Tested with Keysight DSOX2024A on WIn7 and Win10.
 See Keysight's Programmer's Guide for reference.
 
 Andreas Svela 2018
 """
 
 import sys, os        # required for reading user input and command line arguments
-import visa           # instrument communication
+import pyvisa         # instrument communication
 import time, datetime # for measuring elapsed time and adding current date and time to exported files
 import numpy as np
 import matplotlib.pyplot as plt
@@ -40,10 +40,10 @@ class Oscilloscope():
         self.acquire_print = True
 
         try:
-            rm = visa.ResourceManager()
+            rm = pyvisa.ResourceManager()
             self.inst = rm.open_resource(address)
             self.address = address
-        except visa.Error as err:
+        except pyvisa.Error as err:
             print('\nVisaError: Could not connect to \'%s\', exiting now...' % address)
             raise
         # For TCP/IP socket connections enable the read Termination Character, or reads will timeout
@@ -172,7 +172,7 @@ class Oscilloscope():
                 preambles.append(self.inst.query(':WAVeform:PREamble?'))
                 # obtain the data
                 raw.append(self.inst.query_binary_values(':WAVeform:DATA?', datatype=datatype)) # read out data for this source
-            except visa.Error as err:
+            except pyvisa.Error as err:
                 print("\nError: Failed to obtain waveform, have you checked that"
                       " the timeout (currently %d ms) is sufficently long?" % self.timeout)
                 print(err)
@@ -206,7 +206,7 @@ class Oscilloscope():
             self.inst.write(':WAVeform:SOURce ' + source) # selects the channel for which the succeeding WAVeform commands applies to
             try:
                 raw.append(self.inst.query(':WAVeform:DATA?')) # read out data for this source
-            except visa.Error:
+            except pyvisa.Error:
                 print("\nVisaError: Failed to obtain waveform, have you checked that"
                       " the timeout (currently %d ms) is sufficently long?" % self.timeout)
                 print("\nExiting..\n")
@@ -392,6 +392,6 @@ def plotTrace(x, y, channel_nums, fname="", show=config._show_plot, savepng=conf
 if __name__ == '__main__':
     fname = sys.argv[1] if len(sys.argv) >= 2 else config._filename
     ext = config._filetype
-    scope = Oscilloscope()
-    scope.set_options_getTrace_save(fname, ext)
+    scope = Oscilloscope(address='USB0::0x0957::0x1796::MY59125372::INSTR', )
+    scope.set_options_getTrace_save(fname, ext, wav_format='WORD')
     scope.close()

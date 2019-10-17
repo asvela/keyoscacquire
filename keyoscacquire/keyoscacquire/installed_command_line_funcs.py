@@ -73,4 +73,11 @@ def num_traces_command_line():
 def list_visa_devices_command_line():
     """Function installed on the command line: Lists VISA devices"""
     parser = argparse.ArgumentParser(usage=acqprog.list_visa_devices.__doc__)
+    args = parser.parse_args()
     acqprog.list_visa_devices()
+
+def path_of_config_command_line():
+    """Function installed on the command line: Lists VISA devices"""
+    parser = argparse.ArgumentParser(usage=acqprog.path_of_config.__doc__)
+    args = parser.parse_args()
+    acqprog.path_of_config()
