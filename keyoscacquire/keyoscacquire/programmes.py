@@ -18,6 +18,18 @@ from tqdm import tqdm #progressbar
 # local file with default options:
 import keyoscacquire.config as config
 
+
+def list_visa_devices():
+    """Prints the VISA addresses of the connected instruments."""
+    import pyvisa
+    rm = pyvisa.ResourceManager()
+    resources = rm.list_resources()
+    print("VISA devices connected")
+    print("-----------------------------------")
+    for i, r in enumerate(resources):
+        print("%i: %s" % (i, resource_info(r)))
+
+
 def get_single_trace(fname=config._filename, ext=config._filetype, address=config._visa_address, timeout=config._timeout, wav_format=config._waveform_format,
                      channel_nums=config._ch_nums, source_type='CHANnel', acq_type=config._acq_type,
                      num_averages=config._num_avg, p_mode='RAW', num_points=0):
@@ -93,7 +105,7 @@ def getTraces_single_connection_loop(fname=config._filename, ext=config._filetyp
     scope.close()
 
 
-def get_n_traces(fname=config._filename, ext=config._filetype, num=1, address=config._visa_address, timeout=config._timeout, wav_format=config._waveform_format,
+def get_num_traces(fname=config._filename, ext=config._filetype, num=1, address=config._visa_address, timeout=config._timeout, wav_format=config._waveform_format,
                  channel_nums=config._ch_nums, source_type='CHANnel', acq_type=config._acq_type,
                  num_averages=config._num_avg, p_mode='RAW', num_points=0, start_num=0, file_delim=config._file_delimiter):
         """This program connects to the oscilloscope, sets options for the
@@ -141,6 +153,6 @@ def run_programme(name, args):
     elif name == names[2]:
         getTraces_single_connection_loop(fname, ext, acq_type=a_type)
     elif name == names[3]:
-        get_n_traces(fname, ext, num=n, acq_type=a_type)
+        get_num_traces(fname, ext, num=n, acq_type=a_type)
     else:
         raise ValueError("\nUnknown name \'%s\' of program to run. Available programmes %s." % (name, str(names)))
