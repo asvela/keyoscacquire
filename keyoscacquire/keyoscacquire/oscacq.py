@@ -46,6 +46,8 @@ class Oscilloscope():
         except pyvisa.Error as err:
             print('\nVisaError: Could not connect to \'%s\', exiting now...' % address)
             raise
+        # make sure WORD and BYTE data is transeferred as unsigned ints
+        self.inst.write(':WAVeform:UNSigned ON')
         # For TCP/IP socket connections enable the read Termination Character, or reads will timeout
         if self.inst.resource_name.endswith('SOCKET'):
             self.inst.read_termination = '\n'
