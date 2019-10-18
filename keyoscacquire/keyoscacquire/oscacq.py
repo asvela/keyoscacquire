@@ -13,6 +13,8 @@ See Keysight's Programmer's Guide for reference.
 Andreas Svela 2018
 """
 
+__docformat__ = "restructuredtext en"
+
 import sys, os        # required for reading user input and command line arguments
 import pyvisa         # instrument communication
 import time, datetime # for measuring elapsed time and adding current date and time to exported files
@@ -23,6 +25,11 @@ import logging; _log = logging.getLogger(__name__)
 # local file with default options:
 import keyoscacquire.config as config
 
+_screen_colors = {'1':'C1', '2':'C2', '3':'C0', '4':'C3'} # Keysight colour map
+# Datatype is 'H' for 16 bit unsigned int (WORD), 'B' for 8 bit unsigned bit (BYTE)
+# (same naming as for structs, see https://docs.python.org/3/library/struct.html#format-characters)
+_datatypes = {'BYTE':'B', 'WORD':'H'}
+
 
 ##============================================================================##
 
@@ -30,10 +37,17 @@ class Oscilloscope():
 
     def __init__(self, address=config._visa_address, timeout=config._timeout):
         """
-        Open a connection to instrument and choose settings for the connection and acquisition.
-        Some alternative settings are listed.
-        address = {'USB0::2391::6038::MY57233636::INSTR' | 'TCPIP0::192.168.20.30::4000::SOCKET'}
-        timeout = ms before timeout on the channel to the instrument
+        Open a connection to instrument and choose settings for the connection.
+        Raises pyvisa.Error if no successful connection is made.
+
+        Parameters
+        ----------
+        address : str
+            Visa address of instrument. To find the visa addresses of the instruments
+            connected to the computer use the
+            examples 'USB0::2391::6038::MY5725636::INSTR', 'TCPIP0::192.168.20.30::4000::SOCKET'
+        timeout : int
+            Milliseconds before timeout on the channel to the instrument
         """
         self.timeout = timeout
         self.acquire_print = True
@@ -56,30 +70,74 @@ class Oscilloscope():
         self.id = self.inst.query('*IDN?').strip() # get the id of the connected device
         print("Connected to \'%s\'" % self.id)
 
-    def close(self):
-        """Set the oscilloscope to run and close the connection"""
-        # Set the oscilloscope running before closing the connection
+    def run(self):
+        """Set the ocilloscope to running mode."""
         self.inst.write(':RUN')
-        self.inst.close()
-        _log.debug("Closed connection to \'%s\'" % self.id)
+
+    def stop(self):
+        """Stop the oscilloscope."""
+        self.inst.write(':STOP')
 
     def is_running(self):
+        """
+        Determine if the oscilloscope is running.
+
+        Returns
+        -------
+        b : bool
+            True if running
+        """
         reg = int(self.inst.query(':OPERegister:CONDition?')) # The third bit of the operation register is 1 if the instrument is running
         return (reg & 8) == 8
 
+    def close(self, set_running=True):
+        """
+        Closes the connection to the oscilloscope.
+
+        Parameters
+        ----------
+        set_running : bool, optional, default True
+            decide whether to set the oscilloscope to running before closing the connection
+        """
+        # Set the oscilloscope running before closing the connection
+        if set_running: self.run()
+        self.inst.close()
+        _log.debug("Closed connection to \'%s\'" % self.id)
+
     def set_acquire_print(self, value):
-        """Control attribute which decides whether to print information while acquiring"""
+        """
+        Control attribute which decides whether to print information while acquiring.
+
+        Parameters
+        ----------
+        value : bool
+            True to print information to info level in log
+        """
         self.acquire_print = value
 
     def set_acquiring_options(self, wav_format=config._waveform_format, acq_type=config._acq_type,
                               num_averages=config._num_avg, p_mode='RAW', num_points=0, acq_print=None):
-        """Sets the options for acquisition from the oscilloscope
-        wav_format = {'WORD' | 'BYTE' | 'ASCii'}
-        acq_type = {'HRESolution' | 'NORMal' | 'AVERage' | 'AVER<m>'} <m> will be used as num_averages if supplied
-        num_averages = 2 to 65536: applies only to the NORMal and AVERage modes
-        p_mode = {'RAW' | 'MAXimum'}: RAW gives up to 1e6 points. Use MAXimum for sources that are not analogue or digital (functions and math)
-        num_points = {0 | 100 | 250 | 500 | 1000 | 2000 | 5000 | 10000 | 20000
-                     | 50000 | 100000 | 200000 | 500000 | 1000000}: optional command when p_mode (POINTs:MODE) is specified. Use 0 to let p_mode control the number of points.
+        """
+        Sets the options for acquisition from the oscilloscope.
+
+        Parameters
+        ----------
+        wav_format : str, optional, default config._waveform_format
+            Select the format of the communication of waveform from the oscilloscope
+            possible choices {'WORD' | 'BYTE' | 'ASCii'}
+        acq_type : str, optional, default config._acq_type
+            Selects the acquisition mode of the oscilloscope
+            possible choices {'HRESolution' | 'NORMal' | 'AVERage' | 'AVER<m>'}
+            <m> will be used as num_averages if supplied
+        num_averages : int, optional, default config._num_avg
+            2 to 65536: applies only to the NORMal and AVERage modes
+        p_mode : str, optional, default 'RAW'
+            possible choices {'RAW' | 'MAXimum'}
+            'RAW' gives up to 1e6 points. Use MAXimum for sources that are not analogue or digital (functions and math)
+        num_points : int, optional, default 0
+            possible choices {0 | 100 | 250 | 500 | 1000 | 2000 | 5000 | 10000 | 20000
+                                | 50000 | 100000 | 200000 | 500000 | 1000000}
+            optional command when p_mode (POINTs:MODE) is specified. Use 0 to let p_mode control the number of points.
         """
         self.wav_format = wav_format; self.acq_type = acq_type[:4]
         self.p_mode = p_mode; self.num_points = num_points
@@ -125,25 +183,68 @@ class Oscilloscope():
             print("Number of points set to: ", self.num_points)
 
     def build_sourcesstring(self, source_type='CHANnel', channel_nums=config._ch_nums):
-        """Builds the sources string from channel_nums, a list of the channel numbers to be used.
-        If channel_nums is contains only one empty string, the active channels on the oscilloscope
-        are used."""
+        """
+        Set the channels to be acquired, or determine by checking active channels on the oscilloscope.
+
+        Parameters
+        ----------
+        source_type : str, optional, default 'CHANnel'
+            Selects the source type. Must be 'CHANnel' in current implementation.
+            Future version might include { 'MATH' | 'FUNCtion'}.
+        channel_nums : list, optional, default config._ch_nums
+            list of the channel numbers to be acquired from
+            Example ['1', '3']
+            .. note::
+                If channel_nums is [''], the currently active channels on the oscilloscope are used.
+
+        Returns
+        -------
+        sources : list of strs
+            list of the sources
+            Example ['CHAN1', 'CHAN3']
+        channel_nums : list of strs
+            list of the channels
+            Example ['1', '3']
+        """
         if channel_nums == ['']: # if no channels specified, find the channels currently active and acquire from those
             channels = np.array(['1', '2', '3', '4'])
             displayed_channels = [self.inst.query(':CHANnel'+channel+':DISPlay?')[0] for channel in channels] # querying DISP for each channel to determine which channels are currently displayed
             channel_mask = np.array([bool(int(i)) for i in displayed_channels]) # get a mask of bools for the channels that are on [need the int() as int('0') = True]
             channel_nums = channels[channel_mask] # apply mask to the channel list
         sources = [source_type+channel for channel in channel_nums] # build list of sources
-        sourcesstring = ", ".join([source_type+channel for channel in channel_nums]) # make string of sources
+        sourcesstring = ", ".join(sources) # make string of sources
         if self.acquire_print: print("Acquire from sources", sourcesstring)
         return sourcesstring, sources, channel_nums
 
     def capture_and_read(self, sources, sourcestring):
-        """Wrapper function for choosing the correct capture_and_read function according to wav_format"""
-        if self.wav_format[:3] == 'WOR':
-            return self.capture_and_read_binary(sources, sourcestring, datatype='H')
-        elif self.wav_format[:3] == 'BYT':
-            return self.capture_and_read_binary(sources, sourcestring, datatype='B')
+        """
+        This is a wrapper function for choosing the correct capture_and_read function according to wav_format.
+            capture_and_read_binary()
+            capture_and_read_ascii()
+
+        Acquire raw data from selected channels according to acquring options currently set.
+        The parameters are provided by build_sourcesstring()
+
+        Parameters
+        ----------
+        sources : list of strs
+            list of sources
+        sourcesstring : str
+
+        Returns
+        -------
+        See respective
+            capture_and_read_binary()
+            capture_and_read_ascii()
+
+        See also
+        --------
+        Setting acquiring options: set_acquiring_options()
+
+
+        """
+        if self.wav_format[:3] in ['WOR', 'BYT']:
+            return self.capture_and_read_binary(sources, sourcestring, datatype=_datatypes[self.wav_format])
         elif self.wav_format[:3] == 'ASC':
             return self.capture_and_read_ascii(sources, sourcestring)
         else:
@@ -250,8 +351,8 @@ class Oscilloscope():
         """
         ## Connect to instrument and specify acquiring settings
         self.set_acquiring_options(wav_format=wav_format, acq_type=acq_type,
-                                  num_averages=num_averages, p_mode=p_mode,
-                                  num_points=num_points)
+                                   num_averages=num_averages, p_mode=p_mode,
+                                   num_points=num_points)
         ## Select sources
         sourcesstring, sources, channel_nums = self.build_sourcesstring(source_type=source_type, channel_nums=channel_nums)
         ## Capture, read and process data
@@ -290,7 +391,7 @@ class Oscilloscope():
 
 def process_data(raw, metadata, wav_format, acquire_print=True):
         """Wrapper function for choosing the correct process_data function according to wav_format"""
-        if wav_format[:3] == 'WOR' or wav_format[:3] == 'BYT':
+        if wav_format[:3] in ['WOR', 'BYT']:
             return process_data_binary(raw, metadata, acquire_print)
         elif wav_format[:3] == 'ASC':
             return process_data_ascii(raw, metadata, acquire_print)
@@ -377,9 +478,8 @@ def plotTrace(x, y, channel_nums, fname="", show=config._show_plot, savepng=conf
     Plots the trace with channel colours according to the Keysight colourmap
     and saves as a png with filename 'fname'.
     """
-    colors = {'1':'C1', '2':'C2', '3':'C0', '4':'C3'} # Keysight colour map
     for i, vals in enumerate(np.transpose(y)): # for each channel
-        plt.plot(x, vals, color=colors[channel_nums[i]])
+        plt.plot(x, vals, color=_screen_colors[channel_nums[i]])
     if savepng: plt.savefig(fname+".png", bbox_inches='tight')
     if show: plt.show()
     plt.close()
