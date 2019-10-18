@@ -154,6 +154,7 @@ class Oscilloscope():
         """
         Capture and read data and metadata from sources of the oscilloscope inst when waveform format is WORD or BYTE
         Datatype is 'H' for 16 bit unsigned int (WORD), 'B' for 8 bit unsigned bit (BYTE)
+        (same naming as for structs, see https://docs.python.org/3/library/struct.html#format-characters)
         Output: array of raw data, array of preamble metadata (ascii comma separated values)
         """
         ## Capture data
@@ -173,7 +174,7 @@ class Oscilloscope():
                 # obtain comma separated metadata values for processing of raw data for this source
                 preambles.append(self.inst.query(':WAVeform:PREamble?'))
                 # obtain the data
-                raw.append(self.inst.query_binary_values(':WAVeform:DATA?', datatype=datatype)) # read out data for this source
+                raw.append(self.inst.query_binary_values(':WAVeform:DATA?', datatype=datatype, container=np.array)) # read out data for this source
             except pyvisa.Error as err:
                 print("\nError: Failed to obtain waveform, have you checked that"
                       " the timeout (currently %d ms) is sufficently long?" % self.timeout)
@@ -320,10 +321,9 @@ def process_data_binary(raw, preambles, acquire_print):
     for i, data in enumerate(raw):
         preamble = preambles[i].split(',')
         yIncr, yOrig, yRef = float(preamble[7]), float(preamble[8]), int(preamble[9])
-        y[i,:] = np.array([((sample-yRef)*yIncr)+yOrig for sample in data])
-
-    y = np.transpose(np.array(y)) # convert y to np array and transpose for vertical channel columns in csv file
-    x = np.array([[((sample-xRef)*xIncr)+xOrig for sample in range(num_samples)]]) # compute x-values
+        y[i,:] = (data-yRef)*yIncr + yOrig
+    y = y.T # convert y to np array and transpose for vertical channel columns in csv file
+    x = np.array([(np.arange(num_samples)-xRef)*xIncr + xOrig]) # compute x-values
     x = x.T # make x values vertical
     return x, y
 
