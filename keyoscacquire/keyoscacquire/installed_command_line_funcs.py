@@ -1,4 +1,3 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
 """
 Obtain traces, save to files and export raw plots from (Keysight) oscilloscopes using pyVISA.

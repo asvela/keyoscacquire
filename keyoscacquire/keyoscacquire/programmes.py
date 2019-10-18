@@ -1,6 +1,7 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
 """
+Programme for listing visa devices
+Programme for finding path of config.py
 One programme for taking a single trace and saving it.
 Two programmes for taking multiple traces, see descriptions for each function.
 The run_programme function is a wrapper function for scripts and installed functions

@@ -1,4 +1,3 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
 """
 Install the Keysight Oscilloscope Acquire library.
@@ -6,7 +5,7 @@ Install the Keysight Oscilloscope Acquire library.
 Andreas Svela // 2019
 """
 
-__version__ = '2.1.0'
+__version__ = '2.0.1'
 
 import os
 from setuptools import setup
