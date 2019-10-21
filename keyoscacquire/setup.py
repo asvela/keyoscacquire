@@ -5,7 +5,9 @@ Install the Keysight Oscilloscope Acquire library.
 Andreas Svela // 2019
 """
 
-__version__ = '2.0.1'
+__version__ = '2.1.0'
+
+#### Should there be a py-file?
 
 import os
 from setuptools import setup
@@ -40,7 +42,13 @@ if __name__ == '__main__':
               'argparse',
               'numpy',
               'matplotlib',
-              'tqdm'
+              'tqdm',
               ],
           include_package_data=True,
-          zip_safe=False)
+          zip_safe=False,
+          command_options={
+              'build_sphinx': {
+                'version': ('setup.py', __version__[:-2]),
+                'release': ('setup.py', __version__),
+                'source_dir': ('setup.py', 'doc')}},
+           )

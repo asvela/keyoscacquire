@@ -2,6 +2,9 @@
 /keyoscacquire/dist/
 /keyoscacquire/build/
 
+# docs build
+/keyoscacquire/docs/_*
+
 # python egg metadata
 /keyoscacquire/*.egg
 /keyoscacquire/*.egg-info
