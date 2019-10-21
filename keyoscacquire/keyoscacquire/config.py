@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-
-# Default options
+# Default options for keyoscacquire
 _visa_address = 'USB0::2391::6038::MY57233636::INSTR' # address of instrument
 _waveform_format = 'WORD' # WORD formatted data is transferred as 16-bit uint.
                           # BYTE formatted data is transferred as 8-bit uint.

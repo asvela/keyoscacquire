@@ -2,7 +2,7 @@
 """
 Programme for listing visa devices
 Programme for finding path of config.py
-One programme for taking a single trace and saving it.
+Programme for taking a single trace and saving it.
 Two programmes for taking multiple traces, see descriptions for each function.
 The run_programme function is a wrapper function for scripts and installed functions
 calling the programmes with optional command line arguments.
@@ -39,7 +39,7 @@ def list_visa_devices():
             print("{:>2d}  {:6s}  {:{num}s}  {:10s}".format(i, info.resource_class, info.resource_name, alias, num=longest_name_len))
 
 def path_of_config():
-    """Print the absolute path of the config.py file"""
+    """Print the absolute path of the config.py file."""
     import os
     print("config.py can be found in:\n\t%s\n" % os.path.dirname(os.path.abspath(__file__)))
 

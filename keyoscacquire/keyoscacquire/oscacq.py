@@ -1,16 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-Obtain traces, save to files and export raw plots from Keysight oscilloscopes using pyVISA.
-Traces are stored as csv files and will by default be accompanied by a png plot too.
-
-This script can be called resulting in one trace being captured and stored.
-Optional argument from the command line: string setting the base filename of the output files.
-Change the _visa_address under in config to the desired instrument.
-
-Tested with Keysight DSOX2024A on WIn7 and Win10.
+The PyVISA communication with the oscilloscope.
 See Keysight's Programmer's Guide for reference.
 
-Andreas Svela 2018
+Andreas Svela // 2019
 """
 
 __docformat__ = "restructuredtext en"
@@ -34,6 +27,9 @@ _datatypes = {'BYTE':'B', 'WORD':'H'}
 ##============================================================================##
 
 class Oscilloscope():
+    """
+    Wrapper class for PyVISA communication with the oscilloscope.
+    """
 
     def __init__(self, address=config._visa_address, timeout=config._timeout):
         """
@@ -45,7 +41,7 @@ class Oscilloscope():
         address : str
             Visa address of instrument. To find the visa addresses of the instruments
             connected to the computer use the
-            examples 'USB0::2391::6038::MY5725636::INSTR', 'TCPIP0::192.168.20.30::4000::SOCKET'
+            examples 'USB0::2391::6038::MY5737636::INSTR', 'TCPIP0::192.168.20.30::4000::SOCKET'
         timeout : int
             Milliseconds before timeout on the channel to the instrument
         """
@@ -409,8 +405,7 @@ class Oscilloscope():
         channel_nums : list, optional, default ['']
             list of the channel numbers to be acquired from.
             Example ['1', '3']
-            .. note::
-                Use channel_nums=[''] to capture all the currently active channels on the oscilloscope.
+            .. note:: Use channel_nums=[''] to capture all the currently active channels on the oscilloscope.
         source_type : str, optional, default 'CHANnel'
             Selects the source type. Must be 'CHANnel' in current implementation.
             Future version might include { 'MATH' | 'FUNCtion'}.
@@ -427,8 +422,7 @@ class Oscilloscope():
             possible choices {'RAW' | 'MAXimum'}
             'RAW' gives up to 1e6 points. Use MAXimum for sources that are not analogue or digital (functions and math)
         num_points : int, optional, default 0
-            possible choices {0 | 100 | 250 | 500 | 1000 | 2000 | 5000 | 10000 | 20000
-                                | 50000 | 100000 | 200000 | 500000 | 1000000}
+            possible choices {0 | 100 | 250 | 500 | 1000 | 2000 | 5000 | 10000 | 20000 | 50000 | 100000 | 200000 | 500000 | 1000000}
             optional command when p_mode (POINTs:MODE) is specified. Use 0 to let p_mode control the number of points.
 
         Returns
