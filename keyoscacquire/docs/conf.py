@@ -12,17 +12,19 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath('.'))
+
+sys.path.insert(0, os.path.abspath('../keyoscacquire/'))
 
 
 # -- Project information -----------------------------------------------------
 
-project = 'Keysight Oscilloscope Acquire'
+project = 'Keysight oscilloscope acquire'
 copyright = '2019, Andreas Svela'
 author = 'Andreas Svela'
 
 # The full version, including alpha/beta/rc tags
-release = '2.1.0'
+version = '2.1.0'
+release = version
 
 
 # -- General configuration ---------------------------------------------------
@@ -33,8 +35,13 @@ release = '2.1.0'
 extensions = [
 'sphinx.ext.autodoc',
 'sphinx.ext.todo',
-'sphinx.ext.intersphinx'
+'sphinx.ext.intersphinx',
+'recommonmark',
+#'sphinx_rtd_theme',
+#'numpydoc'
+'sphinx.ext.napoleon'
 ]
+autosummary_generate = True
 todo_include_todos = True
 intersphinx_mapping = {'python': ('https://docs.python.org/3', None)}
 
@@ -52,7 +59,22 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'alabaster'
+# html_theme = 'alabaster'
+
+import sphinx_rtd_theme
+html_theme = "sphinx_rtd_theme"
+
+# import guzzle_sphinx_theme
+# html_theme_path = guzzle_sphinx_theme.html_theme_path()
+# html_theme = 'guzzle_sphinx_theme'
+# # Register the theme as an extension to generate a sitemap.xml
+# extensions.append("guzzle_sphinx_theme")
+# # Guzzle theme options (see theme.conf for more information)
+# html_theme_options = {
+#     # Set the name of the project to appear in the sidebar
+#     "project_nav_name": project,
+# }
+
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,

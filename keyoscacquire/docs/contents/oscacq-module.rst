@@ -1,12 +1,9 @@
-.. osc-class:
-
 The Oscilloscope class
 **********************
 
-.. py:module:: keyoscacquire
+.. todo:: Document the attributes
 
-
-
+.. py:currentmodule:: keyoscacquire.oscacq
 
 .. autoclass:: Oscilloscope
    :members:

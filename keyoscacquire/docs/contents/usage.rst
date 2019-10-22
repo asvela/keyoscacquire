@@ -2,7 +2,7 @@
 How to use
 **********
 
-The VISA addresses of connected instruments can be found with the installed command line function `list_visa_devices` or can be found in NI MAX. The address should be set as the ``_visa_address`` in :mod:`keyoscacq.config`
+The VISA addresses of connected instruments can be found with the installed command line function `list_visa_devices` or can be found in NI MAX. The address should be set as the ``_visa_address`` in :mod:`keyoscacquire.config`
 
 .. note:: In order to connect to a VISA instrument, NI MAX or similar might need to be running on the computer.
 
@@ -41,12 +41,15 @@ The programmes takes optional arguments, the manuals are available using the fla
 
 * ``-n 10`` sets number of traces to obtain (only for `get_num_traces`)
 
+.. highlight:: console
+
 For example::
 
     $ getTraces_single_connection_loop -f measurement
 
 will give output files ``measurement n<n>.csv`` and ``measurement n<n>.png``.  The programmes will check if the file ``"measurement"+_file_delimiter+num+_filetype)`` exists, and if it does, prompt the user for something to append to ``measurement`` until ``"measurement"+appended+"0"+_filetype`` is not an existing file. The same checking procedure applies also when no base filename is supplied and ``config._default_filename`` is used.
 
+.. highlight:: python
 
 Note on obtaining traces when the scope is running vs when stopped
 ==================================================================
@@ -63,9 +66,9 @@ The scope will always be set to running after a trace is captured.
 Default options
 ===============
 
-The package is installed with a set of default options found in :mod:`keyoscacq.config` (to find the location of the file run the ``path_to_config`` from the command line):
+The package is installed with a set of default options found in :mod:`keyoscacquire.config` (to find the location of the file run the ``path_to_config`` from the command line):
 
-.. literalinclude :: ../keyoscacquire/config.py
+.. literalinclude :: ../../keyoscacquire/config.py
 
 .. note:: None of the functions access the global variables directly, but they are feed them as default arguments.
 
@@ -102,4 +105,4 @@ Running the module with ``$ python -m keyoscacquire`` obtains and saves a trace 
 Scripts in ./scripts
 --------------------
 
-These can be ran as command line scripts from the folder with `$ python [script].py`. Optional arguments for filename and acquisition mode can be used, such as `$ python [script].py "otherFileName"`, or `$ python [script].py "otherFileName" "AVER8"`. Note, no flag specifiers are needed (or allowed) and the sequence of arguments is fixed.
+These can be ran as command line scripts from the folder with ``$ python [script].py``. Optional arguments for filename and acquisition mode can be used, such as ``$ python [script].py "otherFileName"``, or ``$ python [script].py "otherFileName" "AVER8"``. Note, no flag specifiers are needed (or allowed) and the sequence of arguments is fixed.

@@ -10,7 +10,7 @@ Quick reference
 
 The package installs the following command line functions
 
-* :meth:`path_of_config`: find the path of :mod:`keysightoscacquire.config`. Change this file to your choice of standard settings, see :ref:`default-options`.
+* :meth:`path_of_config`: find the path of :mod:`keysightoscacquire.config` storing default options. Change this file to your choice of standard settings, see :ref:`default-options`.
 
 * :meth:`list_visa_devices`: list the available VISA devices
 
@@ -42,3 +42,6 @@ Known issues/suggested improvements
 
 - Known issue: Sometimes ``WORD`` waveform does not give the correct trace data, just random noise (but switching to ``ASCii`` or ``BYTE`` gives correct traces). If this happens, open *KeySight BenchVue* and obtain one trace through the software. Now try to obtain a trace through this package -- it should now work again using ``WORD``.
 - Add optional argument to supply visa address of instrument to command line executables and scripts
+
+
+.. include:: ../changelog.rst
