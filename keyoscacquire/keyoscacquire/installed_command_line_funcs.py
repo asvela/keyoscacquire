@@ -14,10 +14,7 @@ The loop runs each time 'enter' is hit. Alternatively one can input n-1 characte
 Optional argument from the command line: string setting the base filename of the output files.
 Change the _visa_address under in config to the desired instrument.
 
-Tested with Keysight DSOX2024A.
-See Keysight's Programmer's Guide for reference.
-
-Andreas Svela 2018
+Andreas Svela // 2019
 """
 
 import sys, argparse

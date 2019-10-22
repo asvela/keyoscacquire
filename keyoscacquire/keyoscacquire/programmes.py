@@ -1,15 +1,18 @@
 # -*- coding: utf-8 -*-
 """
-Programme for listing visa devices
-Programme for finding path of config.py
-Programme for taking a single trace and saving it.
-Two programmes for taking multiple traces, see descriptions for each function.
-The run_programme function is a wrapper function for scripts and installed functions
-calling the programmes with optional command line arguments.
+Python backend for installed command line functions. These can also be integrated in python scripts or used as examples.
 
-Andreas Svela // 2019
+* :func:`list_visa_devices`: listing visa devices
+
+* :func:`path_of_config`: finding path of config.py
+
+* :func:`get_single_trace`: taking a single trace and saving it to csv and png
+
+* :func:`get_traces_single_connection_loop` :func:`get_traces_connect_each_time_loop`: two programmes for taking multiple traces, see descriptions for difference
+
+* :func:`run_programme` is a wrapper function for scripts and installed functions calling the programmes with optional command line arguments.
+
 """
-
 
 import sys, logging; _log = logging.getLogger(__name__)
 import keyoscacquire.oscacq as acq

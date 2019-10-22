@@ -47,20 +47,36 @@ class Oscilloscope():
     ----------
     inst : pyvisa.resources.Resource
         The oscilloscope PyVISA resource
+    id : str
+         Example 'AGILENT TECHNOLOGIES,DSO-X 2024A,MY1234567,12.34.567891234'
     address : str
         Visa address of instrument
     timeout : int
         Milliseconds before timeout on the channel to the instrument
     acq_type : {'HRESolution', 'NORMal', 'AVERage', 'AVER<m>'}
-        Acquisition mode of the oscilloscope. <m> will be used as num_averages if supplied
+        Acquisition mode of the oscilloscope. <m> will be used as :attr:`num_averages` if supplied.
+
+        * NORMal — sets the oscilloscope in the normal mode.
+
+        * AVERage — sets the oscilloscope in the averaging mode. You can set the count by :attr:`num_averages`
+
+        * HRESolution — sets the oscilloscope in the high-resolution mode (also known as smoothing). This mode is used to reduce noise at slower sweep speeds where the digitizer samples faster than needed to fill memory for the displayed time range.
+
+            For example, if the digitizer samples at 200 MSa/s, but the effective sample rate is 1 MSa/s (because of a slower sweep speed), only 1 out of every 200 samples needs to be stored. Instead of storing one sample (and throwing others away), the 200 samples are averaged together to provide the value for one display point. The slower the sweep speed, the greater the number of samples that are averaged together for each display point.
     num_averages : int, 2 to 65536
-        Applies only to the 'AVERage' mode: The number of averages applied
+        Applies only to the 'AVERage' :attr:`acq_type`: The number of averages applied
     p_mode : {'NORMal', 'RAW', 'MAXimum'}
         'NORMal' is limited to 62,500 points, whereas 'RAW' gives up to 1e6 points. Use 'MAXimum' for sources that are not analogue or digital.
     num_points : int
-        Use 0 to let p_mode control the number of points, otherwise override with a lower number than maximum for the p_mode
+        Use 0 to let :attr:`p_mode` control the number of points, otherwise override with a lower number than maximum for the :attr:`p_mode`
     wav_format : {'WORD', 'BYTE', 'ASCii'}
-        Select the format of the communication of waveform from the oscilloscope
+        Select the data transmission mode for waveform data points, i.e. how the data is formatted when sent from the oscilloscope.
+
+        * ASCii formatted data converts the internal integer data values to real Y-axis values. Values are transferred as ASCii digits in floating point notation, separated by commas. ASCII formatted data is transferred ASCii text.
+
+        * WORD formatted data transfers unsigned 16-bit data as two bytes.
+
+        * BYTE formatted data is transferred as unsigned 8-bit bytes.
     acquire_print : bool
         ``True`` prints that the capturing starts and the number of points captured
     """
@@ -188,7 +204,7 @@ class Oscilloscope():
                       " where <m> is an integer (currently acq. type is \'%s\').\n"
                        % (acq_type[4:], acq_type))
             if self.num_averages < 1 or self.num_averages > 65536: #check that self.num_averages is within acceptable range
-                raise ValueError("\nThe number of averages {} is out of range.\nExiting..\n".format(self.num_averages))
+                raise ValueError("\nThe number of averages {} is out of range.".format(self.num_averages))
         else:
             self.num_averages = num_averages
 
@@ -244,10 +260,12 @@ class Oscilloscope():
         return sourcesstring, sources, channel_nums
 
     def capture_and_read(self, sources, sourcestring):
-        """This is a wrapper function for choosing the correct capture_and_read function according to wav_format, :func:`capture_and_read_binary` or :func:`capture_and_read_ascii`.
+        """This is a wrapper function for choosing the correct capture_and_read function according to :attr:`wav_format`, :func:`capture_and_read_binary` or :func:`capture_and_read_ascii`.
 
-        Acquire raw data from selected channels according to acquring options currently set.
+        Acquire raw data from selected channels according to acquring options currently set with :func:`set_acquiring_options`.
         The parameters are provided by :func:`build_sourcesstring`.
+
+        The output should be processed by :func:`process_data`.
 
         Parameters
         ----------
@@ -259,24 +277,29 @@ class Oscilloscope():
         Returns
         -------
         See respective
-            :func:`capture_and_read_binary`
-            :func:`capture_and_read_ascii`
+            Depends on the capture_and_read function used
+
+        Raises
+        ------
+        ValueError
+            If :attr:`wav_format` is not {'BYTE', 'WORD', 'ASCii'}
 
         See also
         --------
-        :func:`set_acquiring_options`
+        :func:`process_data`
         """
         if self.wav_format[:3] in ['WOR', 'BYT']:
             return self.capture_and_read_binary(sources, sourcestring, datatype=_datatypes[self.wav_format])
         elif self.wav_format[:3] == 'ASC':
             return self.capture_and_read_ascii(sources, sourcestring)
         else:
-            raise Exception("\nError: Could not capture and read data, waveform format \'{}\' is unknown.\nExiting..\n".format(self.wav_format))
+            raise ValueError("Could not capture and read data, waveform format \'{}\' is unknown.\nExiting..\n".format(self.wav_format))
 
     def capture_and_read_binary(self, sources, sourcesstring, datatype='standard'):
         """Capture and read data and metadata from sources of the oscilloscope when waveform format is ``WORD`` or ``BYTE``.
 
-        The parameters are provided by :func:`build_sourcesstring`
+        The parameters are provided by :func:`build_sourcesstring`.
+        The output should be processed by :func:`process_data_binary`.
 
         Parameters
         ----------
@@ -285,15 +308,15 @@ class Oscilloscope():
         sourcesstring : str
             String of comma separated sources, example ``'CHANnel1, CHANnel3'``
         datatype : char or ``'standard'``, optional but must match waveform format used.
-            To determine how to read the values from the oscilloscope depending on the wav_format setting. Datatype is ``'H'`` for 16 bit unsigned int (``WORD``), for 8 bit unsigned bit (``BYTE``) (same naming as for `structs <https://docs.python.org/3/library/struct.html#format-characters`).
+            To determine how to read the values from the oscilloscope depending on :attr:`wav_format`. Datatype is ``'H'`` for 16 bit unsigned int (``WORD``), for 8 bit unsigned bit (``BYTE``) (same naming as for `structs <https://docs.python.org/3/library/struct.html#format-characters`).
             ``'standard'`` will evaluate ``_datatypes[self.wav_format]`` to automatically choose according to the waveform format.
 
         Returns
         -------
-        raw : ndarray
-            Raw data to be processed by :func:`process_data` (using :func:`process_data_binary`).
-            An ndarray of ints that is converted to voltage values using the preamble.
-        preamble : list
+        raw : :mod:~numpy.ndarray
+            Raw data to be processed by :func:`process_data_binary`.
+            An ndarray of ints that can be converted to voltage values using the preamble.
+        preamble : str
             Preamble metadata (comma separated ascii values)
         """
         ## Capture data
@@ -331,7 +354,8 @@ class Oscilloscope():
     def capture_and_read_ascii(self, sources, sourcesstring):
         """Capture and read data and metadata from sources of the oscilloscope when waveform format is ASCii.
 
-        The parameters are provided by :func:`build_sourcesstring`
+        The parameters are provided by :func:`build_sourcesstring`.
+        The output should be processed by :func:`process_data_ascii`.
 
         Parameters
         ----------
@@ -342,12 +366,12 @@ class Oscilloscope():
 
         Returns
         -------
-        raw : list
-            Raw data to be processed by :func:`process_data` (using :func:`process_data_ascii`)
+        raw : str
+            Raw data to be processed by :func:`process_data_ascii`.
             The raw data is a list of one IEEE block per channel with a head and then comma separated ascii values
         measurement_time : float
-            The time duration of the measurement (the length of the time axis) in seconds
-            Used in :func:`process_data_ascii` to calculate the time axis (for all channels)
+            The time duration of the measurement (the length of the time axis) in seconds.
+            Used in to calculate the time axis (for all channels).
         """
         ## Capture data
         if self.acquire_print: print("Start acquisition..")
@@ -395,9 +419,9 @@ class Oscilloscope():
 
         Returns
         -------
-        time : ndarray
+        time : ~numpy.ndarray
             Time axis for the measurement
-        y : ndarray
+        y : ~numpy.ndarray
             Voltage values, same sequence as sources input
 
         """
@@ -422,24 +446,22 @@ class Oscilloscope():
         source_type : str, optional, default ``'CHANnel'``
             Selects the source type. Must be ``'CHANnel'`` in current implementation.
             Future version might include ``{ 'MATH' | 'FUNCtion'}``.
-        wav_format : str, optional, default ``config._waveform_format``
-            Select the format of the communication of waveform from the oscilloscope. Possible choices ``{'WORD' | 'BYTE' | 'ASCii'}``
-        acq_type : str, optional, default ``config._acq_type``
-            Selects the acquisition mode of the oscilloscope. Possible choices ``{'HRESolution' | 'NORMal' | 'AVERage' | 'AVER<m>'}``. ``<m>`` will be used as ``num_averages`` if supplied
-        num_averages : int, optional, default config._num_avg
-            2 to 65536: applies only to the ``NORMal`` and ``AVERage`` modes
-        p_mode : str, optional, default 'RAW'
-            Possible choices ``{'RAW' | 'MAXimum'}``
-            ``'RAW'`` gives up to 1e6 points. Use ``'MAXimum'`` for sources that are not analogue or digital (functions and math)
+        wav_format : {'WORD', 'BYTE', 'ASCii'}, optional, default config._waveform_format
+            Select the format of the communication of waveform from the oscilloscope
+        acq_type : {'HRESolution', 'NORMal', 'AVERage', 'AVER<m>'}, optional, default config._acq_type
+            Acquisition mode of the oscilloscope. <m> will be used as num_averages if supplied
+        num_averages : int, 2 to 65536, optional, default config._num_avg
+            Applies only to the 'AVERage' mode: The number of averages applied
+        p_mode : {'NORMal', 'RAW', 'MAXimum'}, optional, default 'RAW'
+            'NORMal' is limited to 62,500 points, whereas 'RAW' gives up to 1e6 points. Use 'MAXimum' for sources that are not analogue or digital.
         num_points : int, optional, default 0
-            Optional command when p_mode (POINTs:MODE) is specified. Use 0 to let p_mode control the number of points.
-            Possible choices {0 | 100 | 250 | 500 | 1000 | 2000 | 5000 | 10000 | 20000 | 50000 | 100000 | 200000 | 500000 | 1000000}
+            Use 0 to let p_mode control the number of points, otherwise override with a lower number than maximum for the p_mode
 
         Returns
         -------
-        time : ndarray
+        time : ~numpy.ndarray
             Time axis for the measurement
-        y : ndarray
+        y : ~numpy.ndarray
             Voltage values, same sequence as ``channel_nums``
         channel_nums : list of chars
             list of the channels obtained from, example ``['1', '3']``
@@ -477,16 +499,16 @@ class Oscilloscope():
         source_type : str, optional, default 'CHANnel'
             Selects the source type. Must be ``'CHANnel'`` in current implementation.
             Future version might include {'MATH', 'FUNCtion'}.
-        wav_format : {'WORD', 'BYTE', 'ASCii'}, optional, default ``config._waveform_format``
+        wav_format : {'WORD', 'BYTE', 'ASCii'}, optional, default config._waveform_format
             Select the format of the communication of waveform from the oscilloscope
-        acq_type : {'HRESolution' | 'NORMal' | 'AVERage' | 'AVER<m>'}, optional, default ``config._acq_type``
-            Selects the acquisition mode of the oscilloscope. <m> will be used as num_averages if supplied
-        num_averages : int, optional, default config._num_avg
-            2 to 65536: applies only to the NORMal and AVERage modes
-        p_mode : {'RAW', 'MAXimum'}, optional, default 'RAW'
-            'RAW' gives up to 1e6 points. Use MAXimum for sources that are not analogue or digital (functions and math)
+        acq_type : {'HRESolution', 'NORMal', 'AVERage', 'AVER<m>'}, optional, default config._acq_type
+            Acquisition mode of the oscilloscope. <m> will be used as num_averages if supplied
+        num_averages : int, 2 to 65536, optional, default config._num_avg
+            Applies only to the 'AVERage' mode: The number of averages applied
+        p_mode : {'NORMal', 'RAW', 'MAXimum'}, optional, default 'RAW'
+            'NORMal' is limited to 62,500 points, whereas 'RAW' gives up to 1e6 points. Use 'MAXimum' for sources that are not analogue or digital.
         num_points : int, optional, default 0
-            optional command when p_mode (POINTs:MODE) is specified. Use 0 to let p_mode control the number of points.
+            Use 0 to let p_mode control the number of points, otherwise override with a lower number than maximum for the p_mode
         """
         fname = check_file(fname, ext)
         x, y, channel_nums = self.set_options_get_trace(channel_nums=channel_nums, source_type=source_type,
@@ -503,19 +525,60 @@ class Oscilloscope():
 ##============================================================================##
 
 def process_data(raw, metadata, wav_format, acquire_print=True):
-    """Wrapper function for choosing the correct process_data function according to wav_format.
+    """Wrapper function for choosing the correct process_data function according to ``wav_format`` for the data obtained from :func:`Oscilloscope.capture_and_read`
+
+    Parameters
+    ----------
+    raw : ~numpy.ndarray or str
+        From :func:`~Oscilloscope.capture_and_read`: Raw data, type depending on ``wav_format``
+    metadata : str or float
+        From :func:`~Oscilloscope.capture_and_read`: Preamble or measurement_time depending on ``wav_format``
+    wav_format : {'BYTE', 'WORD', 'ASCii'}
+        Specify what waveform type was used for acquiring to choose the correct processing function.
+    acquire_print : bool
+        True prints the number of points captured per channel
+
+    Returns
+    -------
+    time : :class:`~numpy.ndarray`
+        Time axis for the measurement
+    y : :class:`~numpy.ndarray`
+        Voltage values, one column per channel
+
+    Raises
+    ------
+    ValueError
+        If ``wav_format`` is not {'BYTE', 'WORD', 'ASCii'}
+
+    See also
+    --------
+    :func:`Oscilloscope.capture_and_read`
     """
     if wav_format[:3] in ['WOR', 'BYT']:
         return process_data_binary(raw, metadata, acquire_print)
     elif wav_format[:3] == 'ASC':
         return process_data_ascii(raw, metadata, acquire_print)
     else:
-        raise Exception("\nError: Could not process data, waveform format \'{}\' is unknown.\nExiting..\n".format(wav_format))
-        sys.exit()
+        raise ValueError("Could not process data, waveform format \'{}\' is unknown.".format(wav_format))
 
 def process_data_binary(raw, preambles, acquire_print=True):
-    """Process raw 8/16-bit data to time x values and y voltage values.
-    Output: numpy array x containing time values, numpy array y containing voltages for captured channels
+    """Process raw 8/16-bit data to time values and y voltage values as received from :func:`Oscilloscope.capture_and_read_binary`.
+
+    Parameters
+    ----------
+    raw : ~numpy.ndarray
+        From :func:`~Oscilloscope.capture_and_read_binary`: An ndarray of ints that is converted to voltage values using the preamble.
+    preamble : str
+        From :func:`~Oscilloscope.capture_and_read_binary`: Preamble metadata (comma separated ascii values)
+    acquire_print : bool
+        True prints the number of points captured per channel
+
+    Returns
+    -------
+    time : :class:`~numpy.ndarray`
+        Time axis for the measurement
+    y : :class:`~numpy.ndarray`
+        Voltage values, one column per channel
     """
     preamble = preambles[0].split(',')  # values separated by commas
     # 0 FORMAT : int16 - 0 = BYTE, 1 = WORD, 4 = ASCII.
@@ -541,8 +604,23 @@ def process_data_binary(raw, preambles, acquire_print=True):
     return x, y
 
 def process_data_ascii(raw, measurement_time, acquire_print=True):
-    """Process raw comma separated ascii data to time x values and y voltage values.
-    Output: numpy array x containing time values, numpy array y containing voltages for caputred channels
+    """Process raw comma separated ascii data to time values and y voltage values as received from :func:`Oscilloscope.capture_and_read_ascii`
+
+    Parameters
+    ----------
+    raw : str
+        From :func:`~Oscilloscope.capture_and_read_ascii`: A string containing a block header and comma separated ascii values
+    measurement_time : float
+        From :func:`~Oscilloscope.capture_and_read_ascii`: The time duration of the measurement (the length of the time axis) in seconds
+    acquire_print : bool
+        True prints the number of points captured per channel
+
+    Returns
+    -------
+    time : :class:`~numpy.ndarray`
+        Time axis for the measurement
+    y : :class:`~numpy.ndarray`
+        Voltage values, one column per channel
     """
     y = []
     for data in raw:
@@ -565,7 +643,7 @@ def process_data_ascii(raw, measurement_time, acquire_print=True):
 ##============================================================================##
 
 def check_file(fname, ext=config._filetype, num=""):
-    """Checking if file fname+num+ext exists. If it does the user is prompted for a string to append to fname until a unique fname is found.
+    """Checking if file ``fname+num+ext`` exists. If it does, the user is prompted for a string to append to fname until a unique fname is found.
 
     Parameters
     ----------
@@ -596,9 +674,9 @@ def save_trace(fname, time, y, fileheader="", ext=config._filetype, acquire_prin
     ----------
     fname : str
         Filename of trace
-    time : ndarray
+    time : ~numpy.ndarray
         Time axis for the measurement
-    y : ndarray
+    y : ~numpy.ndarray
         Voltage values, same sequence as channel_nums
     fileheader : str, optional, default ""
         Optional prefix for current date and time which is automatically added to the header.
@@ -621,9 +699,9 @@ def save_trace_npy(fname, time, y, acquire_print=True):
     ----------
     fname : str
         Filename to save to
-    time : ndarray
+    time : ~numpy.ndarray
         Time axis for the measurement
-    y : ndarray
+    y : ~numpy.ndarray
         Voltage values, same sequence as channel_nums
     acquire_print : bool, optional, default True
         ``True`` prints the filename it is saved to
@@ -639,9 +717,9 @@ def plot_trace(time, y, channel_nums, fname="", show=config._show_plot, savepng=
 
     Parameters
     ----------
-    time : ndarray
+    time : ~numpy.ndarray
         Time axis for the measurement
-    y : ndarray
+    y : ~numpy.ndarray
         Voltage values, same sequence as channel_nums
     channel_nums : list of chars
         list of the channels obtained, example ['1', '3']

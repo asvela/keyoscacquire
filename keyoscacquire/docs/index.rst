@@ -3,17 +3,36 @@
 
 .. include:: ../README.rst
 
-.. note:: In order to connect to a VISA instrument, NI MAX or similar might need to be running on the computer.
-
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: User guide:
 
    contents/overview
    contents/usage
-   contents/oscacq-module
-   contents/dataprocessing
    contents/commandline-functions
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Reference:
+
+   contents/osc-class
+   contents/dataprocessing
+   contents/programmes
+
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Project documentation:
+
+   ../changelog
+   ../known-issues
+   contents/license
+
+
+License
+-------
+
+The project is licensed under the MIT license, see :ref:`license`.
 
 
 Indices and tables
@@ -22,17 +41,3 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-
-
-Contribute
-----------
-
-Contributions are welcome, find the project on github
-
-.. todo:: Insert link
-
-
-License
--------
-
-The project is licensed under the MIT license.

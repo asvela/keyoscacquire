@@ -23,7 +23,7 @@ copyright = '2019, Andreas Svela'
 author = 'Andreas Svela'
 
 # The full version, including alpha/beta/rc tags
-version = '2.1.0'
+version = '3.0.0'
 release = version
 
 
@@ -40,13 +40,15 @@ extensions = [
 'sphinx_rtd_theme',
 'sphinx.ext.napoleon',
 'numpydoc',
+'sphinx.ext.viewcode',
 ]
 autosummary_generate = True
 todo_include_todos = True
 napoleon_numpy_docstring = True
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3', None),
-    'pyvisa': ('https://pyvisa.readthedocs.io/en/latest/', None)}
+    'pyvisa': ('https://pyvisa.readthedocs.io/en/latest/', None),
+    'numpy':  ('https://docs.scipy.org/doc/numpy/', None)}
 # autodoc_default_options = {
 #     'special-members': '__init__',
 # }

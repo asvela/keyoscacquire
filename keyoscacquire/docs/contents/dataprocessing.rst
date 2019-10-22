@@ -1,8 +1,11 @@
+.. _data-proc:
 
 Data processing and file saving
 *******************************
 
 .. py:currentmodule:: keyoscacquire.oscacq
+
+The :mod:`keyoscacquire.oscacq` module contains function for processing the raw data captured with :class:`Oscilloscope`, and for saving the processed data to files and plots.
 
 Data processing
 ---------------
@@ -17,7 +20,7 @@ The output from the :func:`Oscilloscope.capture_and_read` function is processed 
 File saving
 -----------
 
-The package has built-in functions for saving traces to ascii values
+The package has built-in functions for saving traces to :mod:`numpy.lib.format` files or ascii values (the latter is slower but will give a header that can be customised).
 
 .. autofunction:: save_trace
 .. autofunction:: save_trace_npy

@@ -1,3 +1,5 @@
+.. _osc-class:
+
 The Oscilloscope class
 **********************
 

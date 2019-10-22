@@ -2,7 +2,7 @@
 Overview and getting started
 ****************************
 
-The code is structured as a module :mod:`keyoscacquire.oscacq` containing the engine doing the `PyVISA <https://pyvisa.readthedocs.io/en/latest/>`_ interfacing in a class :py:class:`Oscilloscope`, and support functions for data processing and saving. Programmes are located in :mod:`keyoscacquire.programmes`. Default options are found in :mod:`keyoscacquire.config`.
+The code is structured as a module :mod:`keyoscacquire.oscacq` containing the engine doing the `PyVISA <https://pyvisa.readthedocs.io/en/latest/>`_ interfacing in a class :class:`~keyoscacquire.oscacq.Oscilloscope`, and support functions for data processing and saving. Programmes are located in :mod:`keyoscacquire.programmes`. Default options are found in :mod:`keyoscacquire.config`.
 
 
 Quick reference
@@ -24,7 +24,8 @@ See more under :ref:`standalone-programmes`.
 
 .. todo:: Add info about oscilloscope class
 
-keyoscacquire uses the :py:mod:`logging` module, see :ref:`logging`.
+:mod:`keyoscacquire` uses the :py:mod:`logging` module, see :ref:`logging`.
+
 
 Installation
 ============
@@ -37,11 +38,4 @@ Install the package with pip::
 or download locally and install with ``$ python setup.py install`` or by running ``install.bat``.
 
 
-Known issues/suggested improvements
-===================================
-
-- Known issue: Sometimes ``WORD`` waveform does not give the correct trace data, just random noise (but switching to ``ASCii`` or ``BYTE`` gives correct traces). If this happens, open *KeySight BenchVue* and obtain one trace through the software. Now try to obtain a trace through this package -- it should now work again using ``WORD``.
-- Add optional argument to supply visa address of instrument to command line executables and scripts
-
-
-.. include:: ../changelog.rst
+.. include:: ../known-issues.rst
