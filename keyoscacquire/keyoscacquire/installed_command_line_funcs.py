@@ -31,7 +31,7 @@ import keyoscacquire.programmes as acqprog
 def connect_each_time_command_line():
     """Function installed on the command line: Obtains and stores multiple traces,
     connecting to the oscilloscope each time."""
-    parser = argparse.ArgumentParser(usage=acqprog.getTraces_connect_each_time_loop.__doc__)
+    parser = argparse.ArgumentParser(usage=acqprog.get_traces_connect_each_time_loop.__doc__)
     parser.add_argument('-f', nargs='?', help='Specify filename base')
     parser.add_argument('-a', nargs='?', help='Specify acquire type: {HRESolution, NORMal, AVER<m>} where <m> is the number of averages in range [1, 65536]')
     args = parser.parse_args()
@@ -42,7 +42,7 @@ def connect_each_time_command_line():
 def single_connection_command_line():
     """Function installed on the command line: Obtains and stores multiple traces,
     keeping a the same connection to the oscilloscope open all the time."""
-    parser = argparse.ArgumentParser(usage=acqprog.getTraces_single_connection_loop.__doc__)
+    parser = argparse.ArgumentParser(usage=acqprog.get_traces_single_connection_loop.__doc__)
     parser.add_argument('-f', nargs='?', help='Specify filename base')
     parser.add_argument('-a', nargs='?', help='Specify acquire type: {HRESolution, NORMal, AVER<m>} where <m> is the number of averages in range [1, 65536]')
     args = parser.parse_args()

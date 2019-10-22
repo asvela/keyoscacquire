@@ -14,7 +14,7 @@ Based on [PyVISA](https://pyvisa.readthedocs.io/en/latest/), keyoscacquire provi
 ```python
    >>> import keyoscacq as koa
    >>> osc = koa.Oscilloscope(address='USB0::1234::1234::MY1234567::INSTR')
-   >>> time, y, channel_numbers = osc.set_options_getTrace()
+   >>> time, y, channel_numbers = osc.set_options_get_trace()
 ```
 
 where ``time`` is a vertical numpy vector of time values and ``y`` is a numpy array which columns contain the data from the channels in ``channel_numbers``.
@@ -30,7 +30,7 @@ Command line functions
 - `list_visa_devices`: list the available VISA devices
 - `get_single_trace`: use with option `-h` for instructions
 - `get_num_traces`: get a set number of traces, use with option `-h` for instructions
-- `getTraces_single_connection`: get a trace each time enter is pressed, use with option `-h` for instructions
+- `get_traces_single_connection`: get a trace each time enter is pressed, use with option `-h` for instructions
 
 
 ## Installation

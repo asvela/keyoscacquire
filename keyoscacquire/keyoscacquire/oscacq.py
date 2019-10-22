@@ -27,31 +27,46 @@ _datatypes = {'BYTE':'B', 'WORD':'H'}
 class Oscilloscope():
     """PyVISA communication with the oscilloscope.
 
+    Creator opens a connection to an instrument and chooses settings for the connection.
+
+    Parameters
+    ----------
+    address : str
+        Visa address of instrument. To find the visa addresses of the instruments
+        connected to the computer run ``list_visa_devices`` in the command line.
+        Example address ``'USB0::1234::1234::MY1234567::INSTR'``
+    timeout : int
+        Milliseconds before timeout on the channel to the instrument
+
+    Raises
+    ------
+    pyvisa.errors.Error
+        if no successful connection is made.
+
     Attributes
     ----------
-
-
-    Methods
-    -------
-
+    inst : pyvisa.resources.Resource
+        The oscilloscope PyVISA resource
+    address : str
+        Visa address of instrument
+    timeout : int
+        Milliseconds before timeout on the channel to the instrument
+    acq_type : {'HRESolution', 'NORMal', 'AVERage', 'AVER<m>'}
+        Acquisition mode of the oscilloscope. <m> will be used as num_averages if supplied
+    num_averages : int, 2 to 65536
+        Applies only to the 'AVERage' mode: The number of averages applied
+    p_mode : {'NORMal', 'RAW', 'MAXimum'}
+        'NORMal' is limited to 62,500 points, whereas 'RAW' gives up to 1e6 points. Use 'MAXimum' for sources that are not analogue or digital.
+    num_points : int
+        Use 0 to let p_mode control the number of points, otherwise override with a lower number than maximum for the p_mode
+    wav_format : {'WORD', 'BYTE', 'ASCii'}
+        Select the format of the communication of waveform from the oscilloscope
+    acquire_print : bool
+        ``True`` prints that the capturing starts and the number of points captured
     """
 
     def __init__(self, address=config._visa_address, timeout=config._timeout):
-        """Open a connection to instrument and choose settings for the connection.
-
-        Parameters
-        ----------
-        address : str
-            Visa address of instrument. To find the visa addresses of the instruments
-            connected to the computer run ``list_visa_devices`` in the commandline
-            examples ``'USB0::2391::6038::MY5737636::INSTR'``, ``'TCPIP0::192.168.20.30::4000::SOCKET'``
-        timeout : int
-            Milliseconds before timeout on the channel to the instrument
-
-        Raises
-        ------
-        :class:`pyvisa.Error` if no successful connection is made.
-        """
+        """See class docstring"""
         self.timeout = timeout
         self.acquire_print = True
 
@@ -73,14 +88,30 @@ class Oscilloscope():
         self.id = self.inst.query('*IDN?').strip() # get the id of the connected device
         print("Connected to \'%s\'" % self.id)
 
+    def write(self, command):
+        """Write VISA command to the oscilloscope.
+
+        Parameters
+        ----------
+        command : str
+            VISA command to be written"""
+        self.inst.write(command)
+
+    def query(self, command):
+        """Query VISA command to the oscilloscope.
+
+        Parameters
+        ----------
+        command : str
+            VISA query"""
+        return self.inst.query(command)
+
     def run(self):
-        """Set the ocilloscope to running mode.
-        """
+        """Set the ocilloscope to running mode."""
         self.inst.write(':RUN')
 
     def stop(self):
-        """Stop the oscilloscope.
-        """
+        """Stop the oscilloscope."""
         self.inst.write(':STOP')
 
     def is_running(self):
@@ -123,21 +154,21 @@ class Oscilloscope():
 
         Parameters
         ----------
-        wav_format : str, optional, default ``config._waveform_format``
+        wav_format : {'WORD', 'BYTE', 'ASCii'}, optional, default config._waveform_format
             Select the format of the communication of waveform from the oscilloscope
-            possible choices ``{'WORD' | 'BYTE' | 'ASCii'}``
-        acq_type : str, optional, default ``config._acq_type``
-            Selects the acquisition mode of the oscilloscope
-            possible choices ``{'HRESolution' | 'NORMal' | 'AVERage' | 'AVER<m>'}``
-            ``<m>`` will be used as num_averages if supplied
-        num_averages : int, optional, default ``config._num_avg``
-            2 to 65536: applies only to the NORMal and AVERage modes
-        p_mode : str, optional, default ``'RAW'``
-            possible choices ``{'RAW' | 'MAXimum'}``
-            ``'RAW'`` gives up to 1e6 points. Use ``'MAXimum'`` for sources that are not analogue or digital (functions and math)
-        num_points : int, optional, default ``0``
-            possible choices ``{0 | 100 | 250 | 500 | 1000 | 2000 | 5000 | 10000 | 20000 | 50000 | 100000 | 200000 | 500000 | 1000000}``
-            optional command when ``p_mode`` (``POINTs:MODE``) is specified. Use ``0`` to let ``p_mode`` control the number of points.
+        acq_type : {'HRESolution', 'NORMal', 'AVERage', 'AVER<m>'}, optional, default config._acq_type
+            Acquisition mode of the oscilloscope. <m> will be used as num_averages if supplied
+        num_averages : int, 2 to 65536, optional, default config._num_avg
+            Applies only to the 'AVERage' mode: The number of averages applied
+        p_mode : {'NORMal', 'RAW', 'MAXimum'}, optional, default 'RAW'
+            'NORMal' is limited to 62,500 points, whereas 'RAW' gives up to 1e6 points. Use 'MAXimum' for sources that are not analogue or digital.
+        num_points : int, optional, default 0
+            Use 0 to let p_mode control the number of points, otherwise override with a lower number than maximum for the p_mode
+
+        Raises
+        ------
+        ValueError
+            if num_averages are outside of the range or <m> in acq_type cannot be converted to int
         """
         self.wav_format = wav_format; self.acq_type = acq_type[:4]
         self.p_mode = p_mode; self.num_points = num_points
@@ -162,8 +193,7 @@ class Oscilloscope():
             self.num_averages = num_averages
 
         # now set the number of averages parameter if relevant
-        if self.acq_type[:4] == 'NORM' or self.acq_type[:4] == 'AVER': # averaging applies for NORMal and AVERage modes only
-            #self.inst.write(':ACQuire:MODE RTIME')
+        if self.acq_type[:4] == 'AVER': # averaging applies AVERage modes only
             self.inst.write(':ACQuire:COUNt ' + str(self.num_averages))
             print("  # of averages: ", self.num_averages)
 
@@ -198,7 +228,7 @@ class Oscilloscope():
 
         Returns
         -------
-        sources : list of strs
+        sources : list of str
             list of the sources, example ``['CHAN1', 'CHAN3']``
         channel_nums : list of chars
             list of the channels, example ``['1', '3']``
@@ -221,7 +251,7 @@ class Oscilloscope():
 
         Parameters
         ----------
-        sources : list of strs
+        sources : list of str
             list of sources, example ``['CHANnel1', 'CHANnel3']``
         sourcesstring : str
             String of comma separated sources, example ``'CHANnel1, CHANnel3'``
@@ -250,7 +280,7 @@ class Oscilloscope():
 
         Parameters
         ----------
-        sources : list of strs
+        sources : list of str
             list of sources, example ``['CHANnel1', 'CHANnel3']``
         sourcesstring : str
             String of comma separated sources, example ``'CHANnel1, CHANnel3'``
@@ -305,7 +335,7 @@ class Oscilloscope():
 
         Parameters
         ----------
-        sources : list of strs
+        sources : list of str
             list of sources, example ``['CHANnel1', 'CHANnel3']``
         sourcesstring : str
             String of comma separated sources, example ``'CHANnel1, CHANnel3'``
@@ -350,15 +380,15 @@ class Oscilloscope():
 
     ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~##
 
-    def getTrace(self, sources, sourcesstring, acquire_print=None):
+    def get_trace(self, sources, sourcesstring, acquire_print=None):
         """Obtain one trace with current settings.
 
         Parameters
         ----------
-        sources : list of strs
+        sources : list of str
             list of sources, example ``['CHANnel1', 'CHANnel3']``
         sourcesstring : str
-            String of comma separated sources, xample ``'CHANnel1, CHANnel3'``
+            String of comma separated sources, example ``'CHANnel1, CHANnel3'``
         acquire_print : {bool, ``None``}, optional, default ``None``
             Possibility to override acquire_print temporarily, but the current
             setting will be restored afterwards
@@ -379,7 +409,7 @@ class Oscilloscope():
         if acquire_print is not None: self.acquire_print = temp # restore to previous setting
         return time, y
 
-    def set_options_getTrace(self, channel_nums=[''], source_type='CHANnel',
+    def set_options_get_trace(self, channel_nums=[''], source_type='CHANnel',
                                  wav_format=config._waveform_format, acq_type=config._acq_type,
                                  num_averages=config._num_avg, p_mode='RAW', num_points=0):
         """Set the options provided by the parameters and obtain one trace.
@@ -388,7 +418,7 @@ class Oscilloscope():
         ----------
         channel_nums : list, optional, default ['']
             list of the channel numbers to be acquired from, example ``['1', '3']``.
-            **Note: Use ``channel_nums=['']`` to capture all the currently active channels on the oscilloscope.**
+            Use ``channel_nums=['']`` to capture all the currently active channels on the oscilloscope.
         source_type : str, optional, default ``'CHANnel'``
             Selects the source type. Must be ``'CHANnel'`` in current implementation.
             Future version might include ``{ 'MATH' | 'FUNCtion'}``.
@@ -403,7 +433,7 @@ class Oscilloscope():
             ``'RAW'`` gives up to 1e6 points. Use ``'MAXimum'`` for sources that are not analogue or digital (functions and math)
         num_points : int, optional, default 0
             Optional command when p_mode (POINTs:MODE) is specified. Use 0 to let p_mode control the number of points.
-            Possible choices ``{0 | 100 | 250 | 500 | 1000 | 2000 | 5000 | 10000 | 20000 | 50000 | 100000 | 200000 | 500000 | 1000000}``
+            Possible choices {0 | 100 | 250 | 500 | 1000 | 2000 | 5000 | 10000 | 20000 | 50000 | 100000 | 200000 | 500000 | 1000000}
 
         Returns
         -------
@@ -421,10 +451,10 @@ class Oscilloscope():
         ## Select sources
         sourcesstring, sources, channel_nums = self.build_sourcesstring(source_type=source_type, channel_nums=channel_nums)
         ## Capture, read and process data
-        time, y = self.getTrace(sources, sourcesstring)
+        time, y = self.get_trace(sources, sourcesstring)
         return time, y, channel_nums
 
-    def set_options_getTrace_save(self, fname=config._filename, ext=config._filetype, channel_nums=[''], source_type='CHANnel',
+    def set_options_get_trace_save(self, fname=config._filename, ext=config._filetype, channel_nums=[''], source_type='CHANnel',
                                   wav_format=config._waveform_format, acq_type=config._acq_type, num_averages=config._num_avg, p_mode='RAW', num_points=0):
         """Get trace and save the trace to a file and plot to png.
 
@@ -442,34 +472,29 @@ class Oscilloscope():
         ext : str, optional, default config._filetype
             Choose the filetype of the saved trace
         channel_nums : list, optional, default ['']
-            list of the channel numbers to be acquired from, example ``['1', '3']``
-            **Note: Use ``channel_nums=['']`` to capture all the currently active channels on the oscilloscope.**
-        source_type : str, optional, default ``'CHANnel'``
+            list of the channel numbers to be acquired from, example ['1', '3'].
+            Use [''] to capture all the currently active channels on the oscilloscope.
+        source_type : str, optional, default 'CHANnel'
             Selects the source type. Must be ``'CHANnel'`` in current implementation.
-            Future version might include ``{'MATH' | 'FUNCtion'}``.
-        wav_format : str, optional, default ``config._waveform_format``
+            Future version might include {'MATH', 'FUNCtion'}.
+        wav_format : {'WORD', 'BYTE', 'ASCii'}, optional, default ``config._waveform_format``
             Select the format of the communication of waveform from the oscilloscope
-            possible choices ``{'WORD' | 'BYTE' | 'ASCii'}``
-        acq_type : str, optional, default ``config._acq_type``
-            Selects the acquisition mode of the oscilloscope
-            possible choices {'HRESolution' | 'NORMal' | 'AVERage' | 'AVER<m>'}
-            <m> will be used as num_averages if supplied
+        acq_type : {'HRESolution' | 'NORMal' | 'AVERage' | 'AVER<m>'}, optional, default ``config._acq_type``
+            Selects the acquisition mode of the oscilloscope. <m> will be used as num_averages if supplied
         num_averages : int, optional, default config._num_avg
             2 to 65536: applies only to the NORMal and AVERage modes
-        p_mode : str, optional, default 'RAW'
-            possible choices {'RAW' | 'MAXimum'}
+        p_mode : {'RAW', 'MAXimum'}, optional, default 'RAW'
             'RAW' gives up to 1e6 points. Use MAXimum for sources that are not analogue or digital (functions and math)
         num_points : int, optional, default 0
-            possible choices {0 | 100 | 250 | 500 | 1000 | 2000 | 5000 | 10000 | 20000 | 50000 | 100000 | 200000 | 500000 | 1000000}
             optional command when p_mode (POINTs:MODE) is specified. Use 0 to let p_mode control the number of points.
         """
         fname = check_file(fname, ext)
-        x, y, channel_nums = self.set_options_getTrace(channel_nums=channel_nums, source_type=source_type,
+        x, y, channel_nums = self.set_options_get_trace(channel_nums=channel_nums, source_type=source_type,
                                                        wav_format=wav_format, acq_type=acq_type, num_averages=num_averages,
                                                        p_mode=p_mode, num_points=num_points)
-        plotTrace(x, y, channel_nums, fname=fname)
+        plot_trace(x, y, channel_nums, fname=fname)
         head = self.id+"\ntime,"+",".join(channel_nums)+"\n"
-        saveTrace(fname, x, y, fileheader=head, ext=ext, acquire_print=self.acquire_print)
+        save_trace(fname, x, y, fileheader=head, ext=ext, acquire_print=self.acquire_print)
 
 
 
@@ -562,10 +587,10 @@ def check_file(fname, ext=config._filetype, num=""):
         fname += append
     return fname
 
-def saveTrace(fname, time, y, fileheader="", ext=config._filetype, acquire_print=True):
+def save_trace(fname, time, y, fileheader="", ext=config._filetype, acquire_print=True):
     """Saves the trace with time values and y values to file.
 
-    Current date and time is automatically added to the header.
+    Current date and time is automatically added to the header. Saving to numpy format with :func:`save_trace_npy` is faster, but does not include metadata and header.
 
     Parameters
     ----------
@@ -587,7 +612,27 @@ def saveTrace(fname, time, y, fileheader="", ext=config._filetype, acquire_print
     data = np.append(time, y, axis=1) # make one array with coloumns x y1 y2 ..
     np.savetxt(fname+ext, data, delimiter=",", header=fileheader+date_time)
 
-def plotTrace(time, y, channel_nums, fname="", show=config._show_plot, savepng=config._export_png):
+def save_trace_npy(fname, time, y, acquire_print=True):
+    """Saves the trace with time values and y values to npy file.
+
+    .. note:: Saving to numpy files is faster than to ascii format files (:func:`save_trace`), but no file header is added.
+
+    Parameters
+    ----------
+    fname : str
+        Filename to save to
+    time : ndarray
+        Time axis for the measurement
+    y : ndarray
+        Voltage values, same sequence as channel_nums
+    acquire_print : bool, optional, default True
+        ``True`` prints the filename it is saved to
+    """
+    if acquire_print: print("Saving trace to %s\n" % (fname+ext))
+    data = np.append(time, y, axis=1)
+    np.save(pathfname_no_ext+".npy", data)
+
+def plot_trace(time, y, channel_nums, fname="", show=config._show_plot, savepng=config._export_png):
     """Plots the trace with oscilloscope channel screen colours according to the Keysight colourmap and saves as a png.
 
     .. Caution:: No filename check for the saved plot, can overwrite existing png files.
@@ -599,8 +644,7 @@ def plotTrace(time, y, channel_nums, fname="", show=config._show_plot, savepng=c
     y : ndarray
         Voltage values, same sequence as channel_nums
     channel_nums : list of chars
-        list of the channels obtained from
-        Example ['1', '3']
+        list of the channels obtained, example ['1', '3']
     fname : str, optional, default ``""``
         Filename of possible exported png
     show : bool, optional, default ``config._show_plot``
@@ -624,5 +668,5 @@ if __name__ == '__main__':
     fname = sys.argv[1] if len(sys.argv) >= 2 else config._filename
     ext = config._filetype
     scope = Oscilloscope(address='USB0::0x0957::0x1796::MY59125372::INSTR', )
-    scope.set_options_getTrace_save(fname, ext, wav_format='WORD')
+    scope.set_options_get_trace_save(fname, ext, wav_format='WORD')
     scope.close()

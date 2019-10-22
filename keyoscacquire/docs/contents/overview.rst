@@ -18,7 +18,7 @@ The package installs the following command line functions
 
 * :meth:`get_num_traces`: get a set number of traces, use with option ``-h`` for instructions
 
-* :meth:`getTraces_single_connection`: get a trace each time enter is pressed, use with option ``-h`` for instructions
+* :meth:`get_traces_single_connection`: get a trace each time enter is pressed, use with option ``-h`` for instructions
 
 See more under :ref:`standalone-programmes`.
 

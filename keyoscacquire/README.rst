@@ -9,7 +9,7 @@ Based on `PyVISA <https://pyvisa.readthedocs.io/en/latest/>`_, keyoscacquire pro
 
    >>> import keyoscacq as koa
    >>> osc = koa.Oscilloscope(address='USB0::1234::1234::MY1234567::INSTR')
-   >>> time, y, channel_numbers = osc.set_options_getTrace()
+   >>> time, y, channel_numbers = osc.set_options_get_trace()
 
 where ``time`` is a vertical numpy vector of time values and ``y`` is a numpy array which columns contain the data from the active channels listed in ``channel_numbers``.
 

@@ -37,13 +37,19 @@ extensions = [
 'sphinx.ext.todo',
 'sphinx.ext.intersphinx',
 'recommonmark',
-#'sphinx_rtd_theme',
-#'numpydoc'
-'sphinx.ext.napoleon'
+'sphinx_rtd_theme',
+'sphinx.ext.napoleon',
+'numpydoc',
 ]
 autosummary_generate = True
 todo_include_todos = True
-intersphinx_mapping = {'python': ('https://docs.python.org/3', None)}
+napoleon_numpy_docstring = True
+intersphinx_mapping = {
+    'python': ('https://docs.python.org/3', None),
+    'pyvisa': ('https://pyvisa.readthedocs.io/en/latest/', None)}
+# autodoc_default_options = {
+#     'special-members': '__init__',
+# }
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

@@ -19,9 +19,7 @@ File saving
 
 The package has built-in functions for saving traces to ascii values
 
-data = np.append(x, y, axis=1)
-np.save(pathfname_no_ext+".npy", data)
-
-.. autofunction:: saveTrace
-.. autofunction:: plotTrace
+.. autofunction:: save_trace
+.. autofunction:: save_trace_npy
+.. autofunction:: plot_trace
 .. autofunction:: check_file

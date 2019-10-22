@@ -18,9 +18,9 @@ Four command line programmes for trace exporting,
 
 * ``get_num_traces``
 
-* ``getTraces_connect_each_time`` and
+* ``get_traces_connect_each_time`` and
 
-* ``getTraces_single_connection``
+* ``get_traces_single_connection``
 
 can be ran directly from the command line after installation (i.e. from whatever folder
 and no need for ``$ python [...].py``). They all have options, the manuals are available using the flag ``-h``.
@@ -45,7 +45,7 @@ The programmes takes optional arguments, the manuals are available using the fla
 
 For example::
 
-    $ getTraces_single_connection_loop -f measurement
+    $ get_traces_single_connection_loop -f measurement
 
 will give output files ``measurement n<n>.csv`` and ``measurement n<n>.png``.  The programmes will check if the file ``"measurement"+_file_delimiter+num+_filetype)`` exists, and if it does, prompt the user for something to append to ``measurement`` until ``"measurement"+appended+"0"+_filetype`` is not an existing file. The same checking procedure applies also when no base filename is supplied and ``config._default_filename`` is used.
 
