@@ -6,6 +6,7 @@
    * add visa address to command line functions
    * update docstrings in programmes
    * test example.py
+   * command line functions
 
 .. include:: ../README.rst
 
