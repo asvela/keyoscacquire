@@ -1,6 +1,12 @@
 .. Keysight Oscilloscope Acquire documentation master file, created by
    sphinx-quickstart on Mon Oct 21 05:06:26 2019.
 
+.. todo::
+   * change from RAW to NORM
+   * add visa address to command line functions
+   * update docstrings in programmes
+   * test example.py
+
 .. include:: ../README.rst
 
 .. toctree::

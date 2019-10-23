@@ -11,21 +11,26 @@ import os
 from setuptools import setup
 
 current_dir = os.path.abspath(os.path.dirname(__file__))
-# with open(os.path.join(current_dir, "README.md")) as fid:
-#     README = fid.read()
+with open(os.path.join(current_dir, "README.rst")) as fid:
+    README = fid.read()
 
 
 if __name__ == '__main__':
     setup(name='keyoscacquire',
           version=__version__,
           description='Obtain traces, save to files and export raw plots from Keysight oscilloscopes using PyVISA.',
-          long_description=open('README.rst').read(),
-          long_description_content_type="text/x-rst",
-          url='http://microphotonics.net/',
+          long_description=README,
+          url='https://github.com/asvela/keyoscacquire.git',
           author='Andreas Svela',
           author_email='asvela@ic.ac.uk',
           license='MIT',
           packages=['keyoscacquire'],
+          classifiers=[
+            "License :: OSI Approved :: MIT License",
+            "Programming Language :: Python :: 3",
+            "Programming Language :: Python :: 3.7",
+            "Operating System :: Microsoft :: Windows",
+            ],
           entry_points={
             'console_scripts' : [
                 'get_single_trace=keyoscacquire.installed_command_line_funcs:single_trace_command_line',

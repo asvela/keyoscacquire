@@ -307,7 +307,7 @@ class Oscilloscope():
             list of sources, example ``['CHANnel1', 'CHANnel3']``
         sourcesstring : str
             String of comma separated sources, example ``'CHANnel1, CHANnel3'``
-        datatype : char or ``'standard'``, optional but must match waveform format used.
+        datatype : char or ``'standard'``, optional but must match waveform format used
             To determine how to read the values from the oscilloscope depending on :attr:`wav_format`. Datatype is ``'H'`` for 16 bit unsigned int (``WORD``), for 8 bit unsigned bit (``BYTE``) (same naming as for `structs <https://docs.python.org/3/library/struct.html#format-characters`).
             ``'standard'`` will evaluate ``_datatypes[self.wav_format]`` to automatically choose according to the waveform format.
 
@@ -368,7 +368,7 @@ class Oscilloscope():
         -------
         raw : str
             Raw data to be processed by :func:`process_data_ascii`.
-            The raw data is a list of one IEEE block per channel with a head and then comma separated ascii values
+            The raw data is a list of one IEEE block per channel with a head and then comma separated ascii values.
         measurement_time : float
             The time duration of the measurement (the length of the time axis) in seconds.
             Used in to calculate the time axis (for all channels).
