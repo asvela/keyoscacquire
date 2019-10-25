@@ -24,7 +24,7 @@ import keyoscacquire.config as config
 
 
 def list_visa_devices():
-    """Prints the VISA addresses of the connected instruments."""
+    """Prints a list of the VISA instruments connected to the computer, including their addresses."""
     import pyvisa
     rm = pyvisa.ResourceManager()
     resources = rm.list_resources()
