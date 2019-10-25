@@ -1,4 +1,4 @@
-import keysightoscacq.oscacq as koa
+import keyoscacquire.oscacq as koa
 import matplotlib.pyplot as plt
 
 def get_averaged(osc_address, averages=8):
