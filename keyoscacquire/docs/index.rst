@@ -25,6 +25,7 @@
    contents/osc-class
    contents/dataprocessing
    contents/programmes
+   contents/config
 
 
 .. toctree::

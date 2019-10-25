@@ -20,9 +20,13 @@ The code has been tested on Windows 7 and 10 with a Keysight DSO2024A model usin
 .. note:: In order to connect to a VISA instrument, NI MAX or similar might need to be running on the computer.
 
 
+Documentation
+-------------
+
+Available `here <READ THE DOCS>`_.
+
+
 Contribute
 ----------
 
-Contributions are welcome, find the project on `github <git>`_.
-
-.. todo:: Insert link
+Contributions are welcome, find the project on `github <https://github.com/asvela/keyoscacquire.git>`_.

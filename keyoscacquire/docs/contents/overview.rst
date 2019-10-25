@@ -10,15 +10,15 @@ Quick reference
 
 The package installs the following command line functions
 
-* :meth:`path_of_config`: find the path of :mod:`keysightoscacquire.config` storing default options. Change this file to your choice of standard settings, see :ref:`default-options`.
+* :program:`list_visa_devices`: list the available VISA devices
 
-* :meth:`list_visa_devices`: list the available VISA devices
+* :program:`path_of_config`: find the path of :mod:`keyoscacquireuire.config` storing default options. Change this file to your choice of standard settings, see :ref:`default-options`.
 
-* :meth:`get_single_trace`: use with option ``-h`` for instructions
+* :program:`get_single_trace`: use with option ``-h`` for instructions
 
-* :meth:`get_num_traces`: get a set number of traces, use with option ``-h`` for instructions
+* :program:`get_num_traces`: get a set number of traces, use with option ``-h`` for instructions
 
-* :meth:`get_traces_single_connection`: get a trace each time enter is pressed, use with option ``-h`` for instructions
+* :program:`get_traces_single_connection`: get a trace each time enter is pressed, use with option ``-h`` for instructions
 
 See more under :ref:`standalone-programmes`.
 

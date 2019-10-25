@@ -41,6 +41,7 @@ extensions = [
 'sphinx.ext.napoleon',
 'numpydoc',
 'sphinx.ext.viewcode',
+'sphinx-prompt',
 ]
 autosummary_generate = True
 todo_include_todos = True

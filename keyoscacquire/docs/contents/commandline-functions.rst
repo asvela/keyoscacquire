@@ -1,45 +1,115 @@
 Command line functions
 **********************
 
+.. |br| raw:: html
 
-Auxiliary
-=========
+    <br>
 
-.. program:: list_visa_devices
-    prints a list of the visa devices connected to the computer
+keyoscacquire installs command line functions to find VISA devices, find the path of the :mod:`~keyoscacquire.config` file and obtain single or multiple traces.
 
-.. option:: -h
-    show description
+For all the trace-obtaining programmes, the filename is checked to ensure no overwrite, if a file exists from before the programme prompts for suffix to the filename. The filename is recursively checked after appending.
 
-.. program:: path_of_config
-    prints the full path of the :py:mod:`keysightoscacq.config`
+The file header in the ascii files saved is::
 
-.. option:: -h
-    show description
-
-
-To obtain traces
-================
-
-For all the programmes, the filename is checked to ensure no overwrite, if a file exists from before the programme prompts for suffix to the filename. The filename is recursively checked after appending.
-
-The file header in the ascii files saved is
-
-    id of oscilloscope (:attr:`~keysightoscacq.oscacq.Oscilloscope.id`)
+    <id>
     time,<chs>
-    timestamp
+    <timestamp>
 
-Where <chs> are the comma separated channels used. For example
+Where ``<id>`` is the :attr:`~keyoscacquire.oscacq.Oscilloscope.id` of the oscilloscope, and ``<chs>`` are the comma separated channels used. For example::
 
-    # AGILENT TECHNOLOGIES,DSO-X 2024A,MY57233636,02.42.2017032900
+    # AGILENT TECHNOLOGIES,DSO-X 2024A,MY1234567,12.34.1234567890
     # time,1,3
     # 2019-09-06 20:01:15.187598
 
+list_visa_devices
+-----------------
+
+**list_visa_devices** [*-h*]
+    Prints a list of the VISA instruments connected to the computer, including their addresses.
+
+.. program:: list_visa_devices
+
+**Options**
+    **-h, \\-\\-help**: Show help
+
+
+path_of_config
+--------------
+
+**path_of_config** [*-h*]
+    Prints the full path of the :mod:`~keyoscacquire.config`
+
+.. program:: path_of_config
+
+**Options**
+    **-h, \\-\\-help**: Show help
+
+get_single_trace
+----------------
+
+**get_single_trace** [*options*]
+    Opens a connection to the VISA instrument, obtain one single trace with standard options in :mod:`~keyoscacquire.config` or override with the options below.
 
 .. program:: get_single_trace
 
-.. option:: -f <filename>
-    Set the file name for saving the trace
+**Options**
+    **-f** <filename>: Set the file name for saving the trace |br|
+    **-a** <acquisition mode>: Set the acquiring mode for the trace |br|
+    **-h, \\-\\-help**: Show help
 
-.. option:: -a <acquisition mode>
-    Set the acquiring mode for the trace
+
+get_num_traces
+--------------
+
+**get_num_traces** [*options*]
+    Opens a connection to the VISA instrument, obtains a specific number of traces with standard options in :mod:`~keyoscacquire.config` or override with the options below. Defaults to 1 trace.
+
+.. program:: get_num_traces
+
+**Options**
+    **-f** <filename>: Set the file name for saving the trace |br|
+    **-a** <acquisition mode>: Set the acquiring mode for the trace |br|
+    **-h, \\-\\-help**: Show help
+
+
+get_traces_single_connection
+----------------------------
+
+**get_traces_connect_each_time** [*options*]
+    This program connects to the oscilloscope, sets the default (:mod:`~keyoscacquire.config`) or argument overridden options for the acquisition and then enters a loop in which the program captures and stores traces each time 'enter' is pressed.
+
+    Alternatively one can input `n-1` characters before hitting ``enter`` to capture `n` traces
+    back to back. To quit press ``q`` + ``enter``. This programme minimises overhead for each measurement,
+    permitting measurements to be taken with quicker succession than if connecting each time
+    a trace is captured. The downside is that which channels are being captured cannot be
+    changing thoughout the measurements.
+
+.. program:: get_traces_single_connection
+
+**Options**
+    **-f** <filename>: Set the file name for saving the trace |br|
+    **-a** <acquisition mode>: Set the acquiring mode for the trace |br|
+    **-h, \\-\\-help**: Show help
+
+
+get_traces_connect_each_time
+----------------------------
+
+**get_traces_connect_each_time** [*options*]
+    This program consists of a loop in which the program connects to the oscilloscope,
+    sets the default (:mod:`~keyoscacquire.config`) or argument overridden options for
+    the acquisition, and captures and stores a trace from the active channels
+    for each loop.
+
+    This permits the active channels to be changing thoughout the measurements, but has larger
+    overhead due to establishing and closing a new connection every time.
+
+    The loop runs each time ``enter`` is hit. Alternatively one can input `n-1` characters before hitting
+    ``enter`` to capture `n` traces back to back. To quit press ``q`` + ``enter``.
+
+.. program:: get_traces_connect_each_time
+
+**Options**
+    **-f** <filename>: Set the file name for saving the trace |br|
+    **-a** <acquisition mode>: Set the acquiring mode for the trace |br|
+    **-h, \\-\\-help**: Show help

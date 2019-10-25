@@ -1,7 +1,7 @@
 .. _osc-class:
 
-The Oscilloscope class
-**********************
+Instrument communication: The Oscilloscope class
+************************************************
 
 .. py:currentmodule:: keyoscacquire.oscacq
 

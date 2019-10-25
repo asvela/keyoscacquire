@@ -31,11 +31,11 @@ class Oscilloscope():
 
     Parameters
     ----------
-    address : str
+    address : str, optional, default config._visa_address
         Visa address of instrument. To find the visa addresses of the instruments
         connected to the computer run ``list_visa_devices`` in the command line.
         Example address ``'USB0::1234::1234::MY1234567::INSTR'``
-    timeout : int
+    timeout : int, optional, default config._timeout
         Milliseconds before timeout on the channel to the instrument
 
     Raises
@@ -64,7 +64,7 @@ class Oscilloscope():
 
             For example, if the digitizer samples at 200 MSa/s, but the effective sample rate is 1 MSa/s (because of a slower sweep speed), only 1 out of every 200 samples needs to be stored. Instead of storing one sample (and throwing others away), the 200 samples are averaged together to provide the value for one display point. The slower the sweep speed, the greater the number of samples that are averaged together for each display point.
     num_averages : int, 2 to 65536
-        Applies only to the 'AVERage' :attr:`acq_type`: The number of averages applied
+        The number of averages applied (applies only to the 'AVERage' :attr:`acq_type`)
     p_mode : {'NORMal', 'RAW', 'MAXimum'}
         'NORMal' is limited to 62,500 points, whereas 'RAW' gives up to 1e6 points. Use 'MAXimum' for sources that are not analogue or digital.
     num_points : int
@@ -91,7 +91,7 @@ class Oscilloscope():
             self.inst = rm.open_resource(address)
             self.address = address
         except pyvisa.Error as err:
-            print('\nVisaError: Could not connect to \'%s\', exiting now...' % address)
+            print('\nVisaError: Could not connect to \'%s\'.' % address)
             raise
         # make sure WORD and BYTE data is transeferred as unsigned ints
         self.inst.write(':WAVeform:UNSigned ON')
@@ -170,7 +170,7 @@ class Oscilloscope():
 
         Parameters
         ----------
-        wav_format : {'WORD', 'BYTE', 'ASCii'}, optional, default config._waveform_format
+        wav_format : {'WORD', 'BYTE', 'ASCii'}, optional, default :attr:`config._waveform_format`
             Select the format of the communication of waveform from the oscilloscope
         acq_type : {'HRESolution', 'NORMal', 'AVERage', 'AVER<m>'}, optional, default config._acq_type
             Acquisition mode of the oscilloscope. <m> will be used as num_averages if supplied

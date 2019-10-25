@@ -20,6 +20,7 @@ if __name__ == '__main__':
           version=__version__,
           description='Obtain traces, save to files and export raw plots from Keysight oscilloscopes using PyVISA.',
           long_description=README,
+          long_description_content_type="text/x-rst",
           url='https://github.com/asvela/keyoscacquire.git',
           author='Andreas Svela',
           author_email='asvela@ic.ac.uk',
