@@ -2,18 +2,16 @@
 How to use
 **********
 
-The VISA addresses of connected instruments can be found with the installed command line function :meth:`list_visa_devices` or can be found in NI MAX. The address should be set as the :data:`_visa_address` in :mod:`keyoscacquire.config`
+The VISA addresses of connected instruments can be found with ``$ list_visa_devices`` in the command line, or can be found in NI MAX or the `PyVISA shell <https://pyvisa.readthedocs.io/en/latest/introduction/shell.html>`_. The address should be set as the :data:`~keyoscacquire.config._visa_address` in :mod:`keyoscacquire.config`
 
 .. note:: In order to connect to a VISA instrument, NI MAX or similar might need to be running on the computer.
 
+.. _cli-programmes-short:
 
-.. _standalone-programmes:
+Command line programmes for trace export
+========================================
 
-Standalone programmes for trace export
-======================================
-
-Four command line programmes for trace exporting, can be ran directly from the command line after installation (i.e. from whatever folder
-and no need for ``$ python [...].py``):
+Four command line programmes for trace exporting can be ran directly from the command line after installation (i.e. from whatever folder and no need for ``$ python [...].py``):
 
 * :program:`get_single_trace`
 
@@ -33,13 +31,13 @@ The difference between the two latter programmes is that the first programme is 
 Optional command line arguments
 -------------------------------
 
-The programmes takes optional arguments, the manuals are available using the flag ``-h``. Here are three examples
+The programmes takes optional arguments, the manuals are available using the flag ``-h`` (see also :ref:`cli-programmes` for more details). Here are three examples
 
 * ``-f "custom filename"`` set as the base filename to "custom filename"
 
 * ``-a AVER8``  sets acquiring type to average with eight traces
 
-* ``-n 10`` sets number of traces to obtain (only for `get_num_traces`)
+* ``-n 10`` sets number of traces to obtain (only for :program:`get_num_traces`)
 
 .. highlight:: console
 
@@ -52,6 +50,24 @@ For example
 will give output files ``measurement n<n>.csv`` and ``measurement n<n>.png``.  The programmes will check if the file ``"measurement"+_file_delimiter+num+_filetype)`` exists, and if it does, prompt the user for something to append to ``measurement`` until ``"measurement"+appended+"0"+_filetype`` is not an existing file. The same checking procedure applies also when no base filename is supplied and ``config._default_filename`` is used.
 
 .. highlight:: python
+
+
+Waveform formats
+================
+
+The oscilloscope can transfer the waveform to the computer in three different ways
+
+* Comma separated ASCII values
+
+* 8-bit integers
+
+* 16-bit integers
+
+Keysight call these ASCii, BYTE and WORD, respectively. The two latter integer types must be post-processed on the computer using a preamble that can be queried for from the ocilloscope. The keyoscacquire package supports all three formats and does the conversion for the integer transfer types, i.e. the output files will be ASCII format anyway, it is simply a question of how the data is transferred to and processed on the computer (see :func:`~keyoscacquire.oscacq.Oscilloscope.capture_and_read` and :func:`~keyoscacquire.oscacq.process_data`).
+
+The 16-bit values format is approximately 10x faster than ascii. and gives the same vertical resolution. 8-bit has significantly lower vertical resolution than the two others, but gives an even higher speed-up.
+
+The default waveform type can be set in with :const:`~keyoscacquire.config._waveform_format`, see :ref:`default-options`, or using the API :attr:`~keyoscacquire.oscacq.Oscilloscope.wav_format`.
 
 
 Using the API
@@ -80,13 +96,11 @@ The scope will always be set to running after a trace is captured.
 Default options in :mod:`keyoscacquire.config`
 ================================================================
 
-The package takes its default options from :mod:`keyoscacquire.config` (to find the location of the file run :program:`path_to_config` from the command line):
+The package takes its default options from :mod:`keyoscacquire.config` (to find the location of the file run ``$ path_to_config`` in the command line):
 
 .. literalinclude :: ../../keyoscacquire/config.py
 
 .. note:: None of the functions access the global variables directly, but they are feed them as default arguments.
-
-The variable :const:`~keyoscacquire.config._waveform_format` dictates whether 16/8-bit raw values or comma separated ascii voltage values should be transferred when the waveform is queried for (the output file will be ascii anyway, this is simply a question of how the data is transferred to and processed on the computer). 16-bit values format is approx. 10x faster than ascii. See :attr:`~keyoscacquire.oscacq.Oscilloscope.wav_format`, as well as :func:`~keyoscacquire.oscacq.Oscilloscope.capture_and_read` and :func:`~keyoscacquire.oscacq.process_data`.
 
 The command line programmes will save traces in the folder from where they are ran as ``_filename+_file_delimiter+<n>+_filetype``, i.e. by default as ``data n<n>.csv`` and ``data n<n>.png``.
 

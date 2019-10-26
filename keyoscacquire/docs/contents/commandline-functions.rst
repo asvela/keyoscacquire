@@ -1,11 +1,13 @@
-Command line functions
-**********************
+.. _cli-programmes:
+
+Command line programmes
+***********************
 
 .. |br| raw:: html
 
     <br>
 
-keyoscacquire installs command line functions to find VISA devices, find the path of the :mod:`~keyoscacquire.config` file and obtain single or multiple traces.
+keyoscacquire installs command line programmes to find VISA devices, find the path of the :mod:`~keyoscacquire.config` file and obtain single or multiple traces.
 
 For all the trace-obtaining programmes, the filename is checked to ensure no overwrite, if a file exists from before the programme prompts for suffix to the filename. The filename is recursively checked after appending.
 
@@ -54,7 +56,7 @@ get_single_trace
 
 **Options**
     **-f** <filename>: Set the file name for saving the trace |br|
-    **-a** <acquisition mode>: Set the acquiring mode for the trace |br|
+    **-a** <acquisition mode>: Set the acquiring mode for the trace, see |br|
     **-h, \\-\\-help**: Show help
 
 

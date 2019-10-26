@@ -13,7 +13,7 @@ Based on `PyVISA <https://pyvisa.readthedocs.io/en/latest/>`_, keyoscacquire pro
 
 where ``time`` is a vertical numpy vector of time values and ``y`` is a numpy array which columns contain the data from the active channels listed in ``channel_numbers``.
 
-If you need to find the VISA address of your oscilloscope, use the command line function ``list_visa_devices`` provided by this package.
+If you need to find the VISA address of your oscilloscope, use the command line programme ``list_visa_devices`` provided by this package.
 
 The code has been tested on Windows 7 and 10 with a Keysight DSO2024A model using a USB connection.
 

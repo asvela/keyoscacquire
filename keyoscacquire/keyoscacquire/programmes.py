@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Python backend for installed command line functions. These can also be integrated in python scripts or used as examples.
+Python backend for installed command line programmes. These can also be integrated in python scripts or used as examples.
 
 * :func:`list_visa_devices`: listing visa devices
 

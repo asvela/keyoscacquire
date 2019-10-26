@@ -19,9 +19,9 @@ v3.0.0 (2019-10-XX)
 v2.1.1 (2019-10-18)
 -------------------
 
-- Added command line function ``list_visa_devices`` to list the addresses of the VISA instruments available
+- Added command line programme ``list_visa_devices`` to list the addresses of the VISA instruments available
 
-- Added command line function ``path_of_config`` to show the path of config.py
+- Added command line programme ``path_of_config`` to show the path of config.py
 
 - Explicitly setting scope to transfer in unsigned ints when doing ``BYTE`` and ``WORD`` waveform formats
 
@@ -53,9 +53,9 @@ v1.1.1 (2019-08-14)
 
 v1.1.0 (2019-04-04)
 -------------------
-Extra command line function, logging enabled, order of magnitude speed-up in data processing
+Extra command line programme, logging enabled, order of magnitude speed-up in data processing
 
-  - Added command line function for obtaining a given number of traces consecutively
+  - Added command line programme for obtaining a given number of traces consecutively
 
   - Former debugging print is now directed to ``logging.debug()``
 
