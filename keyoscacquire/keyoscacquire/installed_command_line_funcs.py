@@ -12,7 +12,7 @@ The loop runs each time 'enter' is hit. Alternatively one can input n-1 characte
 'enter' to capture n traces back to back. To quit press 'q'+'enter'.
 
 Optional argument from the command line: string setting the base filename of the output files.
-Change the _visa_address under in config to the desired instrument.
+Change _visa_address in keyoscacquire.config to the desired instrument's address.
 
 Andreas Svela // 2019
 """
@@ -26,16 +26,20 @@ import keyoscacquire.config as config
 ##============================================================================##
 
 # Help strings
-acq_help = 'The acquire type: {HRESolution, NORMal, AVER<m>} where <m> is the number of averages in range [2, 65536]. Defaults to \''+config._acq_type+"\'."
-file_help = 'The filename base, (without extension, \''+config._filetype+'\' is added). Defaults to \''+config._filename+"\'."
-
+acq_help = "The acquire type: {HRESolution, NORMal, AVER<m>} where <m> is the number of averages in range [2, 65536]. Defaults to \'"+config._acq_type+"\'."
+wav_help = "The waveform format: {BYTE, WORD, ASCii}. Defaults to \'"+config._wav_format+"\'."
+file_help = "The filename base, (without extension, \'"+config._filetype+"\' is added). Defaults to \'"+config._filename+"\'."
+visa_help = "Visa address of instrument. To find the visa addresses of the instruments connected to the computer run 'list_visa_devices' in the command line. Defaults to \'"+config._visa_address+"\'."
+timeout_help = "Milliseconds before timeout on the channel to the instrument. Defaults to "+config._timeout+"."
+channels_help = "List of the channel numbers to be acquired, for example '1 3' (without '). Use an empty string ('') to capture all the currently active channels on the oscilloscope. Defaults to \'"+" ".join(config._ch_num)+"\'."
+points_help = "Use 0 to get the maximum number of points, or set a smaller number to speed up the acquisition and transfer. Defaults to 0."
 
 def connect_each_time_command_line():
     """Function installed on the command line: Obtains and stores multiple traces,
     connecting to the oscilloscope each time."""
-    parser = argparse.ArgumentParser(usage=acqprog.get_traces_connect_each_time_loop.__doc__)
-    parser.add_argument('-f', nargs='?', help=file_help)
-    parser.add_argument('-a', nargs='?', help=acq_help)
+    parser = argparse.ArgumentParser(description=acqprog.get_traces_connect_each_time_loop.__doc__)
+    parser.add_argument('-f', '--filename', nargs='?', help=file_help, default=config._filename)
+    parser.add_argument('-a', '--acq_type', nargs='?', help=acq_help, default=config._acq_type)
     args = parser.parse_args()
 
     acqprog.run_programme("connect_each_time", ['', args.f, args.a])
@@ -44,9 +48,9 @@ def connect_each_time_command_line():
 def single_connection_command_line():
     """Function installed on the command line: Obtains and stores multiple traces,
     keeping a the same connection to the oscilloscope open all the time."""
-    parser = argparse.ArgumentParser(usage=acqprog.get_traces_single_connection_loop.__doc__)
-    parser.add_argument('-f', nargs='?', help=file_help)
-    parser.add_argument('-a', nargs='?', help=acq_help)
+    parser = argparse.ArgumentParser(description=acqprog.get_traces_single_connection_loop.__doc__)
+    parser.add_argument('-f', '--filename', nargs='?', help=file_help, default=config._filename)
+    parser.add_argument('-a', '--acq_type', nargs='?', help=acq_help, default=config._acq_type)
     args = parser.parse_args()
 
     acqprog.run_programme("single_connection", ['', args.f, args.a])
@@ -54,31 +58,39 @@ def single_connection_command_line():
 
 def single_trace_command_line():
     """Function installed on the command line: Obtains and stores a single trace."""
-    parser = argparse.ArgumentParser(usage=acqprog.get_single_trace.__doc__)
-    parser.add_argument('-f', nargs='?', help=file_help)
-    parser.add_argument('-a', nargs='?', help=acq_help)
+    parser = argparse.ArgumentParser(description=acqprog.get_single_trace.__doc__)
+    parser.add_argument('-v', '--visa_address', nargs='?', help=visa_help, default=config._visa_address)
+    parser.add_argument('-c', '--channels', nargs='?', help=channels_help, default=config.ch_nums)
+    parser.add_argument('-f', '--filename', nargs='?', help=file_help, default=config._filename)
+    parser.add_argument('-a', '--acq_type', nargs='?', help=acq_help, default=config._acq_type)
+    parser.add_argument('-w', '--wav_format', nargs='?', help=wav_help, default=config._waveform_format)
+    parser.add_argument('-p', '--num_points', nargs='?', help=points_help, default=0, type=int)
+    parser.add_argument('-t', '--timeout', nargs='?', help=timeout_help, default=config._timeout, type=int)
     args = parser.parse_args()
 
-    acqprog.run_programme("single_trace", ['', args.f, args.a])
+    acqprog.get_single_trace(fname=args.f, address=args.v, timeout=args.t, wav_format=args.w,
+                             channel_nums=args.c, acq_type=args.a, num_points=args.p)
 
 def num_traces_command_line():
     """Function installed on the command line: Obtains and stores a single trace."""
-    parser = argparse.ArgumentParser(usage=acqprog.get_num_traces.__doc__)
-    parser.add_argument('-n', nargs='?', help='The number of traces to obtain. Defaults to 1.')
-    parser.add_argument('-f', nargs='?', help=file_help)
-    parser.add_argument('-a', nargs='?', help=acq_help)
+    parser = argparse.ArgumentParser(description=acqprog.get_num_traces.__doc__)
+    # postitional arg
+    parser.add_argument('num', nargs='?', help='The number of successive traces to obtain.', type=int)
+    # optional args
+    parser.add_argument('-f', '--filename', nargs='?', help=file_help)
+    parser.add_argument('-a', '--acq_type', nargs='?', help=acq_help)
     args = parser.parse_args()
 
-    acqprog.run_programme("num_traces", ['', args.f, args.a, args.n])
+    acqprog.run_programme("num_traces", ['', args.f, args.a, args.num])
 
 def list_visa_devices_command_line():
     """Function installed on the command line: Lists VISA devices"""
-    parser = argparse.ArgumentParser(usage=acqprog.list_visa_devices.__doc__)
+    parser = argparse.ArgumentParser(description=acqprog.list_visa_devices.__doc__)
     args = parser.parse_args()
     acqprog.list_visa_devices()
 
 def path_of_config_command_line():
     """Function installed on the command line: Prints the full path of the config module"""
-    parser = argparse.ArgumentParser(usage=acqprog.path_of_config.__doc__)
+    parser = argparse.ArgumentParser(description=acqprog.path_of_config.__doc__)
     args = parser.parse_args()
     acqprog.path_of_config()
