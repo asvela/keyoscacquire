@@ -422,7 +422,7 @@ class Oscilloscope():
         time : ~numpy.ndarray
             Time axis for the measurement
         y : ~numpy.ndarray
-            Voltage values, same sequence as sources input
+            Voltage values, same sequence as sources input, each row represents one channel
 
         """
         if acquire_print is not None: # possibility to override acquire_print
@@ -462,7 +462,7 @@ class Oscilloscope():
         time : ~numpy.ndarray
             Time axis for the measurement
         y : ~numpy.ndarray
-            Voltage values, same sequence as ``channel_nums``
+            Voltage values, same sequence as ``channel_nums``, each row represents one channel
         channel_nums : list of chars
             list of the channels obtained from, example ``['1', '3']``
         """
@@ -543,7 +543,7 @@ def process_data(raw, metadata, wav_format, acquire_print=True):
     time : :class:`~numpy.ndarray`
         Time axis for the measurement
     y : :class:`~numpy.ndarray`
-        Voltage values, one column per channel
+        Voltage values, each row represents one channel
 
     Raises
     ------
@@ -578,7 +578,7 @@ def process_data_binary(raw, preambles, acquire_print=True):
     time : :class:`~numpy.ndarray`
         Time axis for the measurement
     y : :class:`~numpy.ndarray`
-        Voltage values, one column per channel
+        Voltage values, each row represents one channel
     """
     preamble = preambles[0].split(',')  # values separated by commas
     # 0 FORMAT : int16 - 0 = BYTE, 1 = WORD, 4 = ASCII.
@@ -620,7 +620,7 @@ def process_data_ascii(raw, measurement_time, acquire_print=True):
     time : :class:`~numpy.ndarray`
         Time axis for the measurement
     y : :class:`~numpy.ndarray`
-        Voltage values, one column per channel
+        Voltage values, each row represents one channel
     """
     y = []
     for data in raw:
