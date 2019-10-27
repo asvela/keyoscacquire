@@ -120,10 +120,10 @@ class Oscilloscope():
         else:
             self.p_mode = p_mode
         self.inst.write(':WAVeform:POINts:MODE ' + self.p_mode)
-        #_log.debug("Max number of points for mode %s: %s" % (self.p_mode, self.inst.query(':WAVeform:POINts?')))
+        #_log.debug("Max number of points for mode %s: %s" % (self.p_mode, self.inst.query(':ACQuire:POINts?')))
         if self.num_points != 0: #if number of points has been specified
             self.inst.write(':WAVeform:POINts ' + str(self.num_points))
-            print("Number of points set to: ", self.num_points)
+            _log.debug("Number of points set to: ", self.num_points)
 
     def build_sourcesstring(self, source_type='CHANnel', channel_nums=config._ch_nums):
         """Builds the sources string from channel_nums, a list of the channel numbers to be used.
