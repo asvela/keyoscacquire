@@ -54,6 +54,9 @@ intersphinx_mapping = {
 #     'special-members': '__init__',
 # }
 
+# standard is 'contents' from verson 2.0
+master_doc = 'index'
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
