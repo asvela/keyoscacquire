@@ -7,7 +7,10 @@ Andreas Svela // 2019
 """
 
 visa_path = 'C:\\Program Files\\IVI Foundation\\VISA\\Win64\\agvisa\\agbin\\visa32.dll'
+# Oxford
 visa_address = 'USB0::0x0957::0x1796::MY59125372::INSTR'
+# NPL
+# visa_address = 'USB0::0x0957::0x1796::MY57233636::INSTR'
 
 
 import pyvisa

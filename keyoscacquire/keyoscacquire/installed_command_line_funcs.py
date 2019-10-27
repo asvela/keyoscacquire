@@ -22,7 +22,7 @@ import keyoscacquire.programmes as acqprog
 import keyoscacquire.config as config
 
 ##============================================================================##
-##                   INSTALLED COMMAND LINE FUNCTIONS                         ##
+##                   INSTALLED COMMAND LINE PROGRAMMES                        ##
 ##============================================================================##
 
 # Help strings
