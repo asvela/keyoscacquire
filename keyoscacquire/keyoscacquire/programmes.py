@@ -150,6 +150,6 @@ def get_num_traces(fname=config._filename, ext=config._filetype, num=1, address=
             fnum = file_delim+str(i)
             x, y = scope.get_trace(sources, sourcesstring, acquire_print=(i==n))
             #acq.plot_trace(x, y, channel_nums, fname=fname+fnum)        # plot trace and save png
-            acq.save_trace(fname+fnum, x, y, fileheader=fhead, ext=ext, acquire_print=(i==n)) # save trace to ext file
+            acq.save_trace(fname+fnum, x, y, fileheader=fhead, ext=ext, print_filename=(i==n)) # save trace to ext file
         print("Done")
         scope.close()

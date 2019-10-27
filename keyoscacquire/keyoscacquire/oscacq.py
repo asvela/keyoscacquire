@@ -525,6 +525,59 @@ class Oscilloscope():
         head = self.generate_file_header(channel_nums)
         save_trace(fname, x, y, fileheader=head, ext=ext, print_filename=self.acquire_print)
 
+    def generate_file_header(self, channels, additional_line=None, timestamp=True):
+        """Generate string to be used as file header for saved files
+
+        The file header has this structure::
+
+            <id>
+            <mode>
+            <timestamp>
+            additional_line
+            time,<chs>
+
+        Where ``<id>`` is the :attr:`~keyoscacquire.oscacq.Oscilloscope.id` of the oscilloscope,
+        and ``<chs>`` are the comma separated channels used.
+
+        .. note:: If ``additional_line`` is not supplied the fileheader will be four lines.
+        If ``timestamp=False`` the timestamp line will not be present.
+
+        Parameters
+        ----------
+        channels : list of str
+            Any list of identifies for the channels used for the measurement to be saved.
+        additional_line : str or ``None``, optional, default ``None``
+            No additional line if set to ``None``, otherwise the value of the argument will be used
+            as an additonal line to the file header
+        timestamp : bool
+            ``True`` gives a line with timestamp, ``False`` removes the line
+
+        Returns
+        -------
+        str
+            string to be used as file header
+
+        Example
+        -------
+        If the oscilloscope is acquiring in ``'AVER'`` mode with eight averages::
+
+            Oscilloscope.generate_file_header(['1', '3'], additional_line="my comment")
+
+        gives::
+
+            # AGILENT TECHNOLOGIES,DSO-X 2024A,MY1234567,12.34.1234567890
+            # AVER8
+            # 2019-09-06 20:01:15.187598
+            # my comment
+            # time,1,3
+
+        """
+        num_averages = str(self.num_averages) if self.acq_type[:3] == 'AVE' else ""
+        mode_line = self.acq_type+","+num_averages+"\n"
+        timestamp_line = str(datetime.datetime.now())+"\n" if timestamp else ""
+        add_line = additional_line+"\n" if additional_line is not None else ""
+        channels_line = "time,"+",".join(channels)
+        return self.id+"\n"+mode_line+timestamp_line+add_line+channels_line
 
 
 ##============================================================================##
@@ -645,59 +698,6 @@ def process_data_ascii(raw, measurement_time, acquire_print=True):
         _log.info("Points captured per channel: ", num_samples)
     return x, y
 
-    def generate_file_header(self, channels, additional_line=None, timestamp=True):
-        """Generate string to be used as file header for saved files
-
-        The file header has this structure::
-
-            <id>
-            <mode>
-            <timestamp>
-            additional_line
-            time,<chs>
-
-        Where ``<id>`` is the :attr:`~keyoscacquire.oscacq.Oscilloscope.id` of the oscilloscope,
-        and ``<chs>`` are the comma separated channels used.
-
-        .. note:: If ``additional_line`` is not supplied the fileheader will be four lines.
-        If ``timestamp=False`` the timestamp line will not be present.
-
-        Parameters
-        ----------
-        channels : list of str
-            Any list of identifies for the channels used for the measurement to be saved.
-        additional_line : str or ``None``, optional, default ``None``
-            No additional line if set to ``None``, otherwise the value of the argument will be used
-            as an additonal line to the file header
-        timestamp : bool
-            ``True`` gives a line with timestamp, ``False`` removes the line
-
-        Returns
-        -------
-        str
-            string to be used as file header
-
-        Example
-        -------
-        If the oscilloscope is acquiring in ``'AVER'`` mode with eight averages::
-
-            Oscilloscope.generate_file_header(['1', '3'], additional_line="my comment")
-
-        gives::
-
-            # AGILENT TECHNOLOGIES,DSO-X 2024A,MY1234567,12.34.1234567890
-            # AVER8
-            # 2019-09-06 20:01:15.187598
-            # my comment
-            # time,1,3
-
-        """
-        num_averages = self.num_averages if self.acq_mode[:3] == 'AVE' else ""
-        mode = self.acq_mode+","+num_averages+"\n"
-        date_time = str(datetime.datetime.now())+"\n" if timestamp else ""
-        add_line = additional_line+"\n" if additional_line is not None else ""
-        channels = "\ntime,"+",".join(channel_nums)+"\n"
-        return self.id+"\n"+mode+date_time+add_line+channels
 
 ##============================================================================##
 ##                           SAVING FILES                                     ##
