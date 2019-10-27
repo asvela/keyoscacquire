@@ -39,7 +39,7 @@ extensions = [
 'recommonmark',
 'sphinx_rtd_theme',
 'sphinx.ext.napoleon',
-'numpydoc',
+#'numpydoc',
 'sphinx.ext.viewcode',
 'sphinx-prompt',
 ]
