@@ -471,9 +471,7 @@ class Oscilloscope():
                                    num_averages=num_averages, p_mode=p_mode,
                                    num_points=num_points)
         ## Select sources
-        print(channel_nums)
         sourcesstring, sources, channel_nums = self.build_sourcesstring(source_type=source_type, channel_nums=channel_nums)
-        print(channel_nums)
         ## Capture, read and process data
         time, y = self.get_trace(sources, sourcesstring)
         return time, y, channel_nums
