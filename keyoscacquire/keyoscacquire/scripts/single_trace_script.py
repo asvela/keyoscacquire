@@ -10,9 +10,7 @@ Optional argument from the command line: string setting the base filename of the
 Change the config._visa_address under default options to the desired instrument.
 """
 
-import sys
 import keyoscacquire.installed_command_line_funcs as cli
-
 
 ## Main function, runs only if the script is called from the command line
 if __name__ == '__main__':

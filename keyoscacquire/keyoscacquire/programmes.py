@@ -2,11 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 One programme for taking a single trace and saving it.
-Two programmes for taking multiple traces, see descriptions for each function.
-The run_programme function is a wrapper function for scripts and installed functions
-calling the programmes with optional command line arguments.
-
-Andreas Svela // 2019
+Three programmes for taking multiple traces, see descriptions for each function.
 """
 
 
@@ -141,31 +137,3 @@ def get_num_traces(fname=config._filename, ext=config._filetype, num=1, address=
             acq.saveTrace(fname+fnum, x, y, fileheader=fhead, ext=ext, acquire_print=(i==n)) # save trace to ext file
         print("Done")
         scope.close()
-
-
-
-##============================================================================##
-##                    APPLYING OPTIONAL ARGUMENTS                             ##
-##============================================================================##
-
-
-def run_programme(name, args):
-    fname = args[1] if (len(args) >= 2 and args[1] is not None) else config._filename #if optional argument is supplied on the command line use as base filename
-    ext = config._filetype
-    a_type = args[2] if (len(args) >= 3 and args[2] is not None) else config._acq_type #if 2nd optional argument is supplied on the command line use acquiring mode
-    if a_type[:4] == 'AVER':
-            fname += " " + a_type
-    n = int(args[3]) if len(args) >= 4 else 1 #if 3rd optional argument is supplied on the command line use acquiring mode
-
-    _log.debug("Running programme \'%s\' saving to base filename \'%s\' with extension \'%s\' and aquiring type \'%s\'" % (name, fname, ext, a_type))
-    names = ["single_trace", "connect_each_time", "single_connection", "num_traces"] # possible programme names
-    if name == names[0]:
-        get_single_trace(fname, ext, acq_type=a_type)
-    elif name == names[1]:
-        getTraces_connect_each_time_loop(fname, ext, acq_type=a_type)
-    elif name == names[2]:
-        getTraces_single_connection_loop(fname, ext, acq_type=a_type)
-    elif name == names[3]:
-        get_num_traces(fname, ext, num=n, acq_type=a_type)
-    else:
-        raise ValueError("\nUnknown name \'%s\' of program to run. Available programmes %s." % (name, str(names)))
