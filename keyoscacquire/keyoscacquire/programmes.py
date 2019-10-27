@@ -47,10 +47,11 @@ def path_of_config():
     print("config.py can be found in:\n\t%s\n" % os.path.dirname(os.path.abspath(__file__)))
 
 
-def get_single_trace(fname=config._filename, ext=config._filetype, address=config._visa_address, timeout=config._timeout, wav_format=config._waveform_format,
+def get_single_trace(fname=config._filename, ext=config._filetype, address=config._visa_address,
+                     timeout=config._timeout, wav_format=config._waveform_format,
                      channel_nums=config._ch_nums, source_type='CHANnel', acq_type=config._acq_type,
                      num_averages=config._num_avg, p_mode='RAW', num_points=0):
-    """This programme captures and stores a trace."""
+    """This programme captures and stores a single trace."""
     scope = acq.Oscilloscope(address=address, timeout=timeout)
     scope.set_options_get_trace_save(fname=fname, ext=ext, wav_format=wav_format,
                           channel_nums=channel_nums, source_type=source_type, acq_type=acq_type,
@@ -59,9 +60,10 @@ def get_single_trace(fname=config._filename, ext=config._filetype, address=confi
     print("Done")
 
 
-def get_traces_connect_each_time_loop(fname=config._filename, ext=config._filetype, address=config._visa_address, timeout=config._timeout, wav_format=config._waveform_format,
-                                     channel_nums=config._ch_nums, source_type='CHANnel', acq_type=config._acq_type,
-                                     num_averages=config._num_avg, p_mode='RAW', num_points=0, start_num=0, file_delim=config._file_delimiter):
+def get_traces_connect_each_time_loop(fname=config._filename, ext=config._filetype, address=config._visa_address,
+                                      timeout=config._timeout, wav_format=config._waveform_format,
+                                      channel_nums=config._ch_nums, source_type='CHANnel', acq_type=config._acq_type,
+                                      num_averages=config._num_avg, p_mode='RAW', num_points=0, start_num=0, file_delim=config._file_delimiter):
     """This program consists of a loop in which the program connects to the oscilloscope,
     a trace from the active channels are captured and stored for each loop.
 
@@ -90,9 +92,10 @@ def get_traces_connect_each_time_loop(fname=config._filename, ext=config._filety
         n += 1
     print("Quit")
 
-def get_traces_single_connection_loop(fname=config._filename, ext=config._filetype, address=config._visa_address, timeout=config._timeout, wav_format=config._waveform_format,
-                                     channel_nums=config._ch_nums, source_type='CHANnel', acq_type=config._acq_type,
-                                     num_averages=config._num_avg, p_mode='RAW', num_points=0, start_num=0, file_delim=config._file_delimiter):
+def get_traces_single_connection_loop(fname=config._filename, ext=config._filetype, address=config._visa_address,
+                                      timeout=config._timeout, wav_format=config._waveform_format,
+                                      channel_nums=config._ch_nums, source_type='CHANnel', acq_type=config._acq_type,
+                                      num_averages=config._num_avg, p_mode='RAW', num_points=0, start_num=0, file_delim=config._file_delimiter):
     """This program connects to the oscilloscope, sets options for the acquisition and then
     enters a loop in which the program captures and stores traces each time 'enter' is pressed.
 
@@ -126,11 +129,12 @@ def get_traces_single_connection_loop(fname=config._filename, ext=config._filety
     scope.close()
 
 
-def get_num_traces(fname=config._filename, ext=config._filetype, num=1, address=config._visa_address, timeout=config._timeout, wav_format=config._waveform_format,
-                 channel_nums=config._ch_nums, source_type='CHANnel', acq_type=config._acq_type,
-                 num_averages=config._num_avg, p_mode='RAW', num_points=0, start_num=0, file_delim=config._file_delimiter):
+def get_num_traces(fname=config._filename, ext=config._filetype, num=1, address=config._visa_address,
+                   timeout=config._timeout, wav_format=config._waveform_format,
+                   channel_nums=config._ch_nums, source_type='CHANnel', acq_type=config._acq_type,
+                   num_averages=config._num_avg, p_mode='RAW', num_points=0, start_num=0, file_delim=config._file_delimiter):
         """This program connects to the oscilloscope, sets options for the
-        acquisition, and captures num traces.
+        acquisition, and captures and stores 'num' traces.
         """
         ## Initialise
         scope = acq.Oscilloscope(address=address, timeout=timeout)
