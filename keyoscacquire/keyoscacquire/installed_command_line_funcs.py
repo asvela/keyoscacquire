@@ -62,10 +62,22 @@ def single_trace_command_line():
 
 def num_traces_command_line():
     """Function installed on the command line: Obtains and stores a single trace."""
-    parser = argparse.ArgumentParser(usage=acqprog.get_n_traces.__doc__)
+    parser = argparse.ArgumentParser(usage=acqprog.get_num_traces.__doc__)
     parser.add_argument('-f', nargs='?', help='Specify filename base')
     parser.add_argument('-a', nargs='?', help='Specify acquire type: {HRESolution, NORMal, AVER<m>} where <m> is the number of averages in range [1, 65536]')
     parser.add_argument('-n', nargs='?', help='Specify number of traces to obtain (set to 1 if not specified)')
     args = parser.parse_args()
 
     acqprog.run_programme("num_traces", ['', args.f, args.a, args.n])
+
+def list_visa_devices_command_line():
+    """Function installed on the command line: Lists VISA devices"""
+    parser = argparse.ArgumentParser(usage=acqprog.list_visa_devices.__doc__)
+    args = parser.parse_args()
+    acqprog.list_visa_devices()
+
+def path_of_config_command_line():
+    """Function installed on the command line: Lists VISA devices"""
+    parser = argparse.ArgumentParser(usage=acqprog.path_of_config.__doc__)
+    args = parser.parse_args()
+    acqprog.path_of_config()

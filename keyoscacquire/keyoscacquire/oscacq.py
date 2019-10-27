@@ -1,21 +1,21 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 """
-Obtain traces, save to files and export raw plots from (Keysight) oscilloscopes using pyVISA.
+Obtain traces, save to files and export raw plots from Keysight oscilloscopes using pyVISA.
 Traces are stored as csv files and will by default be accompanied by a png plot too.
 
 This script can be called resulting in one trace being captured and stored.
 Optional argument from the command line: string setting the base filename of the output files.
 Change the _visa_address under in config to the desired instrument.
 
-Tested with Keysight DSOX2024A.
+Tested with Keysight DSOX2024A on WIn7 and Win10.
 See Keysight's Programmer's Guide for reference.
 
 Andreas Svela 2018
 """
 
 import sys, os        # required for reading user input and command line arguments
-import visa           # instrument communication
+import pyvisa         # instrument communication
 import time, datetime # for measuring elapsed time and adding current date and time to exported files
 import numpy as np
 import matplotlib.pyplot as plt
@@ -40,12 +40,14 @@ class Oscilloscope():
         self.acquire_print = True
 
         try:
-            rm = visa.ResourceManager()
+            rm = pyvisa.ResourceManager()
             self.inst = rm.open_resource(address)
             self.address = address
-        except visa.Error as err:
+        except pyvisa.Error as err:
             print('\nVisaError: Could not connect to \'%s\', exiting now...' % address)
             raise
+        # make sure WORD and BYTE data is transeferred as unsigned ints
+        self.inst.write(':WAVeform:UNSigned ON')
         # For TCP/IP socket connections enable the read Termination Character, or reads will timeout
         if self.inst.resource_name.endswith('SOCKET'):
             self.inst.read_termination = '\n'
@@ -61,6 +63,10 @@ class Oscilloscope():
         self.inst.write(':RUN')
         self.inst.close()
         _log.debug("Closed connection to \'%s\'" % self.id)
+
+    def is_running(self):
+        reg = int(self.inst.query(':OPERegister:CONDition?')) # The third bit of the operation register is 1 if the instrument is running
+        return (reg & 8) == 8
 
     def set_acquire_print(self, value):
         """Control attribute which decides whether to print information while acquiring"""
@@ -148,15 +154,15 @@ class Oscilloscope():
         """
         Capture and read data and metadata from sources of the oscilloscope inst when waveform format is WORD or BYTE
         Datatype is 'H' for 16 bit unsigned int (WORD), 'B' for 8 bit unsigned bit (BYTE)
+        (same naming as for structs, see https://docs.python.org/3/library/struct.html#format-characters)
         Output: array of raw data, array of preamble metadata (ascii comma separated values)
         """
         ## Capture data
         if self.acquire_print: print("Start acquisition..")
         start_time = time.time() # time the acquiring process
-        reg = int(self.inst.query(':OPERegister:CONDition?')) # The third bit of the operation register is 1 if the instrument is running
-            # If the instrument is not running, we presumably want the data on the screen and hence don't want
-            # to use DIGitize as digitize will obtain a new trace.
-        if (reg & 8) == 8: # If the third bit is 1 (ie. instrument is running)
+        # If the instrument is not running, we presumably want the data on the screen and hence don't want
+        # to use DIGitize as digitize will obtain a new trace.
+        if self.is_running():
             self.inst.write(':DIGitize ' + sourcesstring) # DIGitize is a specialized RUN command.
                                                      # Waveforms are acquired according to the settings of the :ACQuire commands.
                                                      # When acquisition is complete, the instrument is stopped.
@@ -168,8 +174,8 @@ class Oscilloscope():
                 # obtain comma separated metadata values for processing of raw data for this source
                 preambles.append(self.inst.query(':WAVeform:PREamble?'))
                 # obtain the data
-                raw.append(self.inst.query_binary_values(':WAVeform:DATA?', datatype=datatype)) # read out data for this source
-            except visa.Error as err:
+                raw.append(self.inst.query_binary_values(':WAVeform:DATA?', datatype=datatype, container=np.array)) # read out data for this source
+            except pyvisa.Error as err:
                 print("\nError: Failed to obtain waveform, have you checked that"
                       " the timeout (currently %d ms) is sufficently long?" % self.timeout)
                 print(err)
@@ -191,10 +197,9 @@ class Oscilloscope():
         ## Capture data
         if self.acquire_print: print("Start acquisition..")
         start_time = time.time() # time the acquiring process
-        reg = int(self.inst.query(':OPERegister:CONDition?')) # The third bit of the operation register is 1 if the instrument is running
-            # If the instrument is not running, we presumably want the data on the screen and hence don't want
-            # to use DIGitize as digitize will obtain a new trace.
-        if (reg & 8) == 8: # If the third bit is 1 (ie. instrument is running)
+        # If the instrument is not running, we presumably want the data on the screen and hence don't want
+        # to use DIGitize as digitize will obtain a new trace.
+        if self.is_running():
             self.inst.write(':DIGitize ' + sourcesstring) # DIGitize is a specialized RUN command.
                                                      # Waveforms are acquired according to the settings of the :ACQuire commands.
                                                      # When acquisition is complete, the instrument is stopped.
@@ -204,7 +209,7 @@ class Oscilloscope():
             self.inst.write(':WAVeform:SOURce ' + source) # selects the channel for which the succeeding WAVeform commands applies to
             try:
                 raw.append(self.inst.query(':WAVeform:DATA?')) # read out data for this source
-            except visa.Error:
+            except pyvisa.Error:
                 print("\nVisaError: Failed to obtain waveform, have you checked that"
                       " the timeout (currently %d ms) is sufficently long?" % self.timeout)
                 print("\nExiting..\n")
@@ -316,10 +321,9 @@ def process_data_binary(raw, preambles, acquire_print):
     for i, data in enumerate(raw):
         preamble = preambles[i].split(',')
         yIncr, yOrig, yRef = float(preamble[7]), float(preamble[8]), int(preamble[9])
-        y[i,:] = np.array([((sample-yRef)*yIncr)+yOrig for sample in data])
-
-    y = np.transpose(np.array(y)) # convert y to np array and transpose for vertical channel columns in csv file
-    x = np.array([[((sample-xRef)*xIncr)+xOrig for sample in range(num_samples)]]) # compute x-values
+        y[i,:] = (data-yRef)*yIncr + yOrig
+    y = y.T # convert y to np array and transpose for vertical channel columns in csv file
+    x = np.array([(np.arange(num_samples)-xRef)*xIncr + xOrig]) # compute x-values
     x = x.T # make x values vertical
     return x, y
 
@@ -390,6 +394,6 @@ def plotTrace(x, y, channel_nums, fname="", show=config._show_plot, savepng=conf
 if __name__ == '__main__':
     fname = sys.argv[1] if len(sys.argv) >= 2 else config._filename
     ext = config._filetype
-    scope = Oscilloscope()
-    scope.set_options_getTrace_save(fname, ext)
+    scope = Oscilloscope(address='USB0::0x0957::0x1796::MY59125372::INSTR', )
+    scope.set_options_getTrace_save(fname, ext, wav_format='WORD')
     scope.close()

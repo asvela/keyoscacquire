@@ -18,6 +18,31 @@ from tqdm import tqdm #progressbar
 # local file with default options:
 import keyoscacquire.config as config
 
+
+def list_visa_devices():
+    """Prints the VISA addresses of the connected instruments."""
+    import pyvisa
+    rm = pyvisa.ResourceManager()
+    resources = rm.list_resources()
+    if len(resources) == 0:
+        print("\nNo VISA devices found!")
+    else:
+        longest_name_len = max([len(r) for r in resources])
+        header = " #  class   name"+" "*(longest_name_len-1)+"  alias"
+        print("\nVISA devices connected:")
+        print(header)
+        print("="*(len(header)+8))
+        for i, r in enumerate(resources):
+            info = rm.resource_info(r)
+            alias = info.alias if info.alias is not None else "N/A"
+            print("{:>2d}  {:6s}  {:{num}s}  {:10s}".format(i, info.resource_class, info.resource_name, alias, num=longest_name_len))
+
+def path_of_config():
+    """Print the absolute path of the config.py file"""
+    import os
+    print("config.py can be found in:\n\t%s\n" % os.path.dirname(os.path.abspath(__file__)))
+
+
 def get_single_trace(fname=config._filename, ext=config._filetype, address=config._visa_address, timeout=config._timeout, wav_format=config._waveform_format,
                      channel_nums=config._ch_nums, source_type='CHANnel', acq_type=config._acq_type,
                      num_averages=config._num_avg, p_mode='RAW', num_points=0):
@@ -93,7 +118,7 @@ def getTraces_single_connection_loop(fname=config._filename, ext=config._filetyp
     scope.close()
 
 
-def get_n_traces(fname=config._filename, ext=config._filetype, num=1, address=config._visa_address, timeout=config._timeout, wav_format=config._waveform_format,
+def get_num_traces(fname=config._filename, ext=config._filetype, num=1, address=config._visa_address, timeout=config._timeout, wav_format=config._waveform_format,
                  channel_nums=config._ch_nums, source_type='CHANnel', acq_type=config._acq_type,
                  num_averages=config._num_avg, p_mode='RAW', num_points=0, start_num=0, file_delim=config._file_delimiter):
         """This program connects to the oscilloscope, sets options for the
@@ -141,6 +166,6 @@ def run_programme(name, args):
     elif name == names[2]:
         getTraces_single_connection_loop(fname, ext, acq_type=a_type)
     elif name == names[3]:
-        get_n_traces(fname, ext, num=n, acq_type=a_type)
+        get_num_traces(fname, ext, num=n, acq_type=a_type)
     else:
         raise ValueError("\nUnknown name \'%s\' of program to run. Available programmes %s." % (name, str(names)))
