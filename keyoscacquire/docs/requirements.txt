@@ -1,1 +1,6 @@
 sphinx-prompt
+pyvisa
+numpy
+argparse
+matplotlib
+tqdm

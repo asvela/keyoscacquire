@@ -11,7 +11,7 @@ import sys
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 # the source is in ../keyoscacquire
-source_dir = os.path.dirname(os.path.dirname(os.path.abspath(__name__)))
+source_dir = os.path.abspath('..')
 print("source directory for package:", source_dir)
 sys.path.insert(0, source_dir)
 
