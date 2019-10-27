@@ -1,1 +1,1 @@
-.. include:: ./keyoscacq/README.rst
+`Documentation <http://keyoscacquire.readthedocs.io/en/latest/>`_

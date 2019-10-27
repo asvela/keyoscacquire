@@ -23,7 +23,7 @@ The code has been tested on Windows 7 and 10 with a Keysight DSO2024A model usin
 Documentation
 -------------
 
-Available `here <READ THE DOCS>`_.
+Available `here <http://keyoscacquire.readthedocs.io/en/latest/>`_.
 
 
 Contribute
