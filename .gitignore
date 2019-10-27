@@ -13,8 +13,4 @@
 __pycache__
 *.csv
 *.png
-*.pdf
-*.nb
-*.xlsx
-*.txt
 Thumbs.db
