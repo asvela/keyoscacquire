@@ -14,14 +14,16 @@ For all the trace-obtaining programmes, the filename is checked to ensure no ove
 The file header in the ascii files saved is::
 
     <id>
-    time,<chs>
+    <mode>
     <timestamp>
+    time,<chs>
 
 Where ``<id>`` is the :attr:`~keyoscacquire.oscacq.Oscilloscope.id` of the oscilloscope, and ``<chs>`` are the comma separated channels used. For example::
 
     # AGILENT TECHNOLOGIES,DSO-X 2024A,MY1234567,12.34.1234567890
-    # time,1,3
+    # AVER8
     # 2019-09-06 20:01:15.187598
+    # time,1,3
 
 list_visa_devices
 -----------------

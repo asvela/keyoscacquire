@@ -20,7 +20,7 @@ The output from the :func:`Oscilloscope.capture_and_read` function is processed 
 File saving
 -----------
 
-The package has built-in functions for saving traces to :mod:`numpy.lib.format` files or ascii values (the latter is slower but will give a header that can be customised).
+The package has built-in functions for saving traces to :mod:`numpy.lib.format` files or ascii values (the latter is slower but will give a header that can be customised, for instance :func:`Oscilloscope.generate_file_header` can be used).
 
 .. autofunction:: save_trace
 .. autofunction:: save_trace_npy
