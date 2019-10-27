@@ -31,7 +31,8 @@ wav_help = "The waveform format: {BYTE, WORD, ASCii}. \nDefaults to \'"+config._
 file_help = "The filename base, (without extension, \'"+config._filetype+"\' is added). Defaults to \'"+config._filename+"\'."
 visa_help = "Visa address of instrument. To find the visa addresses of the instruments connected to the computer run 'list_visa_devices' in the command line. Defaults to \'"+config._visa_address+"\'."
 timeout_help = "Milliseconds before timeout on the channel to the instrument. Defaults to "+str(config._timeout)+"."
-channels_help = "List of the channel numbers to be acquired, for example '1 3' (without '). Use an empty string ('') to capture all the currently active channels on the oscilloscope. Defaults to \'"+" ".join(config._ch_nums)+"\'."
+default_channels = " ".join(config._ch_nums) if isinstance(config._ch_nums, list) else config._ch_nums
+channels_help = "List of the channel numbers to be acquired, for example '1 3' (without ') or 'active' (without ') to capture all the currently active channels on the oscilloscope. Defaults to \'"+default_channels+"\'."
 points_help = "Use 0 to get the maximum number of points, or set a smaller number to speed up the acquisition and transfer. Defaults to 0."
 delim_help = "Delimiter used between filename and filenumber (before filetype). Defaults to \'"+config._file_delimiter+"\'."
 

@@ -231,16 +231,16 @@ class Oscilloscope():
     def build_sourcesstring(self, source_type='CHANnel', channel_nums=config._ch_nums):
         """Set the channels to be acquired, or determine by checking active channels on the oscilloscope.
 
-        .. note:: Use ``channel_nums=['']`` to capture all the currently active channels on the oscilloscope.
+        .. note:: Use ``channel_nums='active'`` to capture all the currently active channels on the oscilloscope.
 
         Parameters
         ----------
         source_type : str, optional, default ``'CHANnel'``
             Selects the source type. Must be ``'CHANnel'`` in current implementation.
             Future version might include ``{ 'MATH' | 'FUNCtion'}``.
-        channel_nums : list, optional, default py:var:`keyoscacquire.config._ch_nums`
+        channel_nums : list or ``'active'``, optional, default :data:`keyoscacquire.config._ch_nums`
             list of the channel numbers to be acquired, example ``['1', '3']``.
-            Use channel_nums=[''] to capture all the currently active channels on the oscilloscope.
+            Use ``'active'`` or ``['']`` to capture all the currently active channels on the oscilloscope.
 
         Returns
         -------
@@ -249,7 +249,7 @@ class Oscilloscope():
         channel_nums : list of chars
             list of the channels, example ``['1', '3']``
         """
-        if channel_nums == ['']: # if no channels specified, find the channels currently active and acquire from those
+        if channel_nums in [[''], ['active'], 'active']: # if no channels specified, find the channels currently active and acquire from those
             channels = np.array(['1', '2', '3', '4'])
             displayed_channels = [self.inst.query(':CHANnel'+channel+':DISPlay?')[0] for channel in channels] # querying DISP for each channel to determine which channels are currently displayed
             channel_mask = np.array([bool(int(i)) for i in displayed_channels]) # get a mask of bools for the channels that are on [need the int() as int('0') = True]
@@ -433,16 +433,16 @@ class Oscilloscope():
         if acquire_print is not None: self.acquire_print = temp # restore to previous setting
         return time, y
 
-    def set_options_get_trace(self, channel_nums=[''], source_type='CHANnel',
+    def set_options_get_trace(self, channel_nums=config._ch_nums, source_type='CHANnel',
                                  wav_format=config._waveform_format, acq_type=config._acq_type,
                                  num_averages=config._num_avg, p_mode='RAW', num_points=0):
         """Set the options provided by the parameters and obtain one trace.
 
         Parameters
         ----------
-        channel_nums : list, optional, default ['']
+        channel_nums : list or ``'active'``, optional, default config._ch_nums
             list of the channel numbers to be acquired from, example ``['1', '3']``.
-            Use ``channel_nums=['']`` to capture all the currently active channels on the oscilloscope.
+            Use ``'active'`` to capture all the currently active channels on the oscilloscope.
         source_type : str, optional, default ``'CHANnel'``
             Selects the source type. Must be ``'CHANnel'`` in current implementation.
             Future version might include ``{ 'MATH' | 'FUNCtion'}``.
@@ -476,7 +476,7 @@ class Oscilloscope():
         time, y = self.get_trace(sources, sourcesstring)
         return time, y, channel_nums
 
-    def set_options_get_trace_save(self, fname=config._filename, ext=config._filetype, channel_nums=[''], source_type='CHANnel',
+    def set_options_get_trace_save(self, fname=config._filename, ext=config._filetype, channel_nums=config._ch_nums, source_type='CHANnel',
                                   wav_format=config._waveform_format, acq_type=config._acq_type, num_averages=config._num_avg, p_mode='RAW', num_points=0):
         """Get trace and save the trace to a file and plot to png.
 
@@ -493,9 +493,9 @@ class Oscilloscope():
             Filename of trace
         ext : str, optional, default config._filetype
             Choose the filetype of the saved trace
-        channel_nums : list, optional, default ['']
+        channel_nums : list or ``'active'``, optional, default config._ch_nums
             list of the channel numbers to be acquired from, example ['1', '3'].
-            Use [''] to capture all the currently active channels on the oscilloscope.
+            Use ``'active'`` to capture all the currently active channels on the oscilloscope.
         source_type : str, optional, default 'CHANnel'
             Selects the source type. Must be ``'CHANnel'`` in current implementation.
             Future version might include {'MATH', 'FUNCtion'}.
