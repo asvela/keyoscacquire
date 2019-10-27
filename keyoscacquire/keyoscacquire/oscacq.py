@@ -31,11 +31,11 @@ class Oscilloscope():
 
     Parameters
     ----------
-    address : str, optional, default config._visa_address
+    address : str, optional, default :data:`~keyoscacquire.config._visa_address`
         Visa address of instrument. To find the visa addresses of the instruments
         connected to the computer run ``list_visa_devices`` in the command line.
         Example address ``'USB0::1234::1234::MY1234567::INSTR'``
-    timeout : int, optional, default config._timeout
+    timeout : int, optional, default :data:`~keyoscacquire.config._timeout`
         Milliseconds before timeout on the channel to the instrument
 
     Raises
@@ -56,27 +56,32 @@ class Oscilloscope():
     acq_type : {'HRESolution', 'NORMal', 'AVERage', 'AVER<m>'}
         Acquisition mode of the oscilloscope. <m> will be used as :attr:`num_averages` if supplied.
 
-        * NORMal — sets the oscilloscope in the normal mode.
+        * ``'NORMal'`` — sets the oscilloscope in the normal mode.
 
-        * AVERage — sets the oscilloscope in the averaging mode. You can set the count by :attr:`num_averages`
+        * ``'AVERage'`` — sets the oscilloscope in the averaging mode. You can set the count by :attr:`num_averages`.
 
-        * HRESolution — sets the oscilloscope in the high-resolution mode (also known as smoothing). This mode is used to reduce noise at slower sweep speeds where the digitizer samples faster than needed to fill memory for the displayed time range.
+        * ``'HRESolution'`` — sets the oscilloscope in the high-resolution mode (also known as smoothing). This mode is used to reduce noise at slower sweep speeds where the digitizer samples faster than needed to fill memory for the displayed time range.
 
-            For example, if the digitizer samples at 200 MSa/s, but the effective sample rate is 1 MSa/s (because of a slower sweep speed), only 1 out of every 200 samples needs to be stored. Instead of storing one sample (and throwing others away), the 200 samples are averaged together to provide the value for one display point. The slower the sweep speed, the greater the number of samples that are averaged together for each display point.
+            For example, if the digitizer samples at 200 MSa/s, but the effective sample rate is 1 MSa/s
+            (because of a slower sweep speed), only 1 out of every 200 samples needs to be stored.
+            Instead of storing one sample (and throwing others away), the 200 samples are averaged
+            together to provide the value for one display point. The slower the sweep speed, the greater
+            the number of samples that are averaged together for each display point.
     num_averages : int, 2 to 65536
-        The number of averages applied (applies only to the 'AVERage' :attr:`acq_type`)
-    p_mode : {'NORMal', 'RAW', 'MAXimum'}
-        'NORMal' is limited to 62,500 points, whereas 'RAW' gives up to 1e6 points. Use 'MAXimum' for sources that are not analogue or digital.
+        The number of averages applied (applies only to the ``'AVERage'`` :attr:`acq_type`)
+    p_mode : {``'NORMal'``, ``'RAW'``, ``'MAXimum'``}
+        ``'NORMal'`` is limited to 62,500 points, whereas ``'RAW'`` gives up to 1e6 points. Use ``'MAXimum'`` for sources that are not analogue or digital.
     num_points : int
         Use 0 to let :attr:`p_mode` control the number of points, otherwise override with a lower number than maximum for the :attr:`p_mode`
     wav_format : {'WORD', 'BYTE', 'ASCii'}
         Select the data transmission mode for waveform data points, i.e. how the data is formatted when sent from the oscilloscope.
 
-        * ASCii formatted data converts the internal integer data values to real Y-axis values. Values are transferred as ASCii digits in floating point notation, separated by commas. ASCII formatted data is transferred ASCii text.
+        * ``'ASCii'`` formatted data converts the internal integer data values to real Y-axis values. Values are transferred as ascii digits in floating point notation, separated by commas.
 
-        * WORD formatted data transfers unsigned 16-bit data as two bytes.
+        * ``'WORD'`` formatted data transfers unsigned 16-bit data as two bytes.
 
-        * BYTE formatted data is transferred as unsigned 8-bit bytes.
+        * ``'BYTE'`` formatted data is transferred as unsigned 8-bit bytes.
+
     acquire_print : bool
         ``True`` prints that the capturing starts and the number of points captured
     """
@@ -170,16 +175,18 @@ class Oscilloscope():
 
         Parameters
         ----------
-        wav_format : {'WORD', 'BYTE', 'ASCii'}, optional, default :attr:`config._waveform_format`
-            Select the format of the communication of waveform from the oscilloscope
-        acq_type : {'HRESolution', 'NORMal', 'AVERage', 'AVER<m>'}, optional, default config._acq_type
-            Acquisition mode of the oscilloscope. <m> will be used as num_averages if supplied
-        num_averages : int, 2 to 65536, optional, default config._num_avg
-            Applies only to the 'AVERage' mode: The number of averages applied
-        p_mode : {'NORMal', 'RAW', 'MAXimum'}, optional, default 'RAW'
-            'NORMal' is limited to 62,500 points, whereas 'RAW' gives up to 1e6 points. Use 'MAXimum' for sources that are not analogue or digital.
+        wav_format : {``'WORD'``, ``'BYTE'``, ``'ASCii'``}, optional, default :data:`~keyoscacquire.config._waveform_format`
+            Select the format of the communication of waveform from the oscilloscope, see :attr:`wav_format`
+        acq_type : {``'HRESolution'``, ``'NORMal'``, ``'AVERage'``, ``'AVER<m>'``}, optional, default :data:`~keyoscacquire.config._acq_type`
+            Acquisition mode of the oscilloscope. <m> will be used as num_averages if supplied, see :attr:`acq_type`
+        num_averages : int, 2 to 65536, optional, default :data:`~keyoscacquire.config._num_avg`
+            Applies only to the ``'AVERage'`` mode: The number of averages applied
+        p_mode : {``'NORMal'``, ``'RAW'``, ``'MAXimum'``}, optional, default ``'RAW'``
+            ``'NORMal'`` is limited to 62,500 points, whereas ``'RAW'`` gives up to 1e6 points. Use ``'MAXimum'`` for sources that are not analogue or digital
         num_points : int, optional, default 0
-            Use 0 to let p_mode control the number of points, otherwise override with a lower number than maximum for the p_mode
+            Use 0 to let :attr:`p_mode` control the number of points, otherwise override with a lower number than maximum for the :attr:`p_mode`
+        acq_print : bool or ``None``, optional, default ``None``
+            Temporarily control attribute which decides whether to print information while acquiring: bool sets it to the bool value, ``None`` leaves as the it is in the Oscilloscope object
 
         Raises
         ------
@@ -237,8 +244,8 @@ class Oscilloscope():
         ----------
         source_type : str, optional, default ``'CHANnel'``
             Selects the source type. Must be ``'CHANnel'`` in current implementation.
-            Future version might include ``{ 'MATH' | 'FUNCtion'}``.
-        channel_nums : list or ``'active'``, optional, default :data:`keyoscacquire.config._ch_nums`
+            Future version might include {'MATH', 'FUNCtion'}.
+        channel_nums : list or ``'active'``, optional, default :data:`~keyoscacquire.config._ch_nums`
             list of the channel numbers to be acquired, example ``['1', '3']``.
             Use ``'active'`` or ``['']`` to capture all the currently active channels on the oscilloscope.
 
@@ -296,7 +303,7 @@ class Oscilloscope():
             raise ValueError("Could not capture and read data, waveform format \'{}\' is unknown.\nExiting..\n".format(self.wav_format))
 
     def capture_and_read_binary(self, sources, sourcesstring, datatype='standard'):
-        """Capture and read data and metadata from sources of the oscilloscope when waveform format is ``WORD`` or ``BYTE``.
+        """Capture and read data and metadata from sources of the oscilloscope when waveform format is ``'WORD'`` or ``'BYTE'``.
 
         The parameters are provided by :func:`build_sourcesstring`.
         The output should be processed by :func:`process_data_binary`.
@@ -308,12 +315,12 @@ class Oscilloscope():
         sourcesstring : str
             String of comma separated sources, example ``'CHANnel1, CHANnel3'``
         datatype : char or ``'standard'``, optional but must match waveform format used
-            To determine how to read the values from the oscilloscope depending on :attr:`wav_format`. Datatype is ``'H'`` for 16 bit unsigned int (``WORD``), for 8 bit unsigned bit (``BYTE``) (same naming as for `structs <https://docs.python.org/3/library/struct.html#format-characters`).
-            ``'standard'`` will evaluate ``_datatypes[self.wav_format]`` to automatically choose according to the waveform format.
+            To determine how to read the values from the oscilloscope depending on :attr:`wav_format`. Datatype is ``'H'`` for 16 bit unsigned int (``'WORD'``), for 8 bit unsigned bit (``'BYTE'``) (same naming as for structs, `https://docs.python.org/3/library/struct.html#format-characters`).
+            ``'standard'`` will evaluate :data:`oscacq._datatypes[self.wav_format]` to automatically choose according to the waveform format
 
         Returns
         -------
-        raw : :mod:~numpy.ndarray
+        raw : :class:~numpy.ndarray`
             Raw data to be processed by :func:`process_data_binary`.
             An ndarray of ints that can be converted to voltage values using the preamble.
         preamble : str
@@ -413,15 +420,15 @@ class Oscilloscope():
             list of sources, example ``['CHANnel1', 'CHANnel3']``
         sourcesstring : str
             String of comma separated sources, example ``'CHANnel1, CHANnel3'``
-        acquire_print : {bool, ``None``}, optional, default ``None``
-            Possibility to override acquire_print temporarily, but the current
+        acquire_print : bool or ``None``, optional, default ``None``
+            Possibility to override :attr:`acquire_print` temporarily, but the current
             setting will be restored afterwards
 
         Returns
         -------
-        time : ~numpy.ndarray
+        time : :class:`~numpy.ndarray`
             Time axis for the measurement
-        y : ~numpy.ndarray
+        y : :class:`~numpy.ndarray`
             Voltage values, same sequence as sources input, each row represents one channel
 
         """
@@ -440,28 +447,28 @@ class Oscilloscope():
 
         Parameters
         ----------
-        channel_nums : list or ``'active'``, optional, default config._ch_nums
+        channel_nums : list or ``'active'``, optional, default :data:`~keyoscacquire.config._ch_nums`
             list of the channel numbers to be acquired from, example ``['1', '3']``.
             Use ``'active'`` to capture all the currently active channels on the oscilloscope.
         source_type : str, optional, default ``'CHANnel'``
             Selects the source type. Must be ``'CHANnel'`` in current implementation.
-            Future version might include ``{ 'MATH' | 'FUNCtion'}``.
-        wav_format : {'WORD', 'BYTE', 'ASCii'}, optional, default config._waveform_format
-            Select the format of the communication of waveform from the oscilloscope
-        acq_type : {'HRESolution', 'NORMal', 'AVERage', 'AVER<m>'}, optional, default config._acq_type
-            Acquisition mode of the oscilloscope. <m> will be used as num_averages if supplied
-        num_averages : int, 2 to 65536, optional, default config._num_avg
-            Applies only to the 'AVERage' mode: The number of averages applied
-        p_mode : {'NORMal', 'RAW', 'MAXimum'}, optional, default 'RAW'
-            'NORMal' is limited to 62,500 points, whereas 'RAW' gives up to 1e6 points. Use 'MAXimum' for sources that are not analogue or digital.
+            Future version might include {'MATH', 'FUNCtion'}.
+        wav_format : {``'WORD'``, ``'BYTE'``, ``'ASCii'``}, optional, default :data:`~keyoscacquire.config._waveform_format`
+            Select the format of the communication of waveform from the oscilloscope, see :attr:`wav_format`
+        acq_type : {``'HRESolution'``, ``'NORMal'``, ``'AVERage'``, ``'AVER<m>'``}, optional, default :data:`~keyoscacquire.config._acq_type`
+            Acquisition mode of the oscilloscope. <m> will be used as num_averages if supplied, see :attr:`acq_type`
+        num_averages : int, 2 to 65536, optional, default :data:`~keyoscacquire.config._num_avg`
+            Applies only to the ``'AVERage'`` mode: The number of averages applied
+        p_mode : {``'NORMal'``, ``'RAW'``, ``'MAXimum'``}, optional, default ``'RAW'``
+            ``'NORMal'`` is limited to 62,500 points, whereas ``'RAW'`` gives up to 1e6 points. Use ``'MAXimum'`` for sources that are not analogue or digital
         num_points : int, optional, default 0
-            Use 0 to let p_mode control the number of points, otherwise override with a lower number than maximum for the p_mode
+            Use 0 to let :attr:`p_mode` control the number of points, otherwise override with a lower number than maximum for the :attr:`p_mode`
 
         Returns
         -------
-        time : ~numpy.ndarray
+        time : :class:`~numpy.ndarray`
             Time axis for the measurement
-        y : ~numpy.ndarray
+        y : :class:`~numpy.ndarray`
             Voltage values, same sequence as ``channel_nums``, each row represents one channel
         channel_nums : list of chars
             list of the channels obtained from, example ``['1', '3']``
@@ -489,26 +496,26 @@ class Oscilloscope():
 
         Parameters
         ----------
-        fname : str, optional, default config._filename
+        fname : str, optional, default :data:`~keyoscacquire.config._filename`
             Filename of trace
-        ext : str, optional, default config._filetype
+        ext : str, optional, default :data:`~keyoscacquire.config._filetype`
             Choose the filetype of the saved trace
-        channel_nums : list or ``'active'``, optional, default config._ch_nums
-            list of the channel numbers to be acquired from, example ['1', '3'].
-            Use ``'active'`` to capture all the currently active channels on the oscilloscope.
-        source_type : str, optional, default 'CHANnel'
+        channel_nums : list or ``'active'``, optional, default :data:`~keyoscacquire.config._ch_nums`
+            list of the channel numbers to be acquired from, example ``['1', '3']``.
+            Use ``'active'`` to capture all the currently active channels on the oscilloscope
+        source_type : str, optional, default ``'CHANnel'``
             Selects the source type. Must be ``'CHANnel'`` in current implementation.
-            Future version might include {'MATH', 'FUNCtion'}.
-        wav_format : {'WORD', 'BYTE', 'ASCii'}, optional, default config._waveform_format
-            Select the format of the communication of waveform from the oscilloscope
-        acq_type : {'HRESolution', 'NORMal', 'AVERage', 'AVER<m>'}, optional, default config._acq_type
-            Acquisition mode of the oscilloscope. <m> will be used as num_averages if supplied
-        num_averages : int, 2 to 65536, optional, default config._num_avg
-            Applies only to the 'AVERage' mode: The number of averages applied
-        p_mode : {'NORMal', 'RAW', 'MAXimum'}, optional, default 'RAW'
-            'NORMal' is limited to 62,500 points, whereas 'RAW' gives up to 1e6 points. Use 'MAXimum' for sources that are not analogue or digital.
+            Future version might include {'MATH', 'FUNCtion'}
+        wav_format : {``'WORD'``, ``'BYTE'``, ``'ASCii'``}, optional, default :data:`~keyoscacquire.config._waveform_format`
+            Select the format of the communication of waveform from the oscilloscope, see :attr:`wav_format`
+        acq_type : {``'HRESolution'``, ``'NORMal'``, ``'AVERage'``, ``'AVER<m>'``}, optional, default :data:`~keyoscacquire.config._acq_type`
+            Acquisition mode of the oscilloscope. <m> will be used as num_averages if supplied, see :attr:`acq_type`
+        num_averages : int, 2 to 65536, optional, default :data:`~keyoscacquire.config._num_avg`
+            Applies only to the ``'AVERage'`` mode: The number of averages applied
+        p_mode : {``'NORMal'``, ``'RAW'``, ``'MAXimum'``}, optional, default ``'RAW'``
+            ``'NORMal'`` is limited to 62,500 points, whereas ``'RAW'`` gives up to 1e6 points. Use ``'MAXimum'`` for sources that are not analogue or digital
         num_points : int, optional, default 0
-            Use 0 to let p_mode control the number of points, otherwise override with a lower number than maximum for the p_mode
+            Use 0 to let :attr:`p_mode` control the number of points, otherwise override with a lower number than maximum for the :attr:`p_mode`
         """
         fname = check_file(fname, ext)
         x, y, channel_nums = self.set_options_get_trace(channel_nums=channel_nums, source_type=source_type,
@@ -525,15 +532,15 @@ class Oscilloscope():
 ##============================================================================##
 
 def process_data(raw, metadata, wav_format, acquire_print=True):
-    """Wrapper function for choosing the correct process_data function according to ``wav_format`` for the data obtained from :func:`Oscilloscope.capture_and_read`
+    """Wrapper function for choosing the correct process_data function according to :attr:`wav_format` for the data obtained from :func:`Oscilloscope.capture_and_read`
 
     Parameters
     ----------
     raw : ~numpy.ndarray or str
-        From :func:`~Oscilloscope.capture_and_read`: Raw data, type depending on ``wav_format``
+        From :func:`~Oscilloscope.capture_and_read`: Raw data, type depending on :attr:`wav_format`
     metadata : str or float
-        From :func:`~Oscilloscope.capture_and_read`: Preamble or measurement_time depending on ``wav_format``
-    wav_format : {'BYTE', 'WORD', 'ASCii'}
+        From :func:`~Oscilloscope.capture_and_read`: Preamble or measurement_time depending on :attr:`wav_format`
+    wav_format : {``'WORD'``, ``'BYTE'``, ``'ASCii'``}
         Specify what waveform type was used for acquiring to choose the correct processing function.
     acquire_print : bool
         True prints the number of points captured per channel
@@ -649,7 +656,7 @@ def check_file(fname, ext=config._filetype, num=""):
     ----------
     fname : str
         Base filename to test
-    ext : str, optional, default config._filetype
+    ext : str, optional, default :data:`~keyoscacquire.config._filetype`
         File extension
     num : str, optional, default ""
         Filename suffix that is tested for, but the appended part to the fname will be placed before it,
@@ -678,11 +685,11 @@ def save_trace(fname, time, y, fileheader="", ext=config._filetype, acquire_prin
         Time axis for the measurement
     y : ~numpy.ndarray
         Voltage values, same sequence as channel_nums
-    fileheader : str, optional, default ""
+    fileheader : str, optional, default ``""``
         Optional prefix for current date and time which is automatically added to the header.
-    ext : str, optional, default config._filetype
+    ext : str, optional, default :data:`~keyoscacquire.config._filetype`
         Choose the filetype of the saved trace
-    acquire_print : bool, optional, default True
+    acquire_print : bool, optional, default ``True``
         ``True`` prints the filename it is saved to
     """
     date_time = str(datetime.datetime.now()) # get current date and time
@@ -703,7 +710,7 @@ def save_trace_npy(fname, time, y, acquire_print=True):
         Time axis for the measurement
     y : ~numpy.ndarray
         Voltage values, same sequence as channel_nums
-    acquire_print : bool, optional, default True
+    acquire_print : bool, optional, default ``True``
         ``True`` prints the filename it is saved to
     """
     if acquire_print: print("Saving trace to %s\n" % (fname+ext))
@@ -725,9 +732,9 @@ def plot_trace(time, y, channel_nums, fname="", show=config._show_plot, savepng=
         list of the channels obtained, example ['1', '3']
     fname : str, optional, default ``""``
         Filename of possible exported png
-    show : bool, optional, default ``config._show_plot``
+    show : bool, optional, default :data:`~keyoscacquire.config._show_plot`
         True shows the plot (must be closed before the programme proceeds)
-    savepng : bool, optional, default ``config._export_png``
+    savepng : bool, optional, default :data:`~keyoscacquire.`config._export_png`
         ``True`` exports the plot to ``fname``.png
     """
     for i, vals in enumerate(np.transpose(y)): # for each channel
@@ -745,6 +752,6 @@ def plot_trace(time, y, channel_nums, fname="", show=config._show_plot, savepng=
 if __name__ == '__main__':
     fname = sys.argv[1] if len(sys.argv) >= 2 else config._filename
     ext = config._filetype
-    scope = Oscilloscope(address='USB0::0x0957::0x1796::MY59125372::INSTR', )
-    scope.set_options_get_trace_save(fname, ext, wav_format='WORD')
+    scope = Oscilloscope()
+    scope.set_options_get_trace_save(fname, ext)
     scope.close()
