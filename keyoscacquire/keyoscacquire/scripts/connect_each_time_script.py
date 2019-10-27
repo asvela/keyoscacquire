@@ -14,21 +14,10 @@ The loop runs each time 'enter' is hit. Alternatively one can input n-1 characte
 
 Optional argument from the command line: string setting the base filename of the output files.
 Change the config._visa_address under default options to the desired instrument.
-
-Tested with Keysight DSOX2024A.
-See Keysight's Programmer's Guide for reference.
-
-Andreas Svela 2018
 """
 
-import sys
-import keyoscacquire.programmes as acq
-
-
-##============================================================================##
-##                         MAIN FUNCTION                                    ##
-##============================================================================##
+import keyoscacquire.installed_command_line_funcs as cli
 
 ## Main function, runs only if the script is called from the command line
 if __name__ == '__main__':
-    acq.run_programme("connect_each_time", sys.argv)
+    cli.connect_each_time_command_line()

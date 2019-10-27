@@ -8,21 +8,10 @@ This program captures a single trace and stores it.
 
 Optional argument from the command line: string setting the base filename of the output files.
 Change the config._visa_address under default options to the desired instrument.
-
-Tested with Keysight DSOX2024A.
-See Keysight's Programmer's Guide for reference.
-
-Andreas Svela 2018
 """
 
-import sys
-import keyoscacquire.programmes as acq
-
-
-##============================================================================##
-##                         MAIN FUNCTION                                    ##
-##============================================================================##
+import keyoscacquire.installed_command_line_funcs as cli
 
 ## Main function, runs only if the script is called from the command line
 if __name__ == '__main__':
-    acq.run_programme("single_trace", sys.argv)
+    cli.single_trace_command_line()
