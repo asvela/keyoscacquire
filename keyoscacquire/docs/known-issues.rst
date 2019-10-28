@@ -8,5 +8,4 @@ Known issues and suggested improvements
 
 * Improvements:
 
-    - Add acquiring options to file header of saved files
     - Make a dynamic default setting for number of points

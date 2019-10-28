@@ -25,6 +25,8 @@ Where ``<id>`` is the :attr:`~keyoscacquire.oscacq.Oscilloscope.id` of the oscil
     # 2019-09-06 20:01:15.187598
     # time,1,3
 
+.. todo:: Update info about options for the programmes
+
 list_visa_devices
 -----------------
 

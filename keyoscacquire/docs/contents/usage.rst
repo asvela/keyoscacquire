@@ -33,11 +33,11 @@ Optional command line arguments
 
 The programmes takes optional arguments, the manuals are available using the flag ``-h`` (see also :ref:`cli-programmes` for more details). Here are three examples
 
-* ``-f "custom filename"`` set as the base filename to "custom filename"
+* ``-v USB0::1234::1234::MY1234567::INSTR`` set the visa address of the instrument
+
+* ``-f "custom filename"`` sets the base filename to "custom filename"
 
 * ``-a AVER8``  sets acquiring type to average with eight traces
-
-* ``-n 10`` sets number of traces to obtain (only for :program:`get_num_traces`)
 
 .. highlight:: console
 
