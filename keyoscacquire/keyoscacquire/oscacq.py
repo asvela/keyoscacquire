@@ -40,7 +40,7 @@ class Oscilloscope():
 
     Raises
     ------
-    pyvisa.errors.Error
+    :class:`pyvisa.errors.Error`
         if no successful connection is made.
 
     Attributes
@@ -320,7 +320,7 @@ class Oscilloscope():
 
         Returns
         -------
-        raw : :class:~numpy.ndarray`
+        raw : :class:`~numpy.ndarray`
             Raw data to be processed by :func:`process_data_binary`.
             An ndarray of ints that can be converted to voltage values using the preamble.
         preamble : str
@@ -531,16 +531,16 @@ class Oscilloscope():
         The file header has this structure::
 
             <id>
-            <mode>
+            <mode>,<averages>
             <timestamp>
             additional_line
             time,<chs>
 
         Where ``<id>`` is the :attr:`~keyoscacquire.oscacq.Oscilloscope.id` of the oscilloscope,
+        ``<mode>`` is the :attr:`~keyoscacquire.oscacq.Oscilloscope.acq_type`, ``<averages>`` :attr:`~keyoscacquire.oscacq.Oscilloscope.num_averages` (``"N/A"`` if not applicable)
         and ``<chs>`` are the comma separated channels used.
 
-        .. note:: If ``additional_line`` is not supplied the fileheader will be four lines.
-        If ``timestamp=False`` the timestamp line will not be present.
+        .. note:: If ``additional_line`` is not supplied the fileheader will be four lines. If ``timestamp=False`` the timestamp line will not be present.
 
         Parameters
         ----------
@@ -566,13 +566,13 @@ class Oscilloscope():
         gives::
 
             # AGILENT TECHNOLOGIES,DSO-X 2024A,MY1234567,12.34.1234567890
-            # AVER8
+            # AVER,8
             # 2019-09-06 20:01:15.187598
             # my comment
             # time,1,3
 
         """
-        num_averages = str(self.num_averages) if self.acq_type[:3] == 'AVE' else ""
+        num_averages = str(self.num_averages) if self.acq_type[:3] == 'AVE' else "N/A"
         mode_line = self.acq_type+","+num_averages+"\n"
         timestamp_line = str(datetime.datetime.now())+"\n" if timestamp else ""
         add_line = additional_line+"\n" if additional_line is not None else ""
