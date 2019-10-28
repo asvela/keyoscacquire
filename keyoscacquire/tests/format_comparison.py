@@ -35,25 +35,25 @@ formats = ['BYTE', 'WORD', 'ASCii']
 values = []
 for wav_format in formats:
     inst.write(':WAVeform:FORMat ' +  wav_format) # choose format for the transmitted waveform
-    inst.write(':WAVeform:BYTeorder MSB') # this should be default anyway
+    inst.write(':WAVeform:BYTeorder LSBFirst') # MSBF is default, must be overridden for WORD to work
+    inst.write(':WAVeform:UNSigned OFF') # make sure the scope is sending UNsigned ints
 
     preamble = inst.query(':WAVeform:PREamble?')
     preamble = preamble.split(',')
     print("\nWaveform format", format_dict[int(preamble[0])])
 
-
     if wav_format in ['WORD', 'BYTE']:
+        print(preamble[7:10])
         num_samples = int(preamble[2])  # 2 POINTS : int32 - number of data points transferred.
         yIncr = float(preamble[7])      # 7 YINCREMENT : float32 - voltage diff between data points.
         yOrig = float(preamble[8])      # 8 YORIGIN : float32 - value is the voltage at center screen.
         yRef = int(preamble[9])         # 9 YREFERENCE : int32 - specifies the data point where y-origin occurs.
         print(" y increment %e\n y origin    %e\n y reference %i" % (yIncr, yOrig, yRef))
 
-        inst.write(':WAVeform:UNSigned ON') # make sure the scope is sending UNsigned ints
         # choose right datatype for interpreting query
         # according to https://docs.python.org/3/library/struct.html#format-characters
-        # H is uint16 (unsigned short), B is uint8 (unsigned char)
-        datatype = 'H' if wav_format == 'WORD' else 'B'
+        # h is uint16 (nsigned short), b is int8 (signed char)
+        datatype = 'h' if wav_format == 'WORD' else 'b'
         raw_bin = inst.query_binary_values(':WAVeform:DATA?', datatype=datatype, container=np.array)
         print("raw values", raw_bin)
 
