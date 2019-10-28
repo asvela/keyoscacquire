@@ -18,7 +18,7 @@ with open(os.path.join(current_dir, "README.rst")) as fid:
 if __name__ == '__main__':
     setup(name='keyoscacquire',
           version=__version__,
-          description='Obtain traces, save to files and export raw plots from Keysight oscilloscopes using PyVISA.',
+          description='keyoscacquire is a Python package for acquiring traces from Keysight oscilloscopes through a VISA interface.',
           long_description=README,
           long_description_content_type="text/x-rst",
           url='https://github.com/asvela/keyoscacquire.git',

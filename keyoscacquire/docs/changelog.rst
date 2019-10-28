@@ -2,7 +2,7 @@ Changelog
 =========
 
 
-v3.0.0 (2019-10-XX)
+v3.0.0 (2019-10-28)
 -------------------
 Comprehensive documentation now available on read the docs; more command line programme options; some function name changes; bug fixes
 
@@ -29,6 +29,10 @@ Comprehensive documentation now available on read the docs; more command line pr
   * and others
 
 - *(No compatibility measures introduced)*: ``Oscilloscope.build_sourcesstring()`` -> ``Oscilloscope.determine_channels()`` and changed return sequence
+
+- *(No compatibility measures introduced)*: module ``installed_commandline_funcs`` -> ``installed_cli_programmes``
+
+- *(No compatibility measures introduced)*: functions ending with ``_command_line()`` -> ``_cli()``
 
 - Fixed issue when setting number of points to transfer
 
