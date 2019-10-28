@@ -14,6 +14,11 @@ v3.0.0 (2019-10-XX)
 
 - Wrote comprehensive documentation
 
+- *(No compatibility measures introduced)*: ``Oscilloscope.build_sourcesstring()`` -> ``Oscilloscope.determine_channels()`` and changed return sequence
+
+- Fixed issue with unreliable data transfer from scope. Have now set communication to signed ints
+
+- Fixed issue where ``ASCii`` wave format would set zero time to the beginning of the trace
 
 
 v2.1.1 (2019-10-18)
