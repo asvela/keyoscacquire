@@ -110,7 +110,7 @@ def get_traces_single_connection_loop(fname=config._filename, ext=config._filety
                                num_averages=num_averages, p_mode=p_mode,
                                num_points=num_points)
     ## Select sources
-    sourcesstring, sources, channel_nums = scope.build_sourcesstring(source_type=source_type, channel_nums=channel_nums)
+    sources, sourcesstring, channel_nums = scope.determine_channels(source_type=source_type, channel_nums=channel_nums)
     fhead = scope.generate_file_header(channel_nums)
     n = start_num
     fnum = file_delim+str(n)
@@ -141,7 +141,7 @@ def get_num_traces(fname=config._filename, ext=config._filetype, num=1, address=
                                    num_averages=num_averages, p_mode=p_mode,
                                    num_points=num_points, acq_print=False)
         ## Select sources
-        sourcesstring, sources, channel_nums = scope.build_sourcesstring(source_type=source_type, channel_nums=channel_nums)
+        sources, sourcesstring, channel_nums = scope.determine_channels(source_type=source_type, channel_nums=channel_nums)
         fhead = scope.generate_file_header(channel_nums)
         n = start_num
         fnum = file_delim+str(n)
