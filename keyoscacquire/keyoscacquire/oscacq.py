@@ -40,7 +40,7 @@ class Oscilloscope():
 
     Raises
     ------
-    pyvisa.errors.Error
+    :class:`pyvisa.errors.Error`
         if no successful connection is made.
 
     Attributes
@@ -320,7 +320,7 @@ class Oscilloscope():
 
         Returns
         -------
-        raw : :class:~numpy.ndarray`
+        raw : :class:`~numpy.ndarray`
             Raw data to be processed by :func:`process_data_binary`.
             An ndarray of ints that can be converted to voltage values using the preamble.
         preamble : str
@@ -522,9 +522,62 @@ class Oscilloscope():
                                                        wav_format=wav_format, acq_type=acq_type, num_averages=num_averages,
                                                        p_mode=p_mode, num_points=num_points)
         plot_trace(x, y, channel_nums, fname=fname)
-        head = self.id+"\ntime,"+",".join(channel_nums)+"\n"
-        save_trace(fname, x, y, fileheader=head, ext=ext, acquire_print=self.acquire_print)
+        head = self.generate_file_header(channel_nums)
+        save_trace(fname, x, y, fileheader=head, ext=ext, print_filename=self.acquire_print)
 
+    def generate_file_header(self, channels, additional_line=None, timestamp=True):
+        """Generate string to be used as file header for saved files
+
+        The file header has this structure::
+
+            <id>
+            <mode>,<averages>
+            <timestamp>
+            additional_line
+            time,<chs>
+
+        Where ``<id>`` is the :attr:`~keyoscacquire.oscacq.Oscilloscope.id` of the oscilloscope,
+        ``<mode>`` is the :attr:`~keyoscacquire.oscacq.Oscilloscope.acq_type`, ``<averages>`` :attr:`~keyoscacquire.oscacq.Oscilloscope.num_averages` (``"N/A"`` if not applicable)
+        and ``<chs>`` are the comma separated channels used.
+
+        .. note:: If ``additional_line`` is not supplied the fileheader will be four lines. If ``timestamp=False`` the timestamp line will not be present.
+
+        Parameters
+        ----------
+        channels : list of str
+            Any list of identifies for the channels used for the measurement to be saved.
+        additional_line : str or ``None``, optional, default ``None``
+            No additional line if set to ``None``, otherwise the value of the argument will be used
+            as an additonal line to the file header
+        timestamp : bool
+            ``True`` gives a line with timestamp, ``False`` removes the line
+
+        Returns
+        -------
+        str
+            string to be used as file header
+
+        Example
+        -------
+        If the oscilloscope is acquiring in ``'AVER'`` mode with eight averages::
+
+            Oscilloscope.generate_file_header(['1', '3'], additional_line="my comment")
+
+        gives::
+
+            # AGILENT TECHNOLOGIES,DSO-X 2024A,MY1234567,12.34.1234567890
+            # AVER,8
+            # 2019-09-06 20:01:15.187598
+            # my comment
+            # time,1,3
+
+        """
+        num_averages = str(self.num_averages) if self.acq_type[:3] == 'AVE' else "N/A"
+        mode_line = self.acq_type+","+num_averages+"\n"
+        timestamp_line = str(datetime.datetime.now())+"\n" if timestamp else ""
+        add_line = additional_line+"\n" if additional_line is not None else ""
+        channels_line = "time,"+",".join(channels)
+        return self.id+"\n"+mode_line+timestamp_line+add_line+channels_line
 
 
 ##============================================================================##
@@ -645,6 +698,7 @@ def process_data_ascii(raw, measurement_time, acquire_print=True):
         _log.info("Points captured per channel: ", num_samples)
     return x, y
 
+
 ##============================================================================##
 ##                           SAVING FILES                                     ##
 ##============================================================================##
@@ -672,7 +726,7 @@ def check_file(fname, ext=config._filetype, num=""):
         fname += append
     return fname
 
-def save_trace(fname, time, y, fileheader="", ext=config._filetype, acquire_print=True):
+def save_trace(fname, time, y, fileheader="", ext=config._filetype, print_filename=True):
     """Saves the trace with time values and y values to file.
 
     Current date and time is automatically added to the header. Saving to numpy format with :func:`save_trace_npy` is faster, but does not include metadata and header.
@@ -686,18 +740,17 @@ def save_trace(fname, time, y, fileheader="", ext=config._filetype, acquire_prin
     y : ~numpy.ndarray
         Voltage values, same sequence as channel_nums
     fileheader : str, optional, default ``""``
-        Optional prefix for current date and time which is automatically added to the header.
+        Header of file, use :func:`generate_file_header`
     ext : str, optional, default :data:`~keyoscacquire.config._filetype`
         Choose the filetype of the saved trace
-    acquire_print : bool, optional, default ``True``
+    print_filename : bool, optional, default ``True``
         ``True`` prints the filename it is saved to
     """
-    date_time = str(datetime.datetime.now()) # get current date and time
-    if acquire_print: print("Saving trace to %s\n" % (fname+ext))
+    if print_filename: print("Saving trace to %s\n" % (fname+ext))
     data = np.append(time, y, axis=1) # make one array with coloumns x y1 y2 ..
-    np.savetxt(fname+ext, data, delimiter=",", header=fileheader+date_time)
+    np.savetxt(fname+ext, data, delimiter=",", header=fileheader)
 
-def save_trace_npy(fname, time, y, acquire_print=True):
+def save_trace_npy(fname, time, y, print_filename=True):
     """Saves the trace with time values and y values to npy file.
 
     .. note:: Saving to numpy files is faster than to ascii format files (:func:`save_trace`), but no file header is added.
@@ -710,10 +763,10 @@ def save_trace_npy(fname, time, y, acquire_print=True):
         Time axis for the measurement
     y : ~numpy.ndarray
         Voltage values, same sequence as channel_nums
-    acquire_print : bool, optional, default ``True``
+    print_filename : bool, optional, default ``True``
         ``True`` prints the filename it is saved to
     """
-    if acquire_print: print("Saving trace to %s\n" % (fname+ext))
+    if print_filename: print("Saving trace to %s\n" % (fname+ext))
     data = np.append(time, y, axis=1)
     np.save(pathfname_no_ext+".npy", data)
 
