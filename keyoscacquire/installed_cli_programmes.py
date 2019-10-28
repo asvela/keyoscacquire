@@ -39,7 +39,7 @@ delim_help = "Delimiter used between filename and filenumber (before filetype). 
 def connect_each_time_cli():
     """Function installed on the command line: Obtains and stores multiple traces,
     connecting to the oscilloscope each time."""
-    parser = argparse.ArgumentParser(description=acqprog.getTraces_connect_each_time_loop.__doc__)
+    parser = argparse.ArgumentParser(description=acqprog.get_traces_connect_each_time_loop.__doc__)
     connection_gr = parser.add_argument_group('Connection settings')
     connection_gr.add_argument('-v', '--visa_address', nargs='?', help=visa_help, default=config._visa_address)
     connection_gr.add_argument('-t', '--timeout', nargs='?', help=timeout_help, default=config._timeout, type=int)
@@ -53,7 +53,7 @@ def connect_each_time_cli():
     trans_gr.add_argument('--file_delimiter', nargs='?', help=delim_help, default=config._file_delimiter)
     args = parser.parse_args()
 
-    acqprog.getTraces_connect_each_time_loop(fname=args.filename, address=args.visa_address, timeout=args.timeout, wav_format=args.wav_format,
+    acqprog.get_traces_connect_each_time_loop(fname=args.filename, address=args.visa_address, timeout=args.timeout, wav_format=args.wav_format,
                              channel_nums=args.channels, acq_type=args.acq_type, num_points=args.num_points, file_delim=args.file_delimiter)
 
 
@@ -74,7 +74,7 @@ def single_connection_cli():
     trans_gr.add_argument('--file_delimiter', nargs='?', help=delim_help, default=config._file_delimiter)
     args = parser.parse_args()
 
-    acqprog.getTraces_single_connection_loop(fname=args.filename, address=args.visa_address, timeout=args.timeout, wav_format=args.wav_format,
+    acqprog.get_traces_single_connection_loop(fname=args.filename, address=args.visa_address, timeout=args.timeout, wav_format=args.wav_format,
                              channel_nums=args.channels, acq_type=args.acq_type, num_points=args.num_points, file_delim=args.file_delimiter)
 
 
