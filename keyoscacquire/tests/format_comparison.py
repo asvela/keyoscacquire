@@ -1,24 +1,44 @@
 # -*- coding: utf-8 -*-
 """
-Script to test obtaining data with differentwaveform formats for Keysight DSO2024A
-
+Script to test obtaining data with different waveform formats for Keysight DSO2024A
 
 Andreas Svela // 2019
 """
 
 visa_path = 'C:\\Program Files\\IVI Foundation\\VISA\\Win64\\agvisa\\agbin\\visa32.dll'
-# Oxford
 visa_address = 'USB0::0x0957::0x1796::MY59125372::INSTR'
-# NPL
-# visa_address = 'USB0::0x0957::0x1796::MY57233636::INSTR'
 
 
 import pyvisa
 import numpy as np
 import matplotlib.pyplot as plt
 
-format_dict = {0: "BYTE", 1: "WORD", 4: "ASCii"}
+import keyoscacquire.oscacq as koa
 
+format_dict = {0: "BYTE", 1: "WORD", 4: "ASCii"}
+formats = ['BYTE', 'WORD', 'ASCii']
+
+
+print("\n## ~~~~~~~~~~~~~~~~~ KEYOSCAQUIRE ~~~~~~~~~~~~~~~~~~ ##")
+
+scope = koa.Oscilloscope(address=visa_address)
+scope.set_acquiring_options(num_points=2000)
+sources, sourcesstring, channel_nums = scope.determine_channels(channel_nums=['1'])
+scope.stop()
+
+times, values = [[], []], [[], []]
+for wav_format in formats:
+    print("\nWaveform format", wav_format)
+    scope.set_acquiring_options(wav_format=wav_format)
+    data = scope.capture_and_read(sources, sourcesstring, set_running=False)
+    time, vals = koa.process_data(*data, wav_format, acquire_print=True)
+    times[0].append(time)
+    values[0].append(vals)
+
+scope.close(set_running=False)
+
+
+print("\n## ~~~~~~~~~~~~~~~~~~~ PYVISA ~~~~~~~~~~~~~~~~~~~~~ ##")
 
 # use Keysight VISA and connect to instrument
 rm = pyvisa.ResourceManager(visa_path)
@@ -28,22 +48,18 @@ id = inst.query('*IDN?').strip() # get the id of the connected device
 print("Connected to\n\t\'%s\'" % id)
 
 # obtain trace from channel 1
-inst.write(':DIGitize CHAN1')
 inst.write(':WAVeform:SOURce CHAN1')
 
-formats = ['BYTE', 'WORD', 'ASCii']
-values = []
 for wav_format in formats:
     inst.write(':WAVeform:FORMat ' +  wav_format) # choose format for the transmitted waveform
     inst.write(':WAVeform:BYTeorder LSBFirst') # MSBF is default, must be overridden for WORD to work
-    inst.write(':WAVeform:UNSigned OFF') # make sure the scope is sending UNsigned ints
+    inst.write(':WAVeform:UNSigned OFF') # make sure the scope is sending signed ints
 
     preamble = inst.query(':WAVeform:PREamble?')
     preamble = preamble.split(',')
     print("\nWaveform format", format_dict[int(preamble[0])])
 
     if wav_format in ['WORD', 'BYTE']:
-        print(preamble[7:10])
         num_samples = int(preamble[2])  # 2 POINTS : int32 - number of data points transferred.
         yIncr = float(preamble[7])      # 7 YINCREMENT : float32 - voltage diff between data points.
         yOrig = float(preamble[8])      # 8 YORIGIN : float32 - value is the voltage at center screen.
@@ -60,42 +76,43 @@ for wav_format in formats:
         # calulate values from raw data
         processed = (raw_bin-yRef)*yIncr + yOrig
         print("processed values", processed)
-        values.append(processed)
+        values[1].append(processed)
     elif wav_format == 'ASCii':
-        # use standard query function
-        # according to documentation gives ascii without header:
-        # "The ASCii format does not send out the header information indicating the number of bytes being downloaded."
-        # Keysight Infiniium Oscilloscopes Programmer's guide Version 06.40.00904, page 1503
-        print("First, try not explicitly expecting ASCII with \'query(..)\' ..")
         raw = inst.query(':WAVeform:DATA?')
-        print("The raw data should not contain a block header according to the manual")
-        print("raw ", raw[:100])
-        if raw[0] == '#':
-            print("..but it turns out is has a header block. Remove it and process the data")
-            raw = raw[10:]
-            print("After removing block header", raw[:50])
+        raw = raw[10:] # removing IEEE block header
         raw = raw.split(',') # samples separated by commas
         processed = np.array([float(sample) for sample in raw])
         print("processed values", processed)
-        values.append(processed)
-        # Now try to explicitly expect ascii
-        print("\nSecondly, explicitly expect ASCII with \'query_ascii_values(..)\' ..")
-        try:
-            raw_ascii = inst.query_ascii_values(':WAVeform:DATA?')
-            print("Returns", raw_ascii[:50])
-        except ValueError as e:
-            print("(!) ValueError:")
-            print("\t", e)
+        values[1].append(processed)
 
-# plotting the values obtained
-fig, ax = plt.subplots(nrows=len(formats), sharex=True, sharey=False)
-for val, a, format in zip(values, ax, formats):
-    a.plot(val*1000)
-    a.set_title(format)
-    a.set_ylabel("milli volts")
-ax[2].set_xlabel("point number")
+    num_samples = int(preamble[2])    # POINTS : int32 - number of data points transferred.
+    xIncr = float(preamble[4])        # XINCREMENT : float64 - time difference between data points.
+    xOrig = float(preamble[5])        # XORIGIN : float64 - always the first data point in memory.
+    xRef = int(preamble[6])           # XREFERENCE : int32 - specifies the data point associated with x-origin.
+    time = (np.arange(num_samples)-xRef)*xIncr + xOrig # compute x-values
+    times[1].append(time)
+
+
+# Plotting the signals obtained for visual comparison
+fig, axs = plt.subplots(nrows=len(formats), ncols=2, sharex=True, sharey=True)
+for i, (time, value, ax) in enumerate(zip(times, values, axs.T)):
+    for j, (t, v, a, format) in enumerate(zip(time, value, ax, formats)):
+        try:
+            a.plot(t, v*1000)
+        except ValueError as err:
+            print("Could not plot, check dimensions:", err)
+        a.set_title(format)
+        if i == 0: a.set_ylabel("signal [v]")
+        if j == len(axs)-1: a.set_xlabel("time [s]")
+fig.suptitle("keyoscacquire      pure pyvisa")
+
+print("\nCalculating the difference between same waveform formats")
+diffs = [values[0][i].T-values[1][i].T for i in range(3)]
+for diff, format in zip(diffs, formats):
+    print("Difference in "+format+" signals: "+str(sum(sum(diff))))
+
 plt.show()
 
-#close instrument connection
+# close instrument connection
 inst.write(':RUN')
 inst.close()

@@ -19,8 +19,8 @@ import logging; _log = logging.getLogger(__name__)
 import keyoscacquire.config as config
 
 _screen_colors = {'1':'C1', '2':'C2', '3':'C0', '4':'C3'} # Keysight colour map
-_datatypes = {'BYTE':'B', 'WORD':'H'}
-"""Datatype is 'H' for 16 bit unsigned int (WORD), 'B' for 8 bit unsigned bit (BYTE). Same naming as for `structs <https://docs.python.org/3/library/struct.html#format-characters>`"""
+_datatypes = {'BYTE':'b', 'WORD':'h'}
+"""Datatype is 'h' for 16 bit signed int (WORD), 'b' for 8 bit signed bit (BYTE). Same naming as for `structs <https://docs.python.org/3/library/struct.html#format-characters>`"""
 
 ##============================================================================##
 
@@ -78,9 +78,9 @@ class Oscilloscope():
 
         * ``'ASCii'`` formatted data converts the internal integer data values to real Y-axis values. Values are transferred as ascii digits in floating point notation, separated by commas.
 
-        * ``'WORD'`` formatted data transfers unsigned 16-bit data as two bytes.
+        * ``'WORD'`` formatted data transfers signed 16-bit data as two bytes.
 
-        * ``'BYTE'`` formatted data is transferred as unsigned 8-bit bytes.
+        * ``'BYTE'`` formatted data is transferred as signed 8-bit bytes.
 
     acquire_print : bool
         ``True`` prints that the capturing starts and the number of points captured
@@ -98,13 +98,14 @@ class Oscilloscope():
         except pyvisa.Error as err:
             print('\nVisaError: Could not connect to \'%s\'.' % address)
             raise
-        # make sure WORD and BYTE data is transeferred as unsigned ints
-        self.inst.write(':WAVeform:UNSigned ON')
+        # make sure WORD and BYTE data is transeferred as signed ints and lease significant bit first
+        self.inst.write(':WAVeform:UNSigned OFF')
+        self.inst.write(':WAVeform:BYTeorder LSBFirst') # MSBF is default, must be overridden for WORD to work
         # For TCP/IP socket connections enable the read Termination Character, or reads will timeout
         if self.inst.resource_name.endswith('SOCKET'):
             self.inst.read_termination = '\n'
-
         self.inst.timeout = self.timeout
+
         self.inst.write('*CLS')  # clears the status data structures, the device-defined error queue, and the Request-for-OPC flag
         self.id = self.inst.query('*IDN?').strip() # get the id of the connected device
         print("Connected to \'%s\'" % self.id)
@@ -235,8 +236,8 @@ class Oscilloscope():
             self.inst.write(':WAVeform:POINts ' + str(self.num_points))
             _log.debug("Number of points set to: ", self.num_points)
 
-    def build_sourcesstring(self, source_type='CHANnel', channel_nums=config._ch_nums):
-        """Set the channels to be acquired, or determine by checking active channels on the oscilloscope.
+    def determine_channels(self, source_type='CHANnel', channel_nums=config._ch_nums):
+        """Decide the channels to be acquired, or determine by checking active channels on the oscilloscope.
 
         .. note:: Use ``channel_nums='active'`` to capture all the currently active channels on the oscilloscope.
 
@@ -253,6 +254,8 @@ class Oscilloscope():
         -------
         sources : list of str
             list of the sources, example ``['CHAN1', 'CHAN3']``
+        sourcesstring : str
+            String of comma separated sources, example ``'CHANnel1, CHANnel3'``
         channel_nums : list of chars
             list of the channels, example ``['1', '3']``
         """
@@ -264,13 +267,13 @@ class Oscilloscope():
         sources = [source_type+channel for channel in channel_nums] # build list of sources
         sourcesstring = ", ".join(sources) # make string of sources
         if self.acquire_print: print("Acquire from sources", sourcesstring)
-        return sourcesstring, sources, channel_nums
+        return sources, sourcesstring, channel_nums
 
-    def capture_and_read(self, sources, sourcestring):
+    def capture_and_read(self, sources, sourcestring, set_running=True):
         """This is a wrapper function for choosing the correct capture_and_read function according to :attr:`wav_format`, :func:`capture_and_read_binary` or :func:`capture_and_read_ascii`.
 
         Acquire raw data from selected channels according to acquring options currently set with :func:`set_acquiring_options`.
-        The parameters are provided by :func:`build_sourcesstring`.
+        The parameters are provided by :func:`determine_channels`.
 
         The output should be processed by :func:`process_data`.
 
@@ -280,6 +283,8 @@ class Oscilloscope():
             list of sources, example ``['CHANnel1', 'CHANnel3']``
         sourcesstring : str
             String of comma separated sources, example ``'CHANnel1, CHANnel3'``
+        set_running : bool, optional, default ``True``
+            ``True`` leaves oscilloscope running after data capture
 
         Returns
         -------
@@ -296,16 +301,16 @@ class Oscilloscope():
         :func:`process_data`
         """
         if self.wav_format[:3] in ['WOR', 'BYT']:
-            return self.capture_and_read_binary(sources, sourcestring, datatype=_datatypes[self.wav_format])
+            return self.capture_and_read_binary(sources, sourcestring, datatype=_datatypes[self.wav_format], set_running=set_running)
         elif self.wav_format[:3] == 'ASC':
-            return self.capture_and_read_ascii(sources, sourcestring)
+            return self.capture_and_read_ascii(sources, sourcestring, set_running=set_running)
         else:
-            raise ValueError("Could not capture and read data, waveform format \'{}\' is unknown.\nExiting..\n".format(self.wav_format))
+            raise ValueError("Could not capture and read data, waveform format \'{}\' is unknown.\n".format(self.wav_format))
 
-    def capture_and_read_binary(self, sources, sourcesstring, datatype='standard'):
+    def capture_and_read_binary(self, sources, sourcesstring, datatype='standard', set_running=True):
         """Capture and read data and metadata from sources of the oscilloscope when waveform format is ``'WORD'`` or ``'BYTE'``.
 
-        The parameters are provided by :func:`build_sourcesstring`.
+        The parameters are provided by :func:`determine_channels`.
         The output should be processed by :func:`process_data_binary`.
 
         Parameters
@@ -315,8 +320,10 @@ class Oscilloscope():
         sourcesstring : str
             String of comma separated sources, example ``'CHANnel1, CHANnel3'``
         datatype : char or ``'standard'``, optional but must match waveform format used
-            To determine how to read the values from the oscilloscope depending on :attr:`wav_format`. Datatype is ``'H'`` for 16 bit unsigned int (``'WORD'``), for 8 bit unsigned bit (``'BYTE'``) (same naming as for structs, `https://docs.python.org/3/library/struct.html#format-characters`).
+            To determine how to read the values from the oscilloscope depending on :attr:`wav_format`. Datatype is ``'h'`` for 16 bit signed int (``'WORD'``), for 8 bit signed bit (``'BYTE'``) (same naming as for structs, `https://docs.python.org/3/library/struct.html#format-characters`).
             ``'standard'`` will evaluate :data:`oscacq._datatypes[self.wav_format]` to automatically choose according to the waveform format
+        set_running : bool, optional, default ``True``
+            ``True`` leaves oscilloscope running after data capture
 
         Returns
         -------
@@ -355,13 +362,13 @@ class Oscilloscope():
             _log.info("Elapsed time capture and read: %.1f ms" % ((time.time()-start_time)*1e3))
         else:
             _log.debug("Elapsed time capture and read: %.1f ms" % ((time.time()-start_time)*1e3))
-        self.inst.write(':RUN') # set the oscilloscope running again
+        if set_running: self.inst.write(':RUN') # set the oscilloscope running again
         return raw, preambles
 
-    def capture_and_read_ascii(self, sources, sourcesstring):
+    def capture_and_read_ascii(self, sources, sourcesstring, set_running=True):
         """Capture and read data and metadata from sources of the oscilloscope when waveform format is ASCii.
 
-        The parameters are provided by :func:`build_sourcesstring`.
+        The parameters are provided by :func:`determine_channels`.
         The output should be processed by :func:`process_data_ascii`.
 
         Parameters
@@ -370,15 +377,16 @@ class Oscilloscope():
             list of sources, example ``['CHANnel1', 'CHANnel3']``
         sourcesstring : str
             String of comma separated sources, example ``'CHANnel1, CHANnel3'``
+        set_running : bool, optional, default ``True``
+            ``True`` leaves oscilloscope running after data capture
 
         Returns
         -------
         raw : str
             Raw data to be processed by :func:`process_data_ascii`.
             The raw data is a list of one IEEE block per channel with a head and then comma separated ascii values.
-        measurement_time : float
-            The time duration of the measurement (the length of the time axis) in seconds.
-            Used in to calculate the time axis (for all channels).
+        preamble : str
+            The preamble metadata for one of the channels to calculate time axis (same for all channels)
         """
         ## Capture data
         if self.acquire_print: print("Start acquisition..")
@@ -405,9 +413,9 @@ class Oscilloscope():
             _log.info("Elapsed time capture and read: %.1f ms" % ((time.time()-start_time)*1e3))
         else:
             _log.debug("Elapsed time capture and read: %.1f ms" % ((time.time()-start_time)*1e3))
-        measurement_time = float(self.inst.query(':TIMebase:RANGe?')) # returns the current full-scale range value for the main window
-        self.inst.write(':RUN') # set the oscilloscope running again
-        return raw, measurement_time
+        preamble = self.inst.query(':WAVeform:PREamble?') # preamble (used for calculating time axis, which is the same for all channels)
+        if set_running: self.inst.write(':RUN') # set the oscilloscope running again
+        return raw, preamble
 
     ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~##
 
@@ -478,7 +486,7 @@ class Oscilloscope():
                                    num_averages=num_averages, p_mode=p_mode,
                                    num_points=num_points)
         ## Select sources
-        sourcesstring, sources, channel_nums = self.build_sourcesstring(source_type=source_type, channel_nums=channel_nums)
+        sources, sourcesstring, channel_nums = self.determine_channels(source_type=source_type, channel_nums=channel_nums)
         ## Capture, read and process data
         time, y = self.get_trace(sources, sourcesstring)
         return time, y, channel_nums
@@ -592,7 +600,7 @@ def process_data(raw, metadata, wav_format, acquire_print=True):
     raw : ~numpy.ndarray or str
         From :func:`~Oscilloscope.capture_and_read`: Raw data, type depending on :attr:`wav_format`
     metadata : str or float
-        From :func:`~Oscilloscope.capture_and_read`: Preamble or measurement_time depending on :attr:`wav_format`
+        From :func:`~Oscilloscope.capture_and_read`: List of preambles or preamble depending on :attr:`wav_format`
     wav_format : {``'WORD'``, ``'BYTE'``, ``'ASCii'``}
         Specify what waveform type was used for acquiring to choose the correct processing function.
     acquire_print : bool
@@ -628,8 +636,8 @@ def process_data_binary(raw, preambles, acquire_print=True):
     ----------
     raw : ~numpy.ndarray
         From :func:`~Oscilloscope.capture_and_read_binary`: An ndarray of ints that is converted to voltage values using the preamble.
-    preamble : str
-        From :func:`~Oscilloscope.capture_and_read_binary`: Preamble metadata (comma separated ascii values)
+    preambles : list of str
+        From :func:`~Oscilloscope.capture_and_read_binary`: List of preamble metadata for each channel (list of comma separated ascii values)
     acquire_print : bool
         True prints the number of points captured per channel
 
@@ -663,15 +671,15 @@ def process_data_binary(raw, preambles, acquire_print=True):
     x = x.T # make x values vertical
     return x, y
 
-def process_data_ascii(raw, measurement_time, acquire_print=True):
+def process_data_ascii(raw, preamble, acquire_print=True):
     """Process raw comma separated ascii data to time values and y voltage values as received from :func:`Oscilloscope.capture_and_read_ascii`
 
     Parameters
     ----------
     raw : str
         From :func:`~Oscilloscope.capture_and_read_ascii`: A string containing a block header and comma separated ascii values
-    measurement_time : float
-        From :func:`~Oscilloscope.capture_and_read_ascii`: The time duration of the measurement (the length of the time axis) in seconds
+    preamble : str
+        From :func:`~Oscilloscope.capture_and_read_ascii`: The preamble metadata for one of the channels to calculate time axis (same for all channels)
     acquire_print : bool
         True prints the number of points captured per channel
 
@@ -682,6 +690,12 @@ def process_data_ascii(raw, measurement_time, acquire_print=True):
     y : :class:`~numpy.ndarray`
         Voltage values, each row represents one channel
     """
+    preamble = preamble.split(',')  # values separated by commas
+    num_samples = int(preamble[2])    # POINTS : int32 - number of data points transferred.
+    xIncr = float(preamble[4])        # XINCREMENT : float64 - time difference between data points.
+    xOrig = float(preamble[5])        # XORIGIN : float64 - always the first data point in memory.
+    xRef = int(preamble[6])           # XREFERENCE : int32 - specifies the data point associated with x-origin.
+
     y = []
     for data in raw:
         data = data.split(data[:10])[1] # remove first 10 characters (is this a quick but not so intuitive way?)
@@ -691,7 +705,7 @@ def process_data_ascii(raw, measurement_time, acquire_print=True):
 
     y = np.transpose(np.array(y))
     num_samples = np.shape(y)[0] # number of samples captured per channel
-    x = np.array([np.linspace(0, measurement_time, num_samples)]) # compute x-values
+    x = np.array([(np.arange(num_samples)-xRef)*xIncr + xOrig]) # compute x-values
     x = x.T # make list vertical
     if acquire_print:
         print("Points captured per channel: ", num_samples)
