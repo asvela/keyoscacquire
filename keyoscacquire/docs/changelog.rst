@@ -4,6 +4,7 @@ Changelog
 
 v3.0.0 (2019-10-XX)
 -------------------
+Comprehensive documentation now available on read the docs; more command line programme options; some function name changes; bug fixes
 
 - Expanded command line programmes to take many more options:
 
@@ -20,26 +21,26 @@ v3.0.0 (2019-10-XX)
 
   Now used by ``save_trace()``
 
-- Camel case in function names is no more *(no compatibility measures introduced)*
+-  *(No compatibility measures introduced)*: Camel case in function names is no more
 
   * ``getTrace`` -> ``get_trace``
   * ``saveTrace`` -> ``save_trace``
   * ``plotTrace`` -> ``plot_trace``
   * and others
 
-- Fixed issue when setting number of points to transfer
-
-- Wrote comprehensive documentation
-
 - *(No compatibility measures introduced)*: ``Oscilloscope.build_sourcesstring()`` -> ``Oscilloscope.determine_channels()`` and changed return sequence
 
-- Fixed issue with unreliable data transfer from scope. Have now set communication to signed ints
+- Fixed issue when setting number of points to transfer
+
+- Fixed issue (hopefully) with sometimes getting wrong traces exported. Have now set communication to signed ints, and setting least significant bit first
 
 - Fixed issue where ``ASCii`` wave format would set zero time to the beginning of the trace
 
+- Wrote comprehensive documentation on Read The Docs
 
-v2.1.1 (2019-10-18)
+v2.1.0 (2019-10-18)
 -------------------
+New command line programmes
 
 - Added command line programme ``list_visa_devices`` to list the addresses of the VISA instruments available
 
@@ -51,7 +52,7 @@ v2.1.1 (2019-10-18)
 
 - Changed dependency from visa to pyvisa (the package called visa on pypi is not pyvisa..!), and added tqdm dependency
 
-- ``get_n_traces`` now called ``get_num_traces``
+- *(No compatibility measures introduced)*: ``get_n_traces`` now called ``get_num_traces``
 
 - And minor cosmetic changes
 
@@ -90,5 +91,7 @@ Extra command line programme, logging enabled, order of magnitude speed-up in da
   - Changes in README
 
 
-v1.0.0 (2019-03-07): First release
-----------------------------------
+v1.0.0 (2019-03-07)
+-------------------
+
+- First release on pypi
