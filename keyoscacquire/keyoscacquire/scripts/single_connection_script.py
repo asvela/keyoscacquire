@@ -17,8 +17,8 @@ changing thoughout the measurements.
 Change the config._visa_address under default options to the desired instrument.
 """
 
-import keyoscacquire.installed_command_line_funcs as cli
+import keyoscacquire.installed_cli_programmes as cli
 
 ## Main function, runs only if the script is called from the command line
 if __name__ == '__main__':
-    cli.single_connection_command_line()
+    cli.single_connection_cli()

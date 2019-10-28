@@ -36,7 +36,7 @@ channels_help = "List of the channel numbers to be acquired, for example '1 3' (
 points_help = "Use 0 to get the maximum number of points, or set a smaller number to speed up the acquisition and transfer. Defaults to 0."
 delim_help = "Delimiter used between filename and filenumber (before filetype). Defaults to \'"+config._file_delimiter+"\'."
 
-def connect_each_time_command_line():
+def connect_each_time_cli():
     """Function installed on the command line: Obtains and stores multiple traces,
     connecting to the oscilloscope each time."""
     parser = argparse.ArgumentParser(description=acqprog.getTraces_connect_each_time_loop.__doc__)
@@ -57,7 +57,7 @@ def connect_each_time_command_line():
                              channel_nums=args.channels, acq_type=args.acq_type, num_points=args.num_points, file_delim=args.file_delimiter)
 
 
-def single_connection_command_line():
+def single_connection_cli():
     """Function installed on the command line: Obtains and stores multiple traces,
     keeping a the same connection to the oscilloscope open all the time."""
     parser = argparse.ArgumentParser(description=acqprog.get_traces_single_connection_loop.__doc__)
@@ -78,7 +78,7 @@ def single_connection_command_line():
                              channel_nums=args.channels, acq_type=args.acq_type, num_points=args.num_points, file_delim=args.file_delimiter)
 
 
-def single_trace_command_line():
+def single_trace_cli():
     """Function installed on the command line: Obtains and stores a single trace."""
     parser = argparse.ArgumentParser(description=acqprog.get_single_trace.__doc__)
     connection_gr = parser.add_argument_group('Connection settings')
@@ -96,7 +96,7 @@ def single_trace_command_line():
     acqprog.get_single_trace(fname=args.filename, address=args.visa_address, timeout=args.timeout, wav_format=args.wav_format,
                              channel_nums=args.channels, acq_type=args.acq_type, num_points=args.num_points)
 
-def num_traces_command_line():
+def num_traces_cli():
     """Function installed on the command line: Obtains and stores a single trace."""
     parser = argparse.ArgumentParser(description=acqprog.get_num_traces.__doc__)
     # postitional arg
@@ -118,13 +118,13 @@ def num_traces_command_line():
     acqprog.get_num_traces(num=args.num, fname=args.filename, address=args.visa_address, timeout=args.timeout, wav_format=args.wav_format,
                              channel_nums=args.channels, acq_type=args.acq_type, num_points=args.num_points)
 
-def list_visa_devices_command_line():
+def list_visa_devices_cli():
     """Function installed on the command line: Lists VISA devices"""
     parser = argparse.ArgumentParser(description=acqprog.list_visa_devices.__doc__)
     args = parser.parse_args()
     acqprog.list_visa_devices()
 
-def path_of_config_command_line():
+def path_of_config_cli():
     """Function installed on the command line: Prints the full path of the config module"""
     parser = argparse.ArgumentParser(description=acqprog.path_of_config.__doc__)
     args = parser.parse_args()
