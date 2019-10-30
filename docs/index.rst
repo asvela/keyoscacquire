@@ -9,7 +9,7 @@
 
    contents/overview
    contents/usage
-   contents/commandline-functions
+   contents/commandline-programmes
 
 .. toctree::
    :maxdepth: 2

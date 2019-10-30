@@ -15,6 +15,9 @@ source_dir = os.path.abspath('..')
 print("source directory for package:", source_dir)
 sys.path.insert(0, source_dir)
 
+# Get the version from the version file
+with open(os.path.join(source_dir, 'VERSION')) as version_file:
+    ver = version_file.read().strip()
 
 # -- Project information -----------------------------------------------------
 
@@ -23,7 +26,7 @@ copyright = '2019, Andreas Svela'
 author = 'Andreas Svela'
 
 # The full version, including alpha/beta/rc tags
-version = '3.0.0'
+version = ver
 release = version
 
 
