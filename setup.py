@@ -12,7 +12,7 @@ from setuptools import setup
 current_dir = os.path.abspath(os.path.dirname(__file__))
 
 # Get the version from the version file
-with open(os.path.join(current_dir, 'VERSION')) as version_file:
+with open(os.path.join(current_dir, 'keyoscacquire', 'VERSION')) as version_file:
     __version__ = version_file.read().strip()
 
 # Get the contents of readme

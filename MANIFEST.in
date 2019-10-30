@@ -1,4 +1,4 @@
-include VERSION
+include keyoscacquire/VERSION
 include README.rst
 include INSTALL.md
 include LICENSE.md
