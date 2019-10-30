@@ -5,15 +5,19 @@ Install the Keysight oscilloscope acquire library.
 Andreas Svela // 2019
 """
 
-__version__ = '3.0.0'
 
 import os
 from setuptools import setup
 
 current_dir = os.path.abspath(os.path.dirname(__file__))
-with open(os.path.join(current_dir, "README.rst")) as fid:
-    README = fid.read()
 
+# Get the version from the version file
+with open(os.path.join(current_dir, 'VERSION')) as version_file:
+    __version__ = version_file.read().strip()
+
+# Get the contents of readme
+with open(os.path.join(current_dir, "README.rst")) as readme_file:
+    README = readme_file.read()
 
 if __name__ == '__main__':
     setup(name='keyoscacquire',
