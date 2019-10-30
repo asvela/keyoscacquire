@@ -20,9 +20,10 @@ import keyoscacquire.config as config
 
 #: Supported Keysight DSO/MSO InfiniiVision series
 _supported_series = ['1000', '2000', '3000', '4000', '6000']
-#: Keysight colour map
+#: Keysight colour map for the channels
 _screen_colors = {'1':'C1', '2':'C2', '3':'C0', '4':'C3'}
-#: Datatype is 'h' for 16 bit signed int (WORD), 'b' for 8 bit signed bit (BYTE). Same naming as for `structs <https://docs.python.org/3/library/struct.html#format-characters>`
+#: Datatype is ``'h'`` for 16 bit signed int (``WORD``), ``'b'`` for 8 bit signed bit (``BYTE``).
+#: Same naming as for structs `docs.python.org/3/library/struct.html#format-characters`
 _datatypes = {'BYTE':'b', 'WORD':'h'}
 
 
@@ -60,7 +61,7 @@ class Oscilloscope():
     model : str
         The instrument model name
     model_series : str
-        The model series, e.g. '2000' for a DSO-X 2024A
+        The model series, e.g. '2000' for a DSO-X 2024A. See :func:`interpret_visa_id`.
     address : str
         Visa address of instrument
     timeout : int
