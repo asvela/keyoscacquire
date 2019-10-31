@@ -9,7 +9,6 @@ Known issues and suggested improvements
 * Improvements:
 
     - (feature) Make a dynamic default setting for number of points
-    - (feature) ``list_visa_devices``: Get identities of all connected resources (remember to handle exceptions)
     - (feature) Build functionality for pickling measurement to disk and then post-processing for speed-up in consecutive measurements
     - (instrument support) expand support for Infiniium oscilloscopes
     - (docs) Write tutorial page for documentation

@@ -5,8 +5,9 @@ v3.0 (2019-10)
 --------------
 Comprehensive documentation now available on read the docs, added more command line programme options, some function name changes without compatibility and bug fixes.
 
-v3.0.1 (2019-10-30)
+v3.0.1 (2019-10-31)
   - Some adaptation for using 9000 series oscilloscopes with limited functionality
+  - Expanding the contents of the ``list_visa_devices`` table
   - Bugfix for ascii data processing (originating in v3.0.0)
 
 v3.0.0 (2019-10-28)
