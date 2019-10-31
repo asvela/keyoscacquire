@@ -852,7 +852,7 @@ def interpret_visa_id(id):
     maker, model, serial, firmware = id.split(",")
     # find model_series if applicable
     if model[:3] in ['DSO', 'MSO']:
-        model_number = [c for c in model if digit.isdigit()] # find the numbers in the model string
+        model_number = [c for c in model if c.isdigit()] # find the numbers in the model string
         model_series = model_number[0]+'000' if not model_number == [] else "not found"  # pick the first number and add 000 or use not found
     else:
         model_series = "N/A"
