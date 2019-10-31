@@ -31,15 +31,39 @@ def list_visa_devices():
     if len(resources) == 0:
         print("\nNo VISA devices found!")
     else:
-        longest_name_len = max([len(r) for r in resources])
-        header = " #  class   name"+" "*(longest_name_len-1)+"  alias"
+        information, could_not_connect = [], []
+        for i, address in enumerate(resources): # loop through resources to learn more about them
+            current_resource_info = []
+            info_object = rm.resource_info(address)
+            alias = info_object.alias if info_object.alias is not None else "N/A"
+            current_resource_info.extend((str(i), address, alias))
+            try: # open the instrument and get the identity string
+                instrument = rm.open_resource(address)
+                id = instrument.query('*IDN?')
+                current_resource_info.extend(acq.interpret_visa_id(id))
+                instrument.close()
+            except pyvisa.Error as e:
+                could_not_connect.append(i)
+                current_resource_info.extend(["no connection"]*5)
+            information.append(current_resource_info)
+        # transpose to lists of property
+        nums, addrs, aliases, makers, models, serials, firmwares, model_series = (list(category) for category in zip(*information))
+        # select what properties to list
+        selection = (nums, addrs, makers, models, model_series, aliases)
+        # build header
+        header_fields = (' #', 'address', 'maker', 'model', 'series', 'alias')
+        # find max number of characters for each property to use as padding
+        padding = [max([len(instance) for instance in property]) for property in selection]
+        # make sure the padding is not smaller than the header field length
+        padding = [max(pad, len(field)) for pad, field in zip(padding, header_fields)]
+        row_format = "{:>{p[0]}s}  {:{p[1]}s}  {:{p[2]}s}  {:{p[3]}s}  {:{p[4]}s}  {:{p[5]}s}"
+        header = row_format.format(*header_fields, p=padding)
+        # print the table
         print("\nVISA devices connected:")
         print(header)
-        print("="*(len(header)+8))
-        for i, r in enumerate(resources):
-            info = rm.resource_info(r)
-            alias = info.alias if info.alias is not None else "N/A"
-            print("{:>2d}  {:6s}  {:{num}s}  {:10s}".format(i, info.resource_class, info.resource_name, alias, num=longest_name_len))
+        print("="*(len(header)+2))
+        for info in zip(*selection):
+            print(row_format.format(*info, p=padding))
 
 def path_of_config():
     """Print the absolute path of the config.py file."""

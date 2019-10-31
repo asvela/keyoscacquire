@@ -18,9 +18,14 @@ import logging; _log = logging.getLogger(__name__)
 # local file with default options:
 import keyoscacquire.config as config
 
-_screen_colors = {'1':'C1', '2':'C2', '3':'C0', '4':'C3'} # Keysight colour map
+#: Supported Keysight DSO/MSO InfiniiVision series
+_supported_series = ['1000', '2000', '3000', '4000', '6000']
+#: Keysight colour map for the channels
+_screen_colors = {'1':'C1', '2':'C2', '3':'C0', '4':'C3'}
+#: Datatype is ``'h'`` for 16 bit signed int (``WORD``), ``'b'`` for 8 bit signed bit (``BYTE``).
+#: Same naming as for structs `docs.python.org/3/library/struct.html#format-characters`
 _datatypes = {'BYTE':'b', 'WORD':'h'}
-"""Datatype is 'h' for 16 bit signed int (WORD), 'b' for 8 bit signed bit (BYTE). Same naming as for `structs <https://docs.python.org/3/library/struct.html#format-characters>`"""
+
 
 ##============================================================================##
 
@@ -48,7 +53,15 @@ class Oscilloscope():
     inst : pyvisa.resources.Resource
         The oscilloscope PyVISA resource
     id : str
-         Example 'AGILENT TECHNOLOGIES,DSO-X 2024A,MY1234567,12.34.567891234'
+        The maker, model, serial and firmware version of the scope. Examples::
+
+            'AGILENT TECHNOLOGIES,DSO-X 2024A,MY1234567,12.34.567891234'
+            'KEYSIGHT TECHNOLOGIES,MSO9104A,MY12345678,06.30.00609'
+
+    model : str
+        The instrument model name
+    model_series : str
+        The model series, e.g. '2000' for a DSO-X 2024A. See :func:`interpret_visa_id`.
     address : str
         Visa address of instrument
     timeout : int
@@ -88,30 +101,36 @@ class Oscilloscope():
 
     def __init__(self, address=config._visa_address, timeout=config._timeout):
         """See class docstring"""
+        self.address = address
         self.timeout = timeout
         self.acquire_print = True
-
         try:
             rm = pyvisa.ResourceManager()
             self.inst = rm.open_resource(address)
-            self.address = address
         except pyvisa.Error as err:
             print('\nVisaError: Could not connect to \'%s\'.' % address)
             raise
-        # make sure WORD and BYTE data is transeferred as signed ints and lease significant bit first
-        self.inst.write(':WAVeform:UNSigned OFF')
-        self.inst.write(':WAVeform:BYTeorder LSBFirst') # MSBF is default, must be overridden for WORD to work
+        self.inst.timeout = self.timeout
         # For TCP/IP socket connections enable the read Termination Character, or reads will timeout
         if self.inst.resource_name.endswith('SOCKET'):
             self.inst.read_termination = '\n'
-        self.inst.timeout = self.timeout
-
-        self.inst.write('*CLS')  # clears the status data structures, the device-defined error queue, and the Request-for-OPC flag
+        # Clear the status data structures, the device-defined error queue, and the Request-for-OPC flag
+        self.inst.write('*CLS')
+        # Make sure WORD and BYTE data is transeferred as signed ints and lease significant bit first
+        self.inst.write(':WAVeform:UNSigned OFF')
+        self.inst.write(':WAVeform:BYTeorder LSBFirst') # MSBF is default, must be overridden for WORD to work
+        # Get information about the connected device
         self.id = self.inst.query('*IDN?').strip() # get the id of the connected device
         print("Connected to \'%s\'" % self.id)
+        _, self.model, _, _, self.model_series = interpret_visa_id(self.id)
+        if not self.model_series in _supported_series:
+                print("(!) WARNING: This model (%s) is not yet fully supported by keyoscacquire," % self.model)
+                print("             but might work to some extent. keyoscacquire supports Keysight's")
+                print("             InfiniiVision X-series oscilloscopes.")
+
 
     def write(self, command):
-        """Write VISA command to the oscilloscope.
+        """Write a VISA command to the oscilloscope.
 
         Parameters
         ----------
@@ -120,7 +139,7 @@ class Oscilloscope():
         self.inst.write(command)
 
     def query(self, command):
-        """Query VISA command to the oscilloscope.
+        """Query a VISA command to the oscilloscope.
 
         Parameters
         ----------
@@ -232,8 +251,13 @@ class Oscilloscope():
             self.p_mode = p_mode
         self.inst.write(':WAVeform:POINts:MODE ' + self.p_mode)
         #_log.debug("Max number of points for mode %s: %s" % (self.p_mode, self.inst.query(':ACQuire:POINts?')))
-        if self.num_points != 0: #if number of points has been specified
-            self.inst.write(':WAVeform:POINts ' + str(self.num_points))
+        if self.num_points > 0: # if number of points has been specified
+            if self.model_series in _supported_series:
+                self.inst.write(':WAVeform:POINts ' + str(self.num_points))
+            elif self.model_series in ['9000']:
+                self.inst.write(':ACQuire:POINts ' + str(self.num_points))
+            else:
+                self.inst.write(':WAVeform:POINts ' + str(self.num_points))
             _log.debug("Number of points set to: ", self.num_points)
 
     def determine_channels(self, source_type='CHANnel', channel_nums=config._ch_nums):
@@ -307,7 +331,7 @@ class Oscilloscope():
         else:
             raise ValueError("Could not capture and read data, waveform format \'{}\' is unknown.\n".format(self.wav_format))
 
-    def capture_and_read_binary(self, sources, sourcesstring, datatype='standard', set_running=True):
+    def capture_and_read_binary(self, sources, sourcesstring, datatype='standard', set_running=False):
         """Capture and read data and metadata from sources of the oscilloscope when waveform format is ``'WORD'`` or ``'BYTE'``.
 
         The parameters are provided by :func:`determine_channels`.
@@ -355,7 +379,6 @@ class Oscilloscope():
                 print("\nError: Failed to obtain waveform, have you checked that"
                       " the timeout (currently %d ms) is sufficently long?" % self.timeout)
                 print(err)
-                print("\nExiting..\n")
                 self.close()
                 raise
         if self.acquire_print:
@@ -385,8 +408,8 @@ class Oscilloscope():
         raw : str
             Raw data to be processed by :func:`process_data_ascii`.
             The raw data is a list of one IEEE block per channel with a head and then comma separated ascii values.
-        preamble : str
-            The preamble metadata for one of the channels to calculate time axis (same for all channels)
+        metadata : tuple of str
+            Tuple of the preamble for one of the channels to calculate time axis (same for all channels) and the model series
         """
         ## Capture data
         if self.acquire_print: print("Start acquisition..")
@@ -406,7 +429,6 @@ class Oscilloscope():
             except pyvisa.Error:
                 print("\nVisaError: Failed to obtain waveform, have you checked that"
                       " the timeout (currently %d ms) is sufficently long?" % self.timeout)
-                print("\nExiting..\n")
                 self.close()
                 raise
         if self.acquire_print:
@@ -414,8 +436,9 @@ class Oscilloscope():
         else:
             _log.debug("Elapsed time capture and read: %.1f ms" % ((time.time()-start_time)*1e3))
         preamble = self.inst.query(':WAVeform:PREamble?') # preamble (used for calculating time axis, which is the same for all channels)
+        metadata = (preamble, self.model_series)
         if set_running: self.inst.write(':RUN') # set the oscilloscope running again
-        return raw, preamble
+        return raw, metadata
 
     ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~##
 
@@ -599,8 +622,8 @@ def process_data(raw, metadata, wav_format, acquire_print=True):
     ----------
     raw : ~numpy.ndarray or str
         From :func:`~Oscilloscope.capture_and_read`: Raw data, type depending on :attr:`wav_format`
-    metadata : str or float
-        From :func:`~Oscilloscope.capture_and_read`: List of preambles or preamble depending on :attr:`wav_format`
+    metadata : list or tuple
+        From :func:`~Oscilloscope.capture_and_read`: List of preambles or tuple of preamble and model series depending on :attr:`wav_format`. See :ref:`preamble`.
     wav_format : {``'WORD'``, ``'BYTE'``, ``'ASCii'``}
         Specify what waveform type was used for acquiring to choose the correct processing function.
     acquire_print : bool
@@ -637,7 +660,7 @@ def process_data_binary(raw, preambles, acquire_print=True):
     raw : ~numpy.ndarray
         From :func:`~Oscilloscope.capture_and_read_binary`: An ndarray of ints that is converted to voltage values using the preamble.
     preambles : list of str
-        From :func:`~Oscilloscope.capture_and_read_binary`: List of preamble metadata for each channel (list of comma separated ascii values)
+        From :func:`~Oscilloscope.capture_and_read_binary`: List of preamble metadata for each channel (list of comma separated ascii values, see :ref:`preamble`)
     acquire_print : bool
         True prints the number of points captured per channel
 
@@ -648,38 +671,32 @@ def process_data_binary(raw, preambles, acquire_print=True):
     y : :class:`~numpy.ndarray`
         Voltage values, each row represents one channel
     """
+    # pick one preamle and use for calculating the time values (same for all channels)
     preamble = preambles[0].split(',')  # values separated by commas
-    # 0 FORMAT : int16 - 0 = BYTE, 1 = WORD, 4 = ASCII.
-    # 1 TYPE : int16 - 0 = NORMAL, 1 = PEAK DETECT, 2 = AVERAGE
-    num_samples = int(preamble[2])    # POINTS : int32 - number of data points transferred.
-    # 3 COUNT : int32 - 1 and is always 1.
-    xIncr = float(preamble[4])        # XINCREMENT : float64 - time difference between data points.
-    xOrig = float(preamble[5])        # XORIGIN : float64 - always the first data point in memory.
-    xRef = int(preamble[6])           # XREFERENCE : int32 - specifies the data point associated with x-origin.
-    # 7 YINCREMENT : float32 - voltage diff between data points.
-    # 8 YORIGIN : float32 - value is the voltage at center screen.
-    # 9 YREFERENCE : int32 - specifies the data point where y-origin occurs.
-
-    if acquire_print: print("Points captured per channel: ", num_samples)
-    y = np.empty((len(raw), num_samples))
-    for i, data in enumerate(raw):
-        preamble = preambles[i].split(',')
-        yIncr, yOrig, yRef = float(preamble[7]), float(preamble[8]), int(preamble[9])
-        y[i,:] = (data-yRef)*yIncr + yOrig
-    y = y.T # convert y to np array and transpose for vertical channel columns in csv file
+    num_samples = int(float(preamble[2]))
+    xIncr, xOrig, xRef = float(preamble[4]), float(preamble[5]), float(preamble[6])
     x = np.array([(np.arange(num_samples)-xRef)*xIncr + xOrig]) # compute x-values
     x = x.T # make x values vertical
+    if acquire_print:
+        print("Points captured per channel: ", num_samples)
+        _log.info("Points captured per channel: ", num_samples)
+    y = np.empty((len(raw), num_samples))
+    for i, data in enumerate(raw): # process each channel individually
+        preamble = preambles[i].split(',')
+        yIncr, yOrig, yRef = float(preamble[7]), float(preamble[8]), float(preamble[9])
+        y[i,:] = (data-yRef)*yIncr + yOrig
+    y = y.T # convert y to np array and transpose for vertical channel columns in csv file
     return x, y
 
-def process_data_ascii(raw, preamble, acquire_print=True):
+def process_data_ascii(raw, metadata, acquire_print=True):
     """Process raw comma separated ascii data to time values and y voltage values as received from :func:`Oscilloscope.capture_and_read_ascii`
 
     Parameters
     ----------
     raw : str
         From :func:`~Oscilloscope.capture_and_read_ascii`: A string containing a block header and comma separated ascii values
-    preamble : str
-        From :func:`~Oscilloscope.capture_and_read_ascii`: The preamble metadata for one of the channels to calculate time axis (same for all channels)
+    metadata : tuple
+        From :func:`~Oscilloscope.capture_and_read_ascii`: Tuple of the preamble for one of the channels to calculate time axis (same for all channels) and the model series. See :ref:`preamble`.
     acquire_print : bool
         True prints the number of points captured per channel
 
@@ -690,26 +707,25 @@ def process_data_ascii(raw, preamble, acquire_print=True):
     y : :class:`~numpy.ndarray`
         Voltage values, each row represents one channel
     """
+    preamble, model_series = metadata
     preamble = preamble.split(',')  # values separated by commas
-    num_samples = int(preamble[2])    # POINTS : int32 - number of data points transferred.
-    xIncr = float(preamble[4])        # XINCREMENT : float64 - time difference between data points.
-    xOrig = float(preamble[5])        # XORIGIN : float64 - always the first data point in memory.
-    xRef = int(preamble[6])           # XREFERENCE : int32 - specifies the data point associated with x-origin.
-
-    y = []
-    for data in raw:
-        data = data.split(data[:10])[1] # remove first 10 characters (is this a quick but not so intuitive way?)
-        data = data.split(',') # samples separated by commas
-        data = np.array([float(sample) for sample in data])
-        y.append(data) # add ascii data for this channel to y array
-
-    y = np.transpose(np.array(y))
-    num_samples = np.shape(y)[0] # number of samples captured per channel
+    num_samples = int(float(preamble[2]))
+    xIncr, xOrig, xRef = float(preamble[4]), float(preamble[5]), float(preamble[6])
     x = np.array([(np.arange(num_samples)-xRef)*xIncr + xOrig]) # compute x-values
     x = x.T # make list vertical
     if acquire_print:
         print("Points captured per channel: ", num_samples)
         _log.info("Points captured per channel: ", num_samples)
+    y = []
+    for data in raw:
+        if model_series in ['2000']:
+            data = data.split(data[:10])[1] # remove first 10 characters (IEEE block header)
+        elif model_series in ['9000']:
+            data = data.strip().strip(",") # remove newline character at the end of the string
+        data = data.split(',') # samples separated by commas
+        data = np.array([float(sample) for sample in data])
+        y.append(data) # add ascii data for this channel to y array
+    y = np.transpose(np.array(y))
     return x, y
 
 
@@ -809,6 +825,38 @@ def plot_trace(time, y, channel_nums, fname="", show=config._show_plot, savepng=
     if savepng: plt.savefig(fname+".png", bbox_inches='tight')
     if show: plt.show()
     plt.close()
+
+
+def interpret_visa_id(id):
+    """Interprets VISA ID, finds oscilloscope model series if applicable
+
+    Parameters
+    ----------
+    id : str
+        VISA ID as returned by the ``*IDN?`` command
+
+    Returns
+    -------
+    maker : str
+        Maker of the instrument, e.g. Keysight Technologies
+    model : str
+        Model of the instrument
+    serial : str
+        Serial number of the instrument
+    firmware : str
+        Firmware version
+    model_series : str
+        "N/A" unless the instrument is a Keysight/Agilent DSO and MSO oscilloscope.
+        Returns the model series, e.g. '2000'. Returns "not found" if the model name cannot be interpreted.
+    """
+    maker, model, serial, firmware = id.split(",")
+    # find model_series if applicable
+    if model[:3] in ['DSO', 'MSO']:
+        model_number = [c for c in model if c.isdigit()] # find the numbers in the model string
+        model_series = model_number[0]+'000' if not model_number == [] else "not found"  # pick the first number and add 000 or use not found
+    else:
+        model_series = "N/A"
+    return maker, model, serial, firmware, model_series
 
 
 ##============================================================================##

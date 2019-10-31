@@ -144,4 +144,4 @@ obtains and saves a trace with default options being used. Alternatively, the fi
 Scripts in ./scripts
 --------------------
 
-These can be ran as command line scripts from the folder with ``$ python [script].py``. Optional arguments for filename and acquisition mode can be used, such as ``$ python [script].py "otherFileName"``, or ``$ python [script].py "otherFileName" "AVER8"``. Note, no flag specifiers are needed (or allowed) and the sequence of arguments is fixed.
+These can be ran as command line programmes from the scripts folder with ``$ python [script].py [options]``, where the options are as for the installed command line programmes, and can be displayed with the flag ``-h``. 
