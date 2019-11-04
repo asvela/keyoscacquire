@@ -23,7 +23,7 @@ from tqdm import tqdm #progressbar
 import keyoscacquire.config as config
 
 
-def list_visa_devices():
+def list_visa_devices(ask_idn=True):
     """Prints a list of the VISA instruments connected to the computer, including their addresses."""
     import pyvisa
     rm = pyvisa.ResourceManager()
@@ -37,26 +37,35 @@ def list_visa_devices():
             info_object = rm.resource_info(address)
             alias = info_object.alias if info_object.alias is not None else "N/A"
             current_resource_info.extend((str(i), address, alias))
-            try: # open the instrument and get the identity string
-                instrument = rm.open_resource(address)
-                id = instrument.query('*IDN?')
-                current_resource_info.extend(acq.interpret_visa_id(id))
-                instrument.close()
-            except pyvisa.Error as e:
-                could_not_connect.append(i)
-                current_resource_info.extend(["no connection"]*5)
+            if ask_idn:
+                try: # open the instrument and get the identity string
+                    instrument = rm.open_resource(address)
+                    id = instrument.query('*IDN?')
+                    current_resource_info.extend(acq.interpret_visa_id(id))
+                    instrument.close()
+                except pyvisa.Error as e:
+                    could_not_connect.append(i)
+                    current_resource_info.extend(["no connection"]*5)
+                except UnicodeDecodeError as e:
+                    could_not_connect.append(i)
+                    current_resource_info.extend(["UnicodeDecodeError"]*5)
             information.append(current_resource_info)
-        # transpose to lists of property
-        nums, addrs, aliases, makers, models, serials, firmwares, model_series = (list(category) for category in zip(*information))
-        # select what properties to list
-        selection = (nums, addrs, makers, models, model_series, aliases)
-        # build header
-        header_fields = (' #', 'address', 'maker', 'model', 'series', 'alias')
+        if ask_idn:
+            # transpose to lists of property
+            nums, addrs, aliases, makers, models, serials, firmwares, model_series = (list(category) for category in zip(*information))
+            # select what properties to list
+            selection = (nums, addrs, makers, models, model_series, aliases)
+            # name columns
+            header_fields = (' #', 'address', 'maker', 'model', 'series', 'alias')
+            row_format = "{:>{p[0]}s}  {:{p[1]}s}  {:{p[2]}s}  {:{p[3]}s}  {:{p[4]}s}  {:{p[5]}s}"
+        else:
+            selection = [list(category) for category in zip(*information)]
+            header_fields = (' #', 'address', 'alias')
+            row_format = "{:>{p[0]}s}  {:{p[1]}s}  {:{p[2]}s}"
         # find max number of characters for each property to use as padding
         padding = [max([len(instance) for instance in property]) for property in selection]
         # make sure the padding is not smaller than the header field length
         padding = [max(pad, len(field)) for pad, field in zip(padding, header_fields)]
-        row_format = "{:>{p[0]}s}  {:{p[1]}s}  {:{p[2]}s}  {:{p[3]}s}  {:{p[4]}s}  {:{p[5]}s}"
         header = row_format.format(*header_fields, p=padding)
         # print the table
         print("\nVISA devices connected:")
