@@ -46,9 +46,10 @@ def list_visa_devices(ask_idn=True):
                 except pyvisa.Error as e:
                     could_not_connect.append(i)
                     current_resource_info.extend(["no connection"]*5)
-                except UnicodeDecodeError as e:
+                except Exception as ex:
+                    print("(i) Got exception %s when asking instrument #%i for identity." % (ex.__class__.__name__, i))
                     could_not_connect.append(i)
-                    current_resource_info.extend(["UnicodeDecodeError"]*5)
+                    current_resource_info.extend(["Error"]*5)
             information.append(current_resource_info)
         if ask_idn:
             # transpose to lists of property
