@@ -1,5 +1,6 @@
 # Changelog
 
+- v2.0.4: Fixed broken urls
 - v2.0.3: Updated readme to link to new package [keyoscacquire](https://pypi.org/project/keyoscacquire/). The new package's documentation can be found on [read the docs](https://keyoscacquire.rtfd.io). The source is on [github](https://github.com/asvela/keyoscacquire/)
 - v2.0.2: Bugfix for when setting the number of points to transfer
 - v2.0.1: Cosmetic change in README, clarifying changelog for previous version

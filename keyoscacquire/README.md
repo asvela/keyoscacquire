@@ -1,5 +1,3 @@
-# Keysight oscilloscope acquire package
-
 <br>
 <br>
 <br>
