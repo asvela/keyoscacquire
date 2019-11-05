@@ -1,13 +1,27 @@
 # Keysight oscilloscope acquire package
 
+<br>
+<br>
+<br>
+<br>
+
+## This package has now moved to [keyoscacquire](pypi.org/project/keyoscacquire/), and the new package's documentation can be found on [read the docs](keyoscacquire.rdft.io). The source is on [github](github.com/asvela/keyoscacquire/).
+
+<br>
+<br>
+<br>
+<br>
+<br>
+
+# Readme for this version
 
 v2.0.1 // August 2019 // Andreas Svela
 
 ## Overview
 
-This package gives functionality for acquiring traces from Keysight oscilloscopes through a VISA interface, and exports traces as a chosen ASCII format file (default csv) and a png of the trace plot. The Python library `visa` is used for communication. The code has been tested on a Keysight DSO2024A model using a USB connection.
+This package gives functionality for acquiring traces from Keysight oscilloscopes through a VISA interface, and exports traces as a chosen ASCII format file (default csv) and a png of the trace plot. The Python library `pyvisa` is used for communication. The code has been tested on a Keysight DSO2024A model using a USB connection.
 
-The code is structured as a module `keyoscacquire/oscacq.py` containing the engine doing `visa` interfacing in a class `Oscilloscope`, and support functions for data processing/saving. Programmes are located in `keyoscacquire/programmes.py`.  Default options are found in `keyoscacq/config.py`, the files in `/scripts` can be ran from the command line and are essentially the same running the installed executables.
+The code is structured as a module `keyoscacquire/oscacq.py` containing the engine doing `pyvisa` interfacing in a class `Oscilloscope`, and support functions for data processing/saving. Programmes are located in `keyoscacquire/programmes.py`.  Default options are found in `keyoscacq/config.py`, the files in `/scripts` can be ran from the command line and are essentially the same running the installed executables.
 
 ## Installation
 
