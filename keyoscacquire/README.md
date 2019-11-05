@@ -5,7 +5,7 @@
 <br>
 <br>
 
-## This package has now moved to [keyoscacquire](pypi.org/project/keyoscacquire/), and the new package's documentation can be found on [read the docs](keyoscacquire.rdft.io). The source is on [github](github.com/asvela/keyoscacquire/).
+## This package has now moved to [keyoscacquire](https://pypi.org/project/keyoscacquire/), and the new package's documentation can be found on [read the docs](https://keyoscacquire.rtfd.io). The source is on [github](https://github.com/asvela/keyoscacquire/).
 
 <br>
 <br>
