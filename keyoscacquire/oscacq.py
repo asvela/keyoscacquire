@@ -99,11 +99,14 @@ class Oscilloscope():
         ``True`` prints that the capturing starts and the number of points captured
     """
 
-    def __init__(self, address=config._visa_address, timeout=config._timeout):
+    def __init__(self, address=config._visa_address, timeout=config._timeout, verbose=True):
         """See class docstring"""
         self.address = address
         self.timeout = timeout
         self.acquire_print = True
+        if not verbose: self.acquire_print = False
+        self.verbose = verbose
+
         try:
             rm = pyvisa.ResourceManager()
             self.inst = rm.open_resource(address)
@@ -121,12 +124,12 @@ class Oscilloscope():
         self.inst.write(':WAVeform:BYTeorder LSBFirst') # MSBF is default, must be overridden for WORD to work
         # Get information about the connected device
         self.id = self.inst.query('*IDN?').strip() # get the id of the connected device
-        print("Connected to \'%s\'" % self.id)
+        if verbose: print("Connected to \'%s\'" % self.id)
         _, self.model, _, _, self.model_series = interpret_visa_id(self.id)
         if not self.model_series in _supported_series:
-                print("(!) WARNING: This model (%s) is not yet fully supported by keyoscacquire," % self.model)
-                print("             but might work to some extent. keyoscacquire supports Keysight's")
-                print("             InfiniiVision X-series oscilloscopes.")
+                if self.verbose: print("(!) WARNING: This model (%s) is not yet fully supported by keyoscacquire," % self.model)
+                if self.verbose: print("             but might work to some extent. keyoscacquire supports Keysight's")
+                if self.verbose: print("             InfiniiVision X-series oscilloscopes.")
 
 
     def write(self, command):
@@ -220,7 +223,7 @@ class Oscilloscope():
             self.acquire_print = acq_print #set acquiring_print only if not None
 
         self.inst.write(':ACQuire:TYPE ' + self.acq_type)
-        print("  Acquiring type:", self.acq_type)
+        if self.verbose: print("  Acquiring type:", self.acq_type)
         # handle AVER<m> expressions
         if self.acq_type == 'AVER':
             try:
@@ -238,7 +241,7 @@ class Oscilloscope():
         # now set the number of averages parameter if relevant
         if self.acq_type[:4] == 'AVER': # averaging applies AVERage modes only
             self.inst.write(':ACQuire:COUNt ' + str(self.num_averages))
-            print("  # of averages: ", self.num_averages)
+            if self.verbose: print("  # of averages: ", self.num_averages)
 
         ## Set options for waveform export
         self.inst.write(':WAVeform:FORMat ' +  self.wav_format) # choose format for the transmitted waveform]
