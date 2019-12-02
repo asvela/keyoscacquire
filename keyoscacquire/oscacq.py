@@ -42,6 +42,8 @@ class Oscilloscope():
         Example address ``'USB0::1234::1234::MY1234567::INSTR'``
     timeout : int, optional, default :data:`~keyoscacquire.config._timeout`
         Milliseconds before timeout on the channel to the instrument
+    verbose : bool, optional, default True
+        Whether or not to allow print() output. False will suppress everything except errors.
 
     Raises
     ------
