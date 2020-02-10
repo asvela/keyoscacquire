@@ -6,7 +6,9 @@ v3.0: Docs are overrated
 Comprehensive documentation now available on read the docs, added more command line programme options, some function name changes without compatibility, and bug fixes.
 
 v3.0.2 (2020-02-10)
+  - Context manager compatibility (``__enter__`` and ``__exit__`` functions implemented)
   - Adding the function ``get_active_channels`` to query the scope of its active channels
+  - Adding ``verbose`` attribute
 
 v3.0.1 (2019-10-31)
   - Some adaptation for using Infiniium oscilloscopes with limited functionality

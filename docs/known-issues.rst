@@ -12,3 +12,4 @@ Known issues and suggested improvements
     - (feature) Build functionality for pickling measurement to disk and then post-processing for speed-up in consecutive measurements
     - (instrument support) expand support for Infiniium oscilloscopes
     - (docs) Write tutorial page for documentation
+    - (housekeeping) PEP8 compliance and code audit
