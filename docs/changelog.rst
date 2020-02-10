@@ -1,12 +1,15 @@
 Changelog
 =========
 
-v3.0 (2019-10)
---------------
-Comprehensive documentation now available on read the docs, added more command line programme options, some function name changes without compatibility and bug fixes.
+v3.0: Docs are overrated
+------------------------
+Comprehensive documentation now available on read the docs, added more command line programme options, some function name changes without compatibility, and bug fixes.
+
+v3.0.2 (2020-02-10)
+  - Adding the function ``get_active_channels`` to query the scope of its active channels
 
 v3.0.1 (2019-10-31)
-  - Some adaptation for using 9000 series oscilloscopes with limited functionality
+  - Some adaptation for using Infiniium oscilloscopes with limited functionality
   - Expanding the contents of the ``list_visa_devices`` table
   - Bugfix for ascii data processing (originating in v3.0.0)
 
@@ -47,8 +50,9 @@ v3.0.0 (2019-10-28)
 
   - Wrote comprehensive documentation on read the docs
 
-v2.1 (2019-10)
---------------
+
+v2.1: May I have your address?
+------------------------------
 New command line programmes for listing visa devices and finding config
 
 v2.1.0 (2019-10-18)
@@ -67,9 +71,8 @@ v2.1.0 (2019-10-18)
   - And minor cosmetic changes
 
 
-v2.0 (2019-09)
---------------
-
+v2.0: Labels for everyone
+-------------------------
 
 v2.0.1 (2019-09-13)
   - Cosmetic change in README, clarifying changelog for previous version
@@ -80,8 +83,9 @@ v2.0.0 (2019-08-29)
 
   - Added BYTE/WORD issue to README
 
-v1.1 (2019-08)
----------------
+
+v1.1: Need for speed
+--------------------
 
 v1.1.1 (2019-08-14)
   - Logging gives elapsed time in milliseconds
@@ -103,8 +107,8 @@ v1.1.0 (2019-04-04)
     - Changes in README
 
 
-v1.0 (2019-03)
---------------
+v1.0: Hello world
+-----------------
 
 v1.0 (2019-03-07)
   - First release on pypi

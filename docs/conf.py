@@ -16,7 +16,7 @@ print("source directory for package:", source_dir)
 sys.path.insert(0, source_dir)
 
 # Get the version from the version file
-with open(os.path.join(source_dir, 'VERSION')) as version_file:
+with open(os.path.join(source_dir, 'keyoscacquire', 'VERSION')) as version_file:
     ver = version_file.read().strip()
 
 # -- Project information -----------------------------------------------------

@@ -260,6 +260,20 @@ class Oscilloscope():
                 self.inst.write(':WAVeform:POINts ' + str(self.num_points))
             _log.debug("Number of points set to: ", self.num_points)
 
+    def get_active_channels(self):
+        """Get list of the currently active channels on the instrument
+
+        Returns
+        -------
+        list of chars
+            list of the active channels, example ``['1', '3']``
+        """
+        channels = np.array(['1', '2', '3', '4'])
+        displayed_channels = [self.inst.query(':CHANnel'+channel+':DISPlay?')[0] for channel in channels] # querying DISP for each channel to determine which channels are currently displayed
+        channel_mask = np.array([bool(int(i)) for i in displayed_channels]) # get a mask of bools for the channels that are on [need the int() as int('0') = True]
+        channel_nums = channels[channel_mask] # apply mask to the channel list
+        return channel_nums
+
     def determine_channels(self, source_type='CHANnel', channel_nums=config._ch_nums):
         """Decide the channels to be acquired, or determine by checking active channels on the oscilloscope.
 
@@ -284,10 +298,7 @@ class Oscilloscope():
             list of the channels, example ``['1', '3']``
         """
         if channel_nums in [[''], ['active'], 'active']: # if no channels specified, find the channels currently active and acquire from those
-            channels = np.array(['1', '2', '3', '4'])
-            displayed_channels = [self.inst.query(':CHANnel'+channel+':DISPlay?')[0] for channel in channels] # querying DISP for each channel to determine which channels are currently displayed
-            channel_mask = np.array([bool(int(i)) for i in displayed_channels]) # get a mask of bools for the channels that are on [need the int() as int('0') = True]
-            channel_nums = channels[channel_mask] # apply mask to the channel list
+            channel_nums = self.get_active_channels()
         sources = [source_type+channel for channel in channel_nums] # build list of sources
         sourcesstring = ", ".join(sources) # make string of sources
         if self.acquire_print: print("Acquire from sources", sourcesstring)

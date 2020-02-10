@@ -31,6 +31,7 @@ def list_visa_devices(ask_idn=True):
     if len(resources) == 0:
         print("\nNo VISA devices found!")
     else:
+        print("Found {} resources. Now obtaining information about them..".format(len(resources)))
         information, could_not_connect = [], []
         for i, address in enumerate(resources): # loop through resources to learn more about them
             current_resource_info = []
