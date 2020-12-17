@@ -13,7 +13,7 @@ import pyvisa
 import numpy as np
 import matplotlib.pyplot as plt
 
-import keyoscacquire.oscacq as koa
+import keyoscacquire as koa
 
 format_dict = {0: "BYTE", 1: "WORD", 4: "ASCii"}
 formats = ['BYTE', 'WORD', 'ASCii']
@@ -23,15 +23,15 @@ print("\n## ~~~~~~~~~~~~~~~~~ KEYOSCAQUIRE ~~~~~~~~~~~~~~~~~~ ##")
 
 scope = koa.Oscilloscope(address=visa_address)
 scope.set_acquiring_options(num_points=2000)
-sources, sourcesstring, channel_nums = scope.determine_channels(channel_nums=['1'])
+scope.set_channels_for_capture(channel_nums=['1'])
 scope.stop()
 
 times, values = [[], []], [[], []]
 for wav_format in formats:
     print("\nWaveform format", wav_format)
     scope.set_acquiring_options(wav_format=wav_format)
-    data = scope.capture_and_read(sources, sourcesstring, set_running=False)
-    time, vals = koa.process_data(*data, wav_format, acquire_print=True)
+    scope.capture_and_read(set_running=False)
+    time, vals = koa.process_data(scope.raw, scope.metadata, wav_format, acquire_print=True)
     times[0].append(time)
     values[0].append(vals)
 

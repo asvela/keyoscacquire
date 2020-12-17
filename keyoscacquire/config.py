@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Default options for keyoscacquire"""
 
-#: address of instrument
+#: VISA address of instrument
 _visa_address = 'USB0::1234::1234::MY1234567::INSTR'
 #: waveform format transferred from the oscilloscope to the computer
 #: WORD formatted data is transferred as 16-bit uint.

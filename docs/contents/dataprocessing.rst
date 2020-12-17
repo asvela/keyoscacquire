@@ -1,28 +1,33 @@
 .. _data-proc:
 
-Data processing and file saving
-*******************************
+Data processing, file saving & loading
+**************************************
 
 .. py:currentmodule:: keyoscacquire.oscacq
 
-The :mod:`keyoscacquire.oscacq` module contains function for processing the raw data captured with :class:`Oscilloscope`, and for saving the processed data to files and plots.
+The :mod:`keyoscacquire.oscacq` module contains function for processing
+the raw data captured with :class:`Oscilloscope`, and :mod:`keyoscacquire.traceio`
+for saving the processed data to files and plots.
 
 Data processing
 ---------------
 
-The output from the :func:`Oscilloscope.capture_and_read` function is processed by :func:`process_data`, a wrapper function that sends the data to the respective binary or ascii processing function.
+The output from the :func:`Oscilloscope.capture_and_read` function is processed
+by :func:`process_data`, a wrapper function that sends the data to the
+respective binary or ascii processing function.
 
 .. autofunction:: process_data
-.. autofunction:: process_data_binary
-.. autofunction:: process_data_ascii
 
 
-File saving
------------
+File saving (:mod:`keyoscacquire.traceio`)
+------------------------------------------
 
-The package has built-in functions for saving traces to :mod:`numpy.lib.format` files or ascii values (the latter is slower but will give a header that can be customised, for instance :func:`Oscilloscope.generate_file_header` can be used).
+The package has built-in functions for saving traces to npy format
+(see :mod:`numpy.lib.format`) files or ascii values (the latter is slower but will
+give a header that can be customised, :func:`Oscilloscope.generate_file_header`
+is used by default).
 
-.. autofunction:: save_trace
-.. autofunction:: save_trace_npy
-.. autofunction:: plot_trace
-.. autofunction:: check_file
+.. autofunction:: keyoscacquire.traceio.save_trace
+.. autofunction:: keyoscacquire.traceio.plot_trace
+.. autofunction:: keyoscacquire.traceio.load_trace
+.. autofunction:: keyoscacquire.traceio.load_header

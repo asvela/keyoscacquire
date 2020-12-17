@@ -26,15 +26,15 @@ import keyoscacquire.config as config
 ##============================================================================##
 
 # Help strings
-acq_help = "The acquire type: {HRESolution, NORMal, AVER<m>} where <m> is the number of averages in range [2, 65536]. Defaults to \'"+config._acq_type+"\'."
-wav_help = "The waveform format: {BYTE, WORD, ASCii}. \nDefaults to \'"+config._waveform_format+"\'."
-file_help = "The filename base, (without extension, \'"+config._filetype+"\' is added). Defaults to \'"+config._filename+"\'."
-visa_help = "Visa address of instrument. To find the visa addresses of the instruments connected to the computer run 'list_visa_devices' in the command line. Defaults to \'"+config._visa_address+"\'."
-timeout_help = "Milliseconds before timeout on the channel to the instrument. Defaults to "+str(config._timeout)+"."
+acq_help = f"The acquire type: {{HRESolution, NORMal, AVER<m>}} where <m> is the number of averages in range [2, 65536]. Defaults to '{config._acq_type}'."
+wav_help = f"The waveform format: {{BYTE, WORD, ASCii}}. \nDefaults to '{config._waveform_format}'."
+file_help = f"The filename base, (without extension, '{config._filetype}' is added). Defaults to '{config._filename}'."
+visa_help = f"Visa address of instrument. To find the visa addresses of the instruments connected to the computer run 'list_visa_devices' in the command line. Defaults to '{config._visa_address}."
+timeout_help = f"Milliseconds before timeout on the channel to the instrument. Defaults to {config._timeout}."
 default_channels = " ".join(config._ch_nums) if isinstance(config._ch_nums, list) else config._ch_nums
-channels_help = "List of the channel numbers to be acquired, for example '1 3' (without ') or 'active' (without ') to capture all the currently active channels on the oscilloscope. Defaults to \'"+default_channels+"\'."
-points_help = "Use 0 to get the maximum number of points, or set a smaller number to speed up the acquisition and transfer. Defaults to 0."
-delim_help = "Delimiter used between filename and filenumber (before filetype). Defaults to \'"+config._file_delimiter+"\'."
+channels_help = f"List of the channel numbers to be acquired, for example '1 3' (without ') or 'active' (without ') to capture all the currently active channels on the oscilloscope. Defaults to {default_channels}'."
+points_help = f"Use 0 to get the maximum number of points, or set a smaller number to speed up the acquisition and transfer. Defaults to 0."
+delim_help = f"Delimiter used between filename and filenumber (before filetype). Defaults to '{config._file_delimiter}'."
 
 def connect_each_time_cli():
     """Function installed on the command line: Obtains and stores multiple traces,
@@ -121,8 +121,11 @@ def num_traces_cli():
 def list_visa_devices_cli():
     """Function installed on the command line: Lists VISA devices"""
     parser = argparse.ArgumentParser(description=acqprog.list_visa_devices.__doc__)
+    parser.add_argument('-n', action="store_false",
+                        help=("If this flag is set, the programme will not query "
+                              "the instruments for their IDNs."))
     args = parser.parse_args()
-    acqprog.list_visa_devices()
+    acqprog.list_visa_devices(ask_idn=args.n)
 
 def path_of_config_cli():
     """Function installed on the command line: Prints the full path of the config module"""
