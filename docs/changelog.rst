@@ -14,7 +14,8 @@ v4.0.0 (2020-12)
   - More attributes are used to make the information accessible not only through returns
 
     * Captured data stored to ``Oscilloscope.time`` and ``Oscilloscope.y``
-    * Fname used (not the argument as it might be updated duing saving process)
+    * The filename finally used when saving (which might not be the same as the
+      the argument passed as a filename check happens to avoid overwrite) is
       stored in ``Oscilloscope.fname``
     * ``Oscilloscope.raw`` and ``Oscilloscope.metadata`` are now available
 
@@ -43,7 +44,8 @@ v4.0.0 (2020-12)
     ask for instrument IDNs; and the cli programme will display the instrument's
     firmware rather than Keysight model series.
 
-  - Indicating functions for internal and external use by prefix ``_``
+  - Indicating functions for internal use only and read only attributes with
+    prefix ``_``, see name changes below
 
   - Documentation updates, including moving from read-the-docs theme to Furo theme
 
@@ -76,6 +78,11 @@ v4.0.0 (2020-12)
       (also major changes in the function)
     * ``Oscilloscope.capture_and_read_binary()`` -> ``Oscilloscope._read_binary()``
       (also major changes in the function)
+    * ``Oscilloscope.inst`` -> ``Oscilloscope._inst``
+    * ``Oscilloscope.id`` -> ``Oscilloscope._id``
+    * ``Oscilloscope.address`` -> ``Oscilloscope._address``
+    * ``Oscilloscope._model`` -> ``Oscilloscope._model``
+    * ``Oscilloscope.model_series`` -> ``Oscilloscope._model_series``
 
   - *No compatibility*: Moved functions
 

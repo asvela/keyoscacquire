@@ -61,19 +61,19 @@ class Oscilloscope:
 
     Attributes
     ----------
-    inst : pyvisa.resources.Resource
+    _inst : pyvisa.resources.Resource
         The oscilloscope PyVISA resource
-    id : str
+    _id : str
         The maker, model, serial and firmware version of the scope. Examples::
 
             'AGILENT TECHNOLOGIES,DSO-X 2024A,MY1234567,12.34.567891234'
             'KEYSIGHT TECHNOLOGIES,MSO9104A,MY12345678,06.30.00609'
 
-    model : str
+    _model : str
         The instrument model name
-    model_series : str
+    _model_series : str
         The model series, e.g. '2000' for a DSO-X 2024A. See :func:`keyoscacquire.auxiliary.interpret_visa_id`.
-    address : str
+    _address : str
         Visa address of instrument
     timeout : int
         Milliseconds before timeout on the channel to the instrument
@@ -121,47 +121,51 @@ class Oscilloscope:
     metadata = None
     time = None
     y = None
-    source_type = 'CHANNel'
+    source_type = 'CHAN'
     fname = config._filename
     ext = config._filetype
     savepng = config._export_png
     showplot = config._show_plot
+    channel_nums = config._ch_nums
 
     def __init__(self, address=config._visa_address, timeout=config._timeout, verbose=True):
         """See class docstring"""
-        self.address = address
+        self._address = address
         self.timeout = timeout
         self.verbose = verbose
         self.verbose_acquistion = verbose
         # Connect to the scope
         try:
             rm = pyvisa.ResourceManager()
-            self.inst = rm.open_resource(address)
+            self._inst = rm.open_resource(address)
         except pyvisa.Error as err:
             print(f"\n\nCould not connect to '{address}', see traceback below:\n")
             raise
-        self.inst.timeout = self.timeout
+        self._inst.timeout = self.timeout
         # For TCP/IP socket connections enable the read Termination Character, or reads will timeout
-        if self.inst.resource_name.endswith('SOCKET'):
-            self.inst.read_termination = '\n'
+        if self._inst.resource_name.endswith('SOCKET'):
+            self._inst.read_termination = '\n'
         # Clear the status data structures, the device-defined error queue, and the Request-for-OPC flag
-        self.inst.write('*CLS')
+        self._inst.write('*CLS')
         # Make sure WORD and BYTE data is transeferred as signed ints and lease significant bit first
-        self.inst.write(':WAVeform:UNSigned OFF')
-        self.inst.write(':WAVeform:BYTeorder LSBFirst') # MSBF is default, must be overridden for WORD to work
+        self._inst.write(':WAVeform:UNSigned OFF')
+        self._inst.write(':WAVeform:BYTeorder LSBFirst') # MSBF is default, must be overridden for WORD to work
         # Get information about the connected device
-        self.id = self.inst.query('*IDN?').strip() # get the id of the connected device
+        self._id = self.query('*IDN?')
         if self.verbose:
-            print(f"Connected to '{self.id}'")
-        _, self.model, _, _, self.model_series = chsy.interpret_visa_id(self.id)
-        if not self.model_series in _supported_series:
-                print("(!) WARNING: This model (%s) is not yet fully supported by keyoscacquire," % self.model)
+            print(f"Connected to '{self._id}'")
+        _, self._model, _, _, self._model_series = auxiliary.interpret_visa_id(self._id)
+        if not self._model_series in _supported_series:
+                print("(!) WARNING: This model (%s) is not yet fully supported by keyoscacquire," % self._model)
                 print("             but might work to some extent. keyoscacquire supports Keysight's")
                 print("             InfiniiVision X-series oscilloscopes.")
         # Populate attributes and set standard settings
+        if self.verbose:
+            print("Current settings:")
         self.set_acquiring_options(wav_format=config._waveform_format, acq_type=config._acq_type,
                                    num_averages=config._num_avg, p_mode='RAW', num_points=0,
                                    verbose_acquistion=verbose)
+        print("  ", end="")
         self.set_channels_for_capture(channel_nums=config._ch_nums)
 
     def __enter__(self):
@@ -177,24 +181,40 @@ class Oscilloscope:
         ----------
         command : str
             VISA command to be written"""
-        self.inst.write(command)
+        self._inst.write(command)
 
-    def query(self, command):
+    def query(self, command, action=""):
         """Query a VISA command to the oscilloscope.
 
         Parameters
         ----------
         command : str
-            VISA query"""
-        return self.inst.query(command)
+            VISA query
+        action : str, default ""
+
+        """
+        try:
+            return self._inst.query(command).strip()
+        except pyvisa.Error as err:
+            if action:
+                msg = f"{action} (command '{command}')"
+            else:
+                msg = f"query '{command}'"
+            print(f"\nVisaError: {err}\n  When trying {msg}.")
+            print(f"  Have you checked that the timeout (currently {self.timeout:,d} ms) is sufficently long?")
+            try:
+                print(f"Latest error from the oscilloscope: '{self.get_error()}'\n")
+            except Exception:
+                print("Could not retrieve error from the oscilloscope")
+            raise
 
     def run(self):
         """Set the ocilloscope to running mode."""
-        self.inst.write(':RUN')
+        self._inst.write(':RUN')
 
     def stop(self):
         """Stop the oscilloscope."""
-        self.inst.write(':STOP')
+        self._inst.write(':STOP')
 
     def is_running(self):
         """Determine if the oscilloscope is running.
@@ -205,7 +225,7 @@ class Oscilloscope:
             ``True`` if running, ``False`` otherwise
         """
         # The third bit of the operation register is 1 if the instrument is running
-        reg = int(self.inst.query(':OPERegister:CONDition?'))
+        reg = int(self.query(':OPERegister:CONDition?'))
         return (reg & 8) == 8
 
     def close(self, set_running=True):
@@ -220,8 +240,8 @@ class Oscilloscope:
         # Set the oscilloscope running before closing the connection
         if set_running:
             self.run()
-        self.inst.close()
-        _log.debug(f"Closed connection to '{self.id}'")
+        self._inst.close()
+        _log.debug(f"Closed connection to '{self._id}'")
 
     def get_error(self):
         """Get the latest error
@@ -231,7 +251,8 @@ class Oscilloscope:
         str
             error number,description
         """
-        return self.query(":SYSTem:ERRor?").strip()
+        # Do not use self.query here as that can lead to infinite nesting!
+        return self._inst.query(":SYSTem:ERRor?")
 
     def get_active_channels(self):
         """Get list of the currently active channels on the instrument
@@ -243,7 +264,7 @@ class Oscilloscope:
         """
         channels = np.array(['1', '2', '3', '4'])
         # querying DISP for each channel to determine which channels are currently displayed
-        displayed_channels = [self.inst.query(f":CHANnel{channel}:DISPlay?")[0] for channel in channels]
+        displayed_channels = [self.query(f":CHANnel{channel}:DISPlay?")[0] for channel in channels]
         # get a mask of bools for the channels that are on [need the int() as bool('0') = True]
         channel_mask = np.array([bool(int(i)) for i in displayed_channels])
         # apply mask to the channel list
@@ -300,14 +321,14 @@ class Oscilloscope:
                 else:
                     if num_averages is not None:
                         self.num_averages = num_averages
-        self.inst.write(':ACQuire:TYPE ' + self.acq_type)
+        self._inst.write(':ACQuire:TYPE ' + self.acq_type)
         if self.verbose:
             print("  Acquisition type:", self.acq_type)
         # Check that self.num_averages is within the acceptable range
         if self.acq_type == 'AVER':
             if not (1 <= self.num_averages <= 65536):
                 raise ValueError(f"\nThe number of averages {self.num_averages} is out of range.")
-            self.inst.write(f":ACQuire:COUNt {self.num_averages}")
+            self._inst.write(f":ACQuire:COUNt {self.num_averages}")
             if self.verbose:
                 print("  # of averages: ", self.num_averages)
         # Set options for waveform export
@@ -331,7 +352,7 @@ class Oscilloscope:
         """
         # Choose format for the transmitted waveform
         if wav_format is not None:
-            self.inst.write(f":WAVeform:FORMat {wav_format}")
+            self._inst.write(f":WAVeform:FORMat {wav_format}")
             self.wav_format = wav_format
         if p_mode is not None:
             self.p_mode = p_mode
@@ -341,23 +362,24 @@ class Oscilloscope:
             self.p_mode = 'NORM'
             _log.debug(f":WAVeform:POINts:MODE overridden (from {p_mode}) to "
                         "NORMal due to :ACQuire:TYPE:AVERage.")
-        self.inst.write(f":WAVeform:POINts:MODE {self.p_mode}")
+        self._inst.write(f":WAVeform:POINts:MODE {self.p_mode}")
         # Set to maximum number of points if
-        if num_points == 0:
-            self.inst.write(f":WAVeform:POINts MAXimum")
-            _log.debug("Number of points set to: MAX")
-            self.num_points = num_points
-        # If number of points has been specified, tell the instrument to
-        # use this number of points
-        elif num_points > 0:
-            if self.model_series in _supported_series:
-                self.inst.write(f":WAVeform:POINts {self.num_points}")
-            elif self.model_series in ['9000']:
-                self.inst.write(f":ACQuire:POINts {self.num_points}")
-            else:
-                self.inst.write(f":WAVeform:POINts {self.num_points}")
-            _log.debug("Number of points set to: ", self.num_points)
-            self.num_points = num_points
+        if num_points is not None:
+            if num_points == 0:
+                self._inst.write(f":WAVeform:POINts MAXimum")
+                _log.debug("Number of points set to: MAX")
+                self.num_points = num_points
+            # If number of points has been specified, tell the instrument to
+            # use this number of points
+            elif num_points > 0:
+                if self._model_series in _supported_series:
+                    self._inst.write(f":WAVeform:POINts {self.num_points}")
+                elif self._model_series in ['9000']:
+                    self._inst.write(f":ACQuire:POINts {self.num_points}")
+                else:
+                    self._inst.write(f":WAVeform:POINts {self.num_points}")
+                _log.debug("Number of points set to: ", self.num_points)
+                self.num_points = num_points
 
     ## Capture and read functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
 
@@ -434,7 +456,7 @@ class Oscilloscope:
             # DIGitize is a specialized RUN command.
             # Waveforms are acquired according to the settings of the :ACQuire commands.
             # When acquisition is complete, the instrument is stopped.
-            self.inst.write(':DIGitize ' + self.sourcesstring)
+            self._inst.write(':DIGitize ' + self.sourcesstring)
         ## Read from the scope
         if self.wav_format[:3] in ['WOR', 'BYT']:
             self._read_binary(datatype=_datatypes[self.wav_format])
@@ -481,22 +503,20 @@ class Oscilloscope:
         # Loop through all the sources
         for source in self.sources:
             # Select the channel for which the succeeding WAVeform commands applies to
-            self.inst.write(':WAVeform:SOURce ' + source)
+            self._inst.write(':WAVeform:SOURce ' + source)
             try:
                 # obtain comma separated metadata values for processing of raw data for this source
-                self.metadata.append(self.inst.query(':WAVeform:PREamble?'))
+                self.metadata.append(self.query(':WAVeform:PREamble?'))
                 # obtain the data
                 # read out data for this source
-                self.raw.append(self.inst.query_binary_values(':WAVeform:DATA?', datatype=datatype, container=np.array))
+                self.raw.append(self._inst.query_binary_values(':WAVeform:DATA?', datatype=datatype, container=np.array))
             except pyvisa.Error as err:
-                print(f"\n\nError: Failed to obtain waveform, have you checked that"
-                      f" the timeout (currently {self.timeout:,d} ms) is sufficently long?")
+                print(f"\n\nVisaError: {err}\n  When trying to obtain the waveform.")
+                print(f"  Have you checked that the timeout (currently {self.timeout:,d} ms) is sufficently long?")
                 try:
                     print(f"Latest error from the oscilloscope: '{self.get_error()}'\n")
                 except Exception:
                     print("Could not retrieve error from the oscilloscope")
-                self.close()
-                print(err)
                 raise
 
     def _read_ascii(self):
@@ -524,24 +544,13 @@ class Oscilloscope:
         # Loop through all the sources
         for source in self.sources:
             # Select the channel for which the succeeding WAVeform commands applies to
-            self.inst.write(':WAVeform:SOURce ' + source)
-            try:
-                # Read out data for this source
-                self.raw.append(self.inst.query(':WAVeform:DATA?'))
-            except pyvisa.Error:
-                print(f"\nVisaError: Failed to obtain waveform, have you checked that"
-                      f" the timeout (currently {self.timeout:,d} ms) is sufficently long?")
-                try:
-                    print(f"Latest error from the oscilloscope: '{self.get_error()}'\n")
-                except Exception:
-                    print("Could not retrieve error from the oscilloscope")
-                self.close()
-                print(err)
-                raise
+            self._inst.write(':WAVeform:SOURce ' + source)
+            # Read out data for this source
+            self.raw.append(self.query(':WAVeform:DATA?', action="obtain the waveform"))
         # Get the preamble (used for calculating time axis, which is the same
         # for all channels)
-        preamble = self.inst.query(':WAVeform:PREamble?')
-        self.metadata = (preamble, self.model_series)
+        preamble = self.query(':WAVeform:PREamble?')
+        self.metadata = (preamble, self._model_series)
 
 
     ## Building functions to get a trace and various option setting and processing ##
@@ -576,7 +585,7 @@ class Oscilloscope:
         # Restore self.verbose_acquistion to previous setting
         if verbose_acquistion is not None:
             self.verbose_acquistion = temp
-        return self.time, self.y, self.num_channels
+        return self.time, self.y, self.channel_nums
 
     def set_options_get_trace(self, channel_nums=None, source_type=None,
                               wav_format=None, acq_type=None,
@@ -620,7 +629,7 @@ class Oscilloscope:
                                    num_averages=num_averages, p_mode=p_mode,
                                    num_points=num_points)
         ## Select sources
-        self.set_channels_for_capture(source_type=source_type, channel_nums=channel_nums)
+        self.set_channels_for_capture(channel_nums=channel_nums)
         ## Capture, read and process data
         self.get_trace()
         return self.time, self.y, self.channel_nums
@@ -628,7 +637,8 @@ class Oscilloscope:
     def set_options_get_trace_save(self, fname=None, ext=None,
                                    channel_nums=None, source_type=None,
                                    wav_format=None, acq_type=None,
-                                   num_averages=None, p_mode=None, num_points=None):
+                                   num_averages=None, p_mode=None,
+                                   num_points=None, additional_header_info=None):
         """Get trace and save the trace to a file and plot to png.
 
         Filename is recursively checked to ensure no overwrite.
@@ -670,7 +680,7 @@ class Oscilloscope:
         self.set_options_get_trace(channel_nums=channel_nums, source_type=source_type,
                                    wav_format=wav_format, acq_type=acq_type, num_averages=num_averages,
                                    p_mode=p_mode, num_points=num_points)
-        self.save_trace(fname, ext)
+        self.save_trace(fname, ext, additional_header_info=additional_header_info)
 
     def generate_file_header(self, channels=None, additional_line=None, timestamp=True):
         """Generate string to be used as file header for saved files
@@ -734,9 +744,10 @@ class Oscilloscope:
         channels = self.channel_nums if channels is None else channels
         ch_str = ",".join(channels)
         channels_line = f"time,{ch_str}"
-        return self.id+"\n"+mode_line+timestamp_line+add_line+channels_line
+        return self._id+"\n"+mode_line+timestamp_line+add_line+channels_line
 
-    def save_trace(self, fname=None, ext=None, savepng=None, showplot=None):
+    def save_trace(self, fname=None, ext=None, additional_header_info=None,
+                   savepng=None, showplot=None):
         """Save the most recent trace to fname+ext. Will check if the filename
         exists, and let the user append to the fname if that is the case.
 
@@ -751,25 +762,33 @@ class Oscilloscope:
         showplot : bool, default :data:`~keyoscacquire.config._show_plot`
             Choose whether to show a plot of the trace
         """
-        if fname is not None:
-            self.fname = fname
-        if ext is not None:
-            self.ext = ext
-        if savepng is not None:
-            self.savepng = savepng
-        if showplot is not None:
-            self.showplot = showplot
-        self.fname = chsy.check_file(self.fname, self.ext)
-        traceio.plot_trace(self.time, self.y, self.channel_nums, fname=self.fname,
-                           showplot=self.showplot, savepng=self.savepng)
-        head = self.generate_file_header()
-        traceio.save_trace(self.fname, self.time, self.y, fileheader=head, ext=self.ext,
-                           print_filename=self.verbose_acquistion)
+        if not self.time is None:
+            if fname is not None:
+                self.fname = fname
+            if ext is not None:
+                self.ext = ext
+            if savepng is not None:
+                self.savepng = savepng
+            if showplot is not None:
+                self.showplot = showplot
+            self.fname = auxiliary.check_file(self.fname, self.ext)
+            traceio.plot_trace(self.time, self.y, self.channel_nums, fname=self.fname,
+                               showplot=self.showplot, savepng=self.savepng)
+            head = self.generate_file_header(additional_line=additional_header_info)
+            traceio.save_trace(self.fname, self.time, self.y, fileheader=head, ext=self.ext,
+                               print_filename=self.verbose_acquistion)
+        else:
+            print("(!) No trace has been acquired yet, use get_trace()")
+            _log.info("(!) No trace has been acquired yet, use get_trace()")
 
     def plot_trace(self):
         """Plot and show the most recent trace"""
-        traceio.plot_trace(self.time, self.y, self.channel_nums,
-                           savepng=False, show=True)
+        if not self.time is None:
+            traceio.plot_trace(self.time, self.y, self.channel_nums,
+                               savepng=False, showplot=True)
+        else:
+            print("(!) No trace has been acquired yet, use get_trace()")
+            _log.info("(!) No trace has been acquired yet, use get_trace()")
 
 ##============================================================================##
 ##                           DATA PROCESSING                                  ##

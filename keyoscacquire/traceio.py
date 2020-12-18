@@ -5,9 +5,11 @@ Trace input/output functions for the keyoscacquire package
 Andreas Svela // 2020
 """
 
+import os
 import logging; _log = logging.getLogger(__name__)
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 
 import keyoscacquire.config as config
 import keyoscacquire.oscacq as oscacq
@@ -46,7 +48,7 @@ def save_trace(fname, time, y, fileheader="", ext=config._filetype,
     if os.path.exists(fname+ext):
         raise RuntimeError(f"{fname+ext} already exists")
     if print_filename:
-        print(f"Saving trace to {fname+ext}\n")
+        print(f"Saving trace to: {fname+ext}\n")
     data = np.append(time, y, axis=1) # make one array with columns x y1 y2 ..
     if ext == ".npy":
         if fileheader or nowarn:
@@ -77,7 +79,8 @@ def save_trace_npy(fname, time, y, print_filename=True, **kwargs):
     save_trace(fname, time, y, ext=".npy", nowarn=True, print_filename=print_filename)
 
 
-def plot_trace(time, y, channel_nums, fname="", show=config._show_plot, savepng=config._export_png):
+def plot_trace(time, y, channel_nums, fname="", showplot=config._show_plot,
+               savepng=config._export_png):
     """Plots the trace with oscilloscope channel screen colours according to
     the Keysight colourmap and saves as a png.
 
@@ -103,7 +106,7 @@ def plot_trace(time, y, channel_nums, fname="", show=config._show_plot, savepng=
         plt.plot(time, vals, color=oscacq._screen_colors[channel_nums[i]])
     if savepng:
         plt.savefig(fname+".png", bbox_inches='tight')
-    if show:
+    if showplot:
         plt.show()
     plt.close()
 

@@ -15,7 +15,7 @@ with open(os.path.join(current_dir, 'VERSION')) as version_file:
 import logging; _log = logging.getLogger(__name__)
 
 import keyoscacquire.oscacq as oscacq
-import keyoscacquire.auxiliary as traceio
+import keyoscacquire.traceio as traceio
 import keyoscacquire.config as config
 import keyoscacquire.programmes as programmes
 import keyoscacquire.auxiliary as auxiliary
