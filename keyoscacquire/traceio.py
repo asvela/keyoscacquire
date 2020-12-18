@@ -34,7 +34,7 @@ def save_trace(fname, time, y, fileheader="", ext=config._filetype,
     y : ~numpy.ndarray
         Voltage values, same sequence as channel_nums
     fileheader : str, default ``""``
-        Header of file, use :func:`generate_file_header`
+        Header of file, use for instance :meth:`Oscilloscope.generate_file_header`
     ext : str, default :data:`~keyoscacquire.config._filetype`
         Choose the filetype of the saved trace
     print_filename : bool, default ``True``
@@ -51,9 +51,9 @@ def save_trace(fname, time, y, fileheader="", ext=config._filetype,
         print(f"Saving trace to: {fname+ext}\n")
     data = np.append(time, y, axis=1) # make one array with columns x y1 y2 ..
     if ext == ".npy":
-        if fileheader or nowarn:
-            _log.warning(f"File header {fileheader} is not saved as file format npy is chosen. "
-                          "To surpress this warning, use save_trace_npy() instead or the nowarn flag")
+        if fileheader and not nowarn:
+            _log.warning(f"(!) WARNING: The file header\n\n{fileheader}\n\nis not saved as file format npy is chosen. "
+                          "\nTo suppress this warning, use the nowarn flag.")
         np.save(fname+".npy", data)
     else:
         np.savetxt(fname+ext, data, delimiter=",", header=fileheader)
@@ -79,7 +79,7 @@ def save_trace_npy(fname, time, y, print_filename=True, **kwargs):
     save_trace(fname, time, y, ext=".npy", nowarn=True, print_filename=print_filename)
 
 
-def plot_trace(time, y, channel_nums, fname="", showplot=config._show_plot,
+def plot_trace(time, y, channels, fname="", showplot=config._show_plot,
                savepng=config._export_png):
     """Plots the trace with oscilloscope channel screen colours according to
     the Keysight colourmap and saves as a png.
@@ -93,8 +93,8 @@ def plot_trace(time, y, channel_nums, fname="", showplot=config._show_plot,
         Time axis for the measurement
     y : ~numpy.ndarray
         Voltage values, same sequence as channel_nums
-    channel_nums : list of chars
-        list of the channels obtained, example ['1', '3']
+    channels : list of ints
+        list of the channels obtained, example [1, 3]
     fname : str, default ``""``
         Filename of possible exported png
     show : bool, default :data:`~keyoscacquire.config._show_plot`
@@ -103,7 +103,7 @@ def plot_trace(time, y, channel_nums, fname="", showplot=config._show_plot,
         ``True`` exports the plot to ``fname``.png
     """
     for i, vals in enumerate(np.transpose(y)): # for each channel
-        plt.plot(time, vals, color=oscacq._screen_colors[channel_nums[i]])
+        plt.plot(time, vals, color=oscacq._screen_colors[channels[i]])
     if savepng:
         plt.savefig(fname+".png", bbox_inches='tight')
     if showplot:

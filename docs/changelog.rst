@@ -8,16 +8,17 @@ in 2019 I had very limited Python development experience, so it was time to make
 a few better choices now to make the API easier to use.
 
 That means that there are quite a few non-compatible changes to previous versions,
-all of which are detailed below.
+all of which are detailed below. I am not planning further extensive revisions
+like this.
 
 v4.0.0 (2020-12)
   - More attributes are used to make the information accessible not only through returns
 
-    * Captured data stored to ``Oscilloscope.time`` and ``Oscilloscope.y``
+    * Captured data stored to ``Oscilloscope._time`` and ``Oscilloscope._values``
     * The filename finally used when saving (which might not be the same as the
       the argument passed as a filename check happens to avoid overwrite) is
       stored in ``Oscilloscope.fname``
-    * ``Oscilloscope.raw`` and ``Oscilloscope.metadata`` are now available
+    * ``Oscilloscope._raw`` and ``Oscilloscope._metadata`` with unprocessed data
 
   - More active use of attributes that are carried forward rather than always
     setting the arguments of methods in the ``Oscilloscope`` class. This
@@ -30,11 +31,12 @@ v4.0.0 (2020-12)
     maximum number of points available.
 
   - New ``keyoscacquire.traceio.load_trace()`` function for loading saved a trace
+    from disk to pandas dataframe or numpy array
 
   - Moved save and plot functions to ``keyoscacquire.traceio``, but are imported
     in ``oscacq`` to keep compatibility
 
-  - ``Oscilloscope.read_and_capture()`` will now try to read the error from the
+  - ``Oscilloscope.query()`` will now try to read the error from the
     instrument if pyvisa fails
 
   - Importing ``keyoscacquire.programmes`` in module ``init.py`` to make it accessible
@@ -51,22 +53,19 @@ v4.0.0 (2020-12)
 
   - PEP8 improvements
 
-  - *(New methods)*:
+  - *New methods*:
 
     * ``Oscilloscope.get_error()``
     * ``Oscilloscope.set_waveform_export_options()``
     * ``Oscilloscope.save_trace()`` (``Oscilloscope.savepng`` and
-      ``Oscilloscope.showplot`` can be set to contol its behaviour)
+      ``Oscilloscope.showplot`` can be set to control its behaviour)
     * ``Oscilloscope.plot_trace()``
 
-  - *No compatibility*: Several functions no longer take ``sources`` and
-    ``sourcesstring`` as arguments, rather ``Oscilloscope.sources`` and
-    ``Oscilloscope.sourcesstring`` must be set by
-    ``Oscilloscope.set_channels_for_capture()``
-
-    * ``Oscilloscope.capture_and_read()`` and its ``Oscilloscope._read_ascii()``
-      and ``Oscilloscope._read_binary()``
-    * ``Oscilloscope.get_trace()``
+  - *New properties*:
+    * ``Oscilloscope.active_channels`` can now be used to set and get the
+      currently active channels
+    * ``Oscilloscope.timeout`` this was previously just an attribute with no
+      set option
 
   - *No compatibility*: Name changes
 
@@ -89,8 +88,20 @@ v4.0.0 (2020-12)
     * ``interpret_visa_id()`` from ``oscacq`` to ``auxiliary``
     * ``check_file()`` from ``oscacq`` to ``auxiliary``
 
-  - *No compatibility*: ``Oscilloscope.get_trace()`` now also returns
-    also ``Oscilloscope.num_channels``
+  - *No compatibility*: Several functions no longer take ``sources`` and
+    ``sourcesstring`` as arguments, rather ``Oscilloscope._sources`` must be set by
+    ``Oscilloscope.set_channels_for_capture()`` and ``sourcesstring`` is not in
+    use anymore
+
+    * ``Oscilloscope.capture_and_read()``, and its associated
+    ``Oscilloscope._read_ascii()`` and ``Oscilloscope._read_binary()``
+    * ``Oscilloscope.get_trace()``
+
+  - *No compatibility*: Misc
+    * ``Oscilloscope.get_trace()`` now also returns
+      also ``Oscilloscope.num_channels``
+    * ``Oscilloscope.get_active_channels()`` is now a property ``active_channels``
+      and returns a list of ints, not chars
 
 
 
