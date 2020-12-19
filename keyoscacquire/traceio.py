@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-Trace input/output functions for the keyoscacquire package
+This module provides functions for saving traces to ``npy`` format files
+(see :mod:`numpy.lib.format`) or ascii files. The latter is slower but permits
+a header with metadata for the measurement, see :func:`Oscilloscope.generate_file_header`
+which is used when saving directly from the ``Oscilloscope`` class.
 
-Andreas Svela // 2020
 """
 
 import os
@@ -22,7 +24,7 @@ def save_trace(fname, time, y, fileheader="", ext=config._filetype,
     """Saves the trace with time values and y values to file.
 
     Current date and time is automatically added to the header. Saving to numpy
-    format with :func:`save_trace_npy` is faster, but does not include metadata
+    format with :func:`save_trace_npy()` is faster, but does not include metadata
     and header.
 
     Parameters
@@ -99,7 +101,7 @@ def plot_trace(time, y, channels, fname="", showplot=config._show_plot,
         Filename of possible exported png
     show : bool, default :data:`~keyoscacquire.config._show_plot`
         True shows the plot (must be closed before the programme proceeds)
-    savepng : bool, default :data:`~keyoscacquire.`config._export_png`
+    savepng : bool, default :data:`~keyoscacquire.config._export_png`
         ``True`` exports the plot to ``fname``.png
     """
     for i, vals in enumerate(np.transpose(y)): # for each channel
@@ -113,8 +115,12 @@ def plot_trace(time, y, channels, fname="", showplot=config._show_plot,
 
 ## Trace loading ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
 
-def load_trace(fname, ext=config._filetype, column_names='auto', skip_lines='auto', return_df=True):
+def load_trace(fname, ext=config._filetype, column_names='auto', skip_lines='auto',
+               return_as_df=True):
     """Load a trace saved with keyoscacquire.oscacq.save_file()
+
+    What is returned depends on the format of the file (.npy files contain no
+    headers), and if a dataframe format is chosen for the return.
 
     Parameters
     ----------
@@ -127,14 +133,21 @@ def load_trace(fname, ext=config._filetype, column_names='auto', skip_lines='aut
         To infer df column names from the last line of the header, use ``'auto'``
         (expecting '# <comma separated column headers>' as the last line of the
         header), or specify the column names manually
-
     skip_lines : ``{'auto' or int}``, default ``'auto'``
 
-    return_df : bool, default True
+    return_as_df : bool, default True
+        If the loaded trace is not a .npy file, decide to return the data as
+        a Pandas dataframe if ``True``, or as an ndarray otherwise
 
     Returns
     -------
-
+    data : :class:`~pandas.Dataframe` or :class:`~numpy.ndarray`
+        If ``return_as_df`` is ``True`` and the filetype is not ``.npy``,
+        a Pandas dataframe is returned. Otherwise ndarray. The first column
+        is time, then each column is a channel.
+    header : list or ``None``
+        If ``.npy``, ``None`` is returned. Otherwise, a list of the lines at the
+        beginning of the file starting with ``'#'``, stripped off ``'# '`` is returned
     """
     # Remove extenstion if provided in the fname
     if fname[-4:] in ['.npy', '.csv']:
@@ -146,25 +159,22 @@ def load_trace(fname, ext=config._filetype, column_names='auto', skip_lines='aut
     else:
         return _load_trace_with_header(fname, ext, column_names=column_names,
                                        skip_lines=skip_lines,
-                                       return_df=return_df)
+                                       return_as_df=return_as_df)
 
 
-def _load_trace_with_header(fname, ext, skip_lines='auto', column_names='auto', return_df=True):
-    """
+def _load_trace_with_header(fname, ext, skip_lines='auto', column_names='auto',
+                            return_as_df=True):
+    """Read a trace file that has a header (i.e. not ``.npy`` files).
 
-    Parameters
-    ----------
-    fname : str
-        Filename of trace, with or without extension
-    ext : str, default :data:`~keyoscacquire.config._filetype`
-        The filetype of the saved trace (with the period, e.g. ``'.csv'``)
+    See parameter description for :func:`load_trace()`.
 
     Returns
     -------
-    data :
-        :class:`~pandas.Dataframe` or :class:`~numpy.ndarray`
+    data : :class:`~pandas.Dataframe` or :class:`~numpy.ndarray`
+        Pandas dataframe if ``return_as_df`` is ``True``, ndarray otherwise
     header : list
-        Lines at the beginning of the file starting with ``'#'``, stripped off ``'# '``
+        Lines at the beginning of the file starting with ``'#'``, stripped
+        off ``'# '``
     """
     # Load header
     header = load_header(fname, ext)
@@ -194,7 +204,8 @@ def load_header(fname, ext=config._filetype):
     Returns
     -------
     header : list
-        Lines at the beginning of the file starting with ``'#'``, stripped off ``'# '``
+        Lines at the beginning of the file starting with ``'#'``, stripped
+        off ``'# '``
     """
     if fname[-4:] in ['.csv']:
         ext = fname[-4:]

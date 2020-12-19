@@ -5,7 +5,7 @@ Data processing, file saving & loading
 
 .. py:currentmodule:: keyoscacquire.oscacq
 
-The :mod:`keyoscacquire.oscacq` module contains function for processing
+The :mod:`keyoscacquire.oscacq` module contains a function for processing
 the raw data captured with :class:`Oscilloscope`, and :mod:`keyoscacquire.traceio`
 for saving the processed data to files and plots.
 
@@ -16,16 +16,20 @@ The output from the :func:`Oscilloscope.capture_and_read` function is processed
 by :func:`process_data`, a wrapper function that sends the data to the
 respective binary or ascii processing function.
 
+This function is kept outside the Oscilloscope class as one might want to
+post-process data after capturing it.
+
 .. autofunction:: process_data
 
 
-File saving (:mod:`keyoscacquire.traceio`)
-------------------------------------------
+File saving and loading (:mod:`keyoscacquire.traceio`)
+------------------------------------------------------
 
-The package has built-in functions for saving traces to npy format
-(see :mod:`numpy.lib.format`) files or ascii values (the latter is slower but will
-give a header that can be customised, :func:`Oscilloscope.generate_file_header`
-is used by default).
+The Oscilloscope class has the method :meth:`Oscilloscope.save_trace()` for
+saving the most recently captured trace to disk. This method relies on the
+``traceio`` module.
+
+.. automodule:: keyoscacquire.traceio
 
 .. autofunction:: keyoscacquire.traceio.save_trace
 .. autofunction:: keyoscacquire.traceio.plot_trace

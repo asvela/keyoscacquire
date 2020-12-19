@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 """
-Python backend for installed command line programmes. These can also be integrated in python scripts or used as examples.
+Python backend for installed command line programmes. These can also be
+integrated in python scripts or used as examples.
 
-    * :func:`list_visa_devices`: listing visa devices
-    * :func:`path_of_config`: finding path of config.py
-    * :func:`get_single_trace`: taking a single trace and saving it to csv and png
-    * :func:`get_traces_single_connection_loop` :func:`get_traces_connect_each_time_loop`: two programmes for taking multiple traces when a key is pressed, see descriptions for difference
-    * :func:`get_num_traces`: get a specific number of traces
+* :func:`list_visa_devices`: listing visa devices
+* :func:`path_of_config`: finding path of config.py to set default options
+* :func:`get_single_trace`: taking a single trace and saving it to csv and png
+* :func:`get_traces_single_connection_loop` :func:`get_traces_connect_each_time_loop`:
+  two programmes for taking multiple traces when a key is pressed, see descriptions for difference
+* :func:`get_num_traces`: get a specific number of traces
 
 """
 

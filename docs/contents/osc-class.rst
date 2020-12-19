@@ -10,7 +10,47 @@ Oscilloscope API
 .. py:currentmodule:: keyoscacquire.oscacq
 
 .. autoclass:: Oscilloscope
-   :members:
+
+High-level functions
+--------------------
+
+.. automethod:: Oscilloscope.get_trace
+.. automethod:: Oscilloscope.save_trace
+.. automethod:: Oscilloscope.plot_trace
+.. automethod:: Oscilloscope.set_options_get_trace
+.. automethod:: Oscilloscope.set_options_get_trace_save
+
+
+Connection and VISA commands
+----------------------------
+
+.. automethod:: Oscilloscope.close
+.. autoproperty:: Oscilloscope.timeout
+.. automethod:: Oscilloscope.write
+.. automethod:: Oscilloscope.query
+.. automethod:: Oscilloscope.get_error
+
+Oscilloscope state control
+--------------------------
+
+.. automethod:: Oscilloscope.run
+.. automethod:: Oscilloscope.stop
+.. automethod:: Oscilloscope.is_running
+.. autoproperty:: Oscilloscope.active_channels
+
+Acquisition and transfer options
+--------------------------------
+
+.. automethod:: Oscilloscope.set_channels_for_capture
+.. automethod:: Oscilloscope.set_acquiring_options
+.. automethod:: Oscilloscope.set_waveform_export_options
+
+
+--------------
+
+.. automethod:: Oscilloscope.capture_and_read
+.. automethod:: Oscilloscope.generate_file_header
+
 
 Auxiliary to the class
 ======================
@@ -25,8 +65,8 @@ Auxiliary to the class
 The preamble
 ============
 
-The preamble returned by the capture_and_read functions (i.e. returned by the
-oscilloscope when querying the VISA command ``:WAV:PREamble?``) is a string of
+The preamble returned by the :meth:`capture_and_read` method (i.e. returned by the
+oscilloscope when querying the VISA command ``:WAVeform:PREamble?``) is a string of
 comma separated values, the values have the following meaning::
 
   0. FORMAT : int16 - 0 = BYTE, 1 = WORD, 4 = ASCII.

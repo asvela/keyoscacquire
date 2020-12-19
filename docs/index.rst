@@ -5,6 +5,9 @@
   :end-before: command-line-use-marker
 
 
+Table of contents
+-----------------
+
 .. toctree::
    :maxdepth: 2
    :caption: User guide

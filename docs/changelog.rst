@@ -3,16 +3,19 @@ Changelog
 
 v4.0: Extreme (API) makeover
 ----------------------------
-Big makeover with many no compatible changes. When writing the base of this back
-in 2019 I had very limited Python development experience, so it was time to make
-a few better choices now to make the API easier to use.
+Big makeover with many non-compatible changes (sorry).
+
+When writing the base of this package back in 2019, I had very limited Python
+development experience, and some not so clever choices were made. It was time
+to make clear these up and make the API easier to use.
 
 That means that there are quite a few non-compatible changes to previous versions,
 all of which are detailed below. I am not planning further extensive revisions
 like this.
 
 v4.0.0 (2020-12)
-  - More attributes are used to make the information accessible not only through returns
+  - More attributes are used to make the information accessible not only through
+    returns
 
     * Captured data stored to ``Oscilloscope._time`` and ``Oscilloscope._values``
     * The filename finally used when saving (which might not be the same as the
@@ -95,11 +98,15 @@ v4.0.0 (2020-12)
     use anymore
 
     * ``Oscilloscope.capture_and_read()``, and its associated
-    ``Oscilloscope._read_ascii()`` and ``Oscilloscope._read_binary()``
+      ``Oscilloscope._read_ascii()`` and ``Oscilloscope._read_binary()``
     * ``Oscilloscope.get_trace()``
 
   - *No compatibility*: Misc
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> a4667078e715ef15060b2ab292e3077d7acc6f44
     * ``Oscilloscope.get_trace()`` now also returns
       also ``Oscilloscope.num_channels``
     * ``Oscilloscope.get_active_channels()`` is now a property ``active_channels``

@@ -8,7 +8,9 @@ interfacing in a class :class:`~keyoscacquire.oscacq.Oscilloscope`, and
 support functions for data processing. Programmes are located
 in :mod:`keyoscacquire.programmes`, and the same programmes can be run
 directly from the command line as they are installed in the Python path,
-see :ref:`cli-programmes`. Default options are found in :mod:`keyoscacquire.config`.
+see :ref:`cli-programmes`. Default options are found in :mod:`keyoscacquire.config`,
+and the :mod:`keyoscacquire.traceio` provides functions for plotting, saving,
+and loading traces from disk.
 
 
 Quick reference
