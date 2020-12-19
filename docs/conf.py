@@ -26,8 +26,8 @@ copyright = '2019-2020, Andreas Svela'
 author = 'Andreas Svela'
 
 # The full version, including alpha/beta/rc tags
-version = ver
-release = version
+version = ver.rsplit(".", 1)[0] # get only major.minor
+release = ver
 
 html_title = f"{project} v{version}"
 

@@ -2,7 +2,6 @@
 """
 Auxiliary functions for the keyoscacquire package
 
-Andreas Svela // 2020
 """
 
 import os
