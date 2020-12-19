@@ -62,6 +62,7 @@ v4.0.0 (2020-12)
     * ``Oscilloscope.plot_trace()``
 
   - *New properties*:
+
     * ``Oscilloscope.active_channels`` can now be used to set and get the
       currently active channels
     * ``Oscilloscope.timeout`` this was previously just an attribute with no
@@ -98,6 +99,7 @@ v4.0.0 (2020-12)
     * ``Oscilloscope.get_trace()``
 
   - *No compatibility*: Misc
+  
     * ``Oscilloscope.get_trace()`` now also returns
       also ``Oscilloscope.num_channels``
     * ``Oscilloscope.get_active_channels()`` is now a property ``active_channels``

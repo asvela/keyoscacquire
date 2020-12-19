@@ -4,6 +4,7 @@ furo
 recommonmark
 pyvisa
 numpy
+pandas
 argparse
 matplotlib
 tqdm

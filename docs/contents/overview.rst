@@ -16,7 +16,7 @@ Quick reference
 
 .. include:: ../../README.rst
   :start-after: command-line-use-marker
-  :end-before: documentation-marker
+  :end-before: contribute-marker
 
 
 Installation

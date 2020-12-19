@@ -357,9 +357,8 @@ class Oscilloscope:
         wav_format : {``'WORD'``, ``'BYTE'``, ``'ASCii'``}, default :data:`~keyoscacquire.config._waveform_format`
             Select the format of the communication of waveform from the
             oscilloscope, see :attr:`wav_format`
-        p_mode : {``'NORMal'``, ``'RAW'``, ``'MAXimum'``}, default ``'RAW'``
+        p_mode : {``'NORMal'``, ``'RAW'``}, default ``'RAW'``
             ``'NORMal'`` is limited to 62,500 points, whereas ``'RAW'`` gives up to 1e6 points.
-            Use ``'MAXimum'`` for sources that are not analogue or digital
         num_points : int, default 0
             Use 0 to get the maximum amount of points, otherwise
             override with a lower number than maximum for the :attr:`p_mode`
@@ -424,7 +423,7 @@ class Oscilloscope:
         # Build list of sources
         self._sources = [f"CHANnel{ch}" for ch in self._capture_channels]
         if self.verbose_acquistion:
-            print(f"Acquire from channels {self._capture_channels}")
+            print(f"Acquire from channels:  {self._capture_channels}")
         return self._capture_channels
 
     def capture_and_read(self, set_running=True):
@@ -567,11 +566,15 @@ class Oscilloscope:
 
     ## Building functions to get a trace and various option setting and processing ##
 
-    def get_trace(self, verbose_acquistion=None):
+    def get_trace(self, channels=None, verbose_acquistion=None):
         """Obtain one trace with current settings.
 
         Parameters
         ----------
+        channels : list of ints or ``'active'``, default :data:`~keyoscacquire.config._ch_nums`
+            list of the channel numbers to be acquired, example ``[1, 3]``.
+            Use ``'active'`` or ``[]`` to capture all the currently active
+            channels on the oscilloscope.
         verbose_acquistion : bool or ``None``, default ``None``
             Possibility to override :attr:`verbose_acquistion` temporarily,
             but the current setting will be restored afterwards
@@ -586,8 +589,7 @@ class Oscilloscope:
         _capture_channels : list of ints
             list of the channels obtaied from, example ``[1, 3]``
         """
-        if self._capture_active:
-            self.set_channels_for_capture()
+        self.set_channels_for_capture(channels=channels)
         # Possibility to override verbose_acquistion
         if verbose_acquistion is not None:
             # Store current setting and set temporary setting
@@ -640,15 +642,12 @@ class Oscilloscope:
         self.set_acquiring_options(wav_format=wav_format, acq_type=acq_type,
                                    num_averages=num_averages, p_mode=p_mode,
                                    num_points=num_points)
-        ## Select sources
-        self.set_channels_for_capture(channels=channels)
         ## Capture, read and process data
         self.get_trace()
         return self._time, self._values, self._capture_channels
 
     def set_options_get_trace_save(self, fname=None, ext=None,
-                                   channels=None, source_type=None,
-                                   wav_format=None, acq_type=None,
+                                   channels=None, wav_format=None, acq_type=None,
                                    num_averages=None, p_mode=None,
                                    num_points=None, additional_header_info=None):
         """Get trace and save the trace to a file and plot to png.
@@ -671,9 +670,6 @@ class Oscilloscope:
             list of the channel numbers to be acquired, example ``[1, 3]``.
             Use ``'active'`` or ``[]`` to capture all the currently active
             channels on the oscilloscope.
-        source_type : str, default ``'CHANnel'``
-            Selects the source type. Must be ``'CHANnel'`` in current implementation.
-            Future version might include {'MATH', 'FUNCtion'}
         wav_format : {``'WORD'``, ``'BYTE'``, ``'ASCii'``}, default :data:`~keyoscacquire.config._waveform_format`
             Select the format of the communication of waveform from the
             oscilloscope, see :attr:`wav_format`
@@ -690,8 +686,8 @@ class Oscilloscope:
             Use 0 to let :attr:`p_mode` control the number of points, otherwise
             override with a lower number than maximum for the :attr:`p_mode`
         """
-        self.set_options_get_trace(channels=channels, source_type=source_type,
-                                   wav_format=wav_format, acq_type=acq_type, num_averages=num_averages,
+        self.set_options_get_trace(channels=channels, wav_format=wav_format,
+                                   acq_type=acq_type, num_averages=num_averages,
                                    p_mode=p_mode, num_points=num_points)
         self.save_trace(fname, ext, additional_header_info=additional_header_info)
 
@@ -886,8 +882,8 @@ def _process_data_binary(raw, preambles, verbose_acquistion=True):
     time = np.array([(np.arange(num_samples)-xRef)*xIncr + xOrig]) # compute x-values
     time = time.T # make x values vertical
     if verbose_acquistion:
-        print("Points captured per channel: ", num_samples)
-        _log.info("Points captured per channel: ", num_samples)
+        print(f"Points captured per channel: {num_samples:,d}")
+        _log.info(f"Points captured per channel: {num_samples:,d}")
     y = np.empty((len(raw), num_samples))
     for i, data in enumerate(raw): # process each channel individually
         preamble = preambles[i].split(',')
@@ -927,8 +923,8 @@ def _process_data_ascii(raw, metadata, verbose_acquistion=True):
     time = np.array([(np.arange(num_samples)-xRef)*xIncr + xOrig])
     time = time.T # Make list vertical
     if verbose_acquistion:
-        print("Points captured per channel: ", num_samples)
-        _log.info("Points captured per channel: ", num_samples)
+        print(f"Points captured per channel: {num_samples:,d}")
+        _log.info(f"Points captured per channel: {num_samples:,d}")
     y = []
     for data in raw:
         if model_series in ['2000']:

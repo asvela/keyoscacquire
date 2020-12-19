@@ -48,7 +48,7 @@ def save_trace(fname, time, y, fileheader="", ext=config._filetype,
     if os.path.exists(fname+ext):
         raise RuntimeError(f"{fname+ext} already exists")
     if print_filename:
-        print(f"Saving trace to: {fname+ext}\n")
+        print(f"Saving trace to:  {fname+ext}\n")
     data = np.append(time, y, axis=1) # make one array with columns x y1 y2 ..
     if ext == ".npy":
         if fileheader and not nowarn:

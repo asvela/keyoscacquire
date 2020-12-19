@@ -19,6 +19,14 @@ using a USB connection.
   need to be running on the computer. Installation of Keysight Connection
   Expert might also be necessary.
 
+
+Documentation
+-------------
+
+Available at `keyoscacquire.rtfd.io <http://keyoscacquire.readthedocs.io/en/latest/>`_.
+A few examples below, but formatting and links are broken as the snippet is intended
+for the documentation parser.
+
 .. command-line-use-marker
 
 Command line use
@@ -77,13 +85,7 @@ array which columns contain the data from the active channels listed in
 Explore the Reference section (particularly :ref:`osc-class`) to get more
 information about the API.
 
-.. documentation-marker
-
-Documentation
--------------
-
-Available at `keyoscacquire.rtfd.io <http://keyoscacquire.readthedocs.io/en/latest/>`_.
-
+.. contribute-marker
 
 Contribute
 ----------
