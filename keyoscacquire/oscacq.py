@@ -32,7 +32,7 @@ _supported_series = ['1000', '2000', '3000', '4000', '6000']
 _screen_colors = {1:'C1', 2:'C2', 3:'C0', 4:'C3'}
 #: Datatype is ``'h'`` for 16 bit signed int (``WORD``), ``'b'`` for 8 bit signed bit (``BYTE``).
 #: Same naming as for structs `docs.python.org/3/library/struct.html#format-characters`
-_datatypes = {'BYTE':'b', 'WORD':'h'}
+_datatypes = {'BYT':'b', 'WOR':'h', 'BYTE':'b', 'WORD':'h'}
 
 
 ## ========================================================================= ##
@@ -97,42 +97,6 @@ class Oscilloscope:
         The values for the most recent captured trace
     _capture_channels : list of ints
         The channels of captured for the most recent trace
-    acq_type : {'HRESolution', 'NORMal', 'AVERage', 'AVER<m>'}
-        Acquisition mode of the oscilloscope. <m> will be used as :attr:`num_averages` if supplied.
-
-        * ``'NORMal'`` — sets the oscilloscope in the normal mode.
-
-        * ``'AVERage'`` — sets the oscilloscope in the averaging mode.
-          You can set the count by :attr:`num_averages`.
-
-        * ``'HRESolution'`` — sets the oscilloscope in the high-resolution mode
-          (also known as smoothing). This mode is used to reduce noise at slower
-          sweep speeds where the digitizer samples faster than needed to fill memory for the displayed time range.
-
-            For example, if the digitizer samples at 200 MSa/s, but the effective sample rate is 1 MSa/s
-            (because of a slower sweep speed), only 1 out of every 200 samples needs to be stored.
-            Instead of storing one sample (and throwing others away), the 200 samples are averaged
-            together to provide the value for one display point. The slower the sweep speed, the greater
-            the number of samples that are averaged together for each display point.
-    num_averages : int, 2 to 65536
-        The number of averages applied (applies only to the ``'AVERage'`` :attr:`acq_type`)
-    p_mode : {``'NORMal'``, ``'RAW'``, ``'MAXimum'``}
-        ``'NORMal'`` is limited to 62,500 points, whereas ``'RAW'`` gives up to
-        1e6 points. Use ``'MAXimum'`` for sources that are not analogue or digital.
-    num_points : int
-        Use 0 to let :attr:`p_mode` control the number of points, otherwise
-        override with a lower number than maximum for the :attr:`p_mode`
-    wav_format : {'WORD', 'BYTE', 'ASCii'}
-        Select the data transmission mode for waveform data points, i.e. how
-        the data is formatted when sent from the oscilloscope.
-
-        * ``'ASCii'`` formatted data converts the internal integer data values
-           to real Y-axis values. Values are transferred as ascii digits in
-           floating point notation, separated by commas.
-
-        * ``'WORD'`` formatted data transfers signed 16-bit data as two bytes.
-
-        * ``'BYTE'`` formatted data is transferred as signed 8-bit bytes.
     """
     _raw = None
     _metadata = None
@@ -248,7 +212,7 @@ class Oscilloscope:
             error number,description
         """
         # Do not use self.query here as that can lead to infinite nesting!
-        return self._inst.query(":SYSTem:ERRor?")
+        return self._inst.query(":SYSTem:ERRor?").strip()
 
     def run(self):
         """Set the ocilloscope to running mode."""
@@ -276,7 +240,7 @@ class Oscilloscope:
         timeout must be longer than the acquisition time.
 
         :getter:  Returns the number of milliseconds before timeout of a query command
-        :setter:  SeMilliseconds before timeout of a query command
+        :setter:  Set the number of milliseconds before timeout of a query command
         :type:    int
         """
         return self._inst.timeout
@@ -308,6 +272,181 @@ class Oscilloscope:
             channels = [channels]
         for i in range(1, 5):
             self.write(f":CHAN{i}:DISP {int(i in channels)}")
+
+    @property
+    def acq_type(self):
+        """Acquisition mode of the oscilloscope
+
+        Can be either
+
+            * ``'NORMal'`` — sets the oscilloscope in the normal mode.
+            * ``'AVERage'`` or ``'AVER<m>'`` — sets the oscilloscope in the averaging mode.
+              The number of averages can be set with :property:`num_averages`, or
+               <m> will be used as :property:`num_averages` if supplied.
+               <m> can be in the range 2 to 65,536
+            * ``'HRESolution'`` — sets the oscilloscope in the high-resolution mode
+              (also known as smoothing). This mode is used to reduce noise at slower
+              sweep speeds where the digitizer samples faster than needed to fill memory for the displayed time range.
+
+                For example, if the digitizer samples at 200 MSa/s, but the effective sample rate is 1 MSa/s
+                (because of a slower sweep speed), only 1 out of every 200 samples needs to be stored.
+                Instead of storing one sample (and throwing others away), the 200 samples are averaged
+                together to provide the value for one display point. The slower the sweep speed, the greater
+                the number of samples that are averaged together for each display point.
+
+        :getter:  Returns the current mode (will not return ``<m>`` for ``AVER``)
+        :setter:  Sets the mode, for example ``AVER8``, if :attr:`verbose` will
+                  print the type and the number of averages number
+        :type:    ``{'NORMal', 'AVERage', 'AVER<m>', 'HRES'}
+
+        Raises
+        ------
+        ValueError
+            If ``<m>`` in cannot be converted to an int (or is out of range)
+        """
+        return self.query(":ACQuire:TYPE?")
+
+    @acq_type.setter
+    def acq_type(self, type: str):
+        """See getter"""
+        acq_type = type[:4].upper()
+        self.write(f":ACQuire:TYPE {acq_type}")
+        if self.verbose:
+            print(f"  Acquisition type:  {acq_type}")
+        # Handle AVER<m> expressions
+        if acq_type == 'AVER':
+            if len(type) > 4 and not type[4:].lower() == 'age':
+                try:
+                    self.num_averages = int(type[4:])
+                except ValueError:
+                    ValueError(f"\nValueError: Failed to convert '{type[4:]}' to an integer, "
+                                "check that acquisition type is on the form AVER or AVER<m> "
+                               f"where <m> is an integer (currently acq. type is '{type}').\n")
+            else:
+                num = self.num_averages
+                if self.verbose:
+                    print(f"  # of averages:  {num}")
+
+    @property
+    def num_averages(self):
+        """The number of averages taken if the scope is in the ``'AVERage'``
+        :property:`acq_type`
+
+        :getter:  Returns the current number of averages
+        :setter:  Set the number, will print the number if :attr:`verbose`
+        :type:    int, 2 to 65,536
+
+        Raises
+        ------
+        ValueError
+            If the number is is out of range
+        """
+        return self.query(":ACQuire:COUNt?")
+
+    @num_averages.setter
+    def num_averages(self, num: int):
+        """See getter"""
+        if not (2 <= num <= 65536):
+                raise ValueError(f"\nThe number of averages {num} is out of range.")
+        self.write(f":ACQuire:COUNt {num}")
+        if self.verbose and self.acq_type == 'AVER':
+            print(f"  # of averages:  {num}")
+
+    @property
+    def p_mode(self):
+        """The points mode of the acquistion
+
+        ``'NORMal'`` is limited to 62,500 points, whereas ``'RAW'`` gives up to
+        1e6 points. Use ``'MAXimum'`` for sources that are not analogue or digital.
+
+        :getter:  Returns the current mode
+        :setter:  Set the mode, will check if compatible with the :property:`acq_type`
+        :type:    ``{'NORMal', 'RAW', 'MAXimum'}``
+        """
+        return self.query(":WAVeform:POINts:MODE?")
+
+    @p_mode.setter
+    def p_mode(self, p_mode: str):
+        """See getter"""
+        if (not p_mode[:4] == 'NORM') and self.acq_type == 'AVER':
+            p_mode = 'NORM'
+            _log.info(f":WAVeform:POINts:MODE overridden (from {p_mode}) to "
+                        "NORMal due to :ACQuire:TYPE:AVERage.")
+        self.write(f":WAVeform:POINts:MODE {p_mode}")
+
+    @property
+    def num_points(self):
+        """The number of points to be acquired for each channel. Use 0 to let
+        get the maximum number given the :property:`p_mode`, otherwise
+        override with a lower number than maximum for the :property:`p_mode`
+
+        .. warning:: If the exact number of points is crucial, always check the
+          number of points with the getter after performing the setter.
+
+        .. note:: The scope must be stopped to get the number of points that
+          will be transferred when it is in the *stopped* state. As this package
+          always stops the scope when getting a trace, the getter will also
+          do this to get the actual number of points that will be
+          transferred (otherwise the returned number will be capped by the
+          :property:`p_mode` ``NORMal`` (which can be transferred without
+          stopping the scope)).
+
+        :getter:  Returns the number of points that will be acquired (stopping
+                  and re-running the scope as explained in the note above)
+        :setter:  Set the number, but beware that the scope might change the
+                  number depending on memory depth, time axis settings, etc.
+        :type:    int
+        """
+        # Must stop the scope to be able to read the actual number of points
+        # that will be transferred in the RAW or MAX mode
+        self.stop()
+        points = int(self.query(":WAVeform:POINTs?"))
+        self.run()
+        return points
+
+    @num_points.setter
+    def num_points(self, num_points: int):
+        """See getter"""
+        if num_points == 0:
+            self.write(f":WAVeform:POINts MAXimum")
+            _log.debug("Number of points set to: MAX")
+        # If number of points has been specified, tell the instrument to
+        # use this number of points
+        elif num_points > 0:
+            if self._model_series in ['9000']:
+                self.write(f":ACQuire:POINts {num_points}")
+            else:
+                # Must stop the scope to set the number of points to avoid
+                # getting an error in the scopes' log (however, it seems to
+                # be working regardless, only the get_error() will return -222)
+                self.stop()
+                self.write(f":WAVeform:POINts {num_points}")
+                self.run()
+            _log.debug(f"Number of points set to:  {num_points}")
+
+    @property
+    def wav_format(self):
+        """Data transmission mode for waveform data points, i.e. how
+        the data is formatted when sent from the oscilloscope.
+
+        * ``'ASCii'`` formatted data converts the internal integer data values
+           to real Y-axis values. Values are transferred as ascii digits in
+           floating point notation, separated by commas.
+        * ``'WORD'`` formatted data transfers signed 16-bit data as two bytes.
+        * ``'BYTE'`` formatted data is transferred as signed 8-bit bytes.
+
+        :getter:  Returns the number of points that will be acquired, however
+                  it does not seem to be fully stable
+        :setter:  Set the number, but beware that the scope might change the
+                  number depending on memory depth, time axis settings, etc.
+        :type:    ``{'WORD', 'BYTE', 'ASCii'}``
+        """
+        return self.query(":WAVeform:FORMat?")
+
+    @wav_format.setter
+    def wav_format(self, wav_format: str):
+        """See getter"""
+        self.write(f":WAVeform:FORMat {wav_format}")
 
     def set_acquiring_options(self, wav_format=None, acq_type=None,
                               num_averages=None, p_mode=None, num_points=None,
@@ -341,34 +480,12 @@ class Oscilloscope:
             If num_averages are outside of the range or <m> in acq_type cannot
             be converted to int
         """
-        # Set verbose_acquistion only if not None
         if verbose_acquistion is not None:
             self.verbose_acquistion = verbose_acquistion
-        # Set the acquistion type
         if acq_type is not None:
-            self.acq_type = acq_type[:4].upper()
-            # Handle AVER<m> expressions
-            if self.acq_type == 'AVER' and not acq_type[4:].lower() == 'age':
-                if len(acq_type) > 4:
-                    try:
-                        self.num_averages = int(acq_type[4:])
-                    except ValueError:
-                        ValueError(f"\nValueError: Failed to convert '{acq_type[4:]}' to an integer, "
-                                    "check that acquisition type is on the form AVER or AVER<m> "
-                                   f"where <m> is an integer (currently acq. type is '{acq_type}').\n")
-                else:
-                    if num_averages is not None:
-                        self.num_averages = num_averages
-        self.write(':ACQuire:TYPE ' + self.acq_type)
-        if self.verbose:
-            print("  Acquisition type:", self.acq_type)
-        # Check that self.num_averages is within the acceptable range
-        if self.acq_type == 'AVER':
-            if not (1 <= self.num_averages <= 65536):
-                raise ValueError(f"\nThe number of averages {self.num_averages} is out of range.")
-            self.write(f":ACQuire:COUNt {self.num_averages}")
-            if self.verbose:
-                print("  # of averages: ", self.num_averages)
+            self.acq_type = acq_type
+        if num_averages is not None:
+            self.num_averages = num_averages
         # Set options for waveform export
         self.set_waveform_export_options(wav_format, num_points, p_mode)
 
@@ -389,34 +506,11 @@ class Oscilloscope:
         """
         # Choose format for the transmitted waveform
         if wav_format is not None:
-            self.write(f":WAVeform:FORMat {wav_format}")
             self.wav_format = wav_format
         if p_mode is not None:
             self.p_mode = p_mode
-        a_isaver = self.acq_type == 'AVER'
-        p_isnorm = self.p_mode[:4] == 'NORM'
-        if a_isaver and not p_isnorm:
-            self.p_mode = 'NORM'
-            _log.debug(f":WAVeform:POINts:MODE overridden (from {p_mode}) to "
-                        "NORMal due to :ACQuire:TYPE:AVERage.")
-        self.write(f":WAVeform:POINts:MODE {self.p_mode}")
-        # Set to maximum number of points if
         if num_points is not None:
-            if num_points == 0:
-                self.write(f":WAVeform:POINts MAXimum")
-                _log.debug("Number of points set to: MAX")
-                self.num_points = num_points
-            # If number of points has been specified, tell the instrument to
-            # use this number of points
-            elif num_points > 0:
-                if self._model_series in _supported_series:
-                    self.write(f":WAVeform:POINts {self.num_points}")
-                elif self._model_series in ['9000']:
-                    self.write(f":ACQuire:POINts {self.num_points}")
-                else:
-                    self.write(f":WAVeform:POINts {self.num_points}")
-                _log.debug("Number of points set to: ", self.num_points)
-                self.num_points = num_points
+            self.num_points = num_points
 
     ## Capture and read functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
 
@@ -437,7 +531,7 @@ class Oscilloscope:
             the channels that will be captured, example ``[1, 3]``
         """
         # If no channels specified, find the channels currently active and acquire from those
-        if np.any(channels in [[], ['active'], 'active']) or self._capture_active:
+        if np.any(channels in [[], ['active'], 'active']) or (self._capture_active and channels is None):
             self._capture_channels = self.active_channels
             # Store that active channels are being used
             self._capture_active = True
@@ -445,7 +539,7 @@ class Oscilloscope:
             self._capture_channels =  channels
             self._capture_active = False
         # Build list of sources
-        self._sources = [f"CHANnel{ch}" for ch in self._capture_channels]
+        self._sources = [f"CHAN{ch}" for ch in self._capture_channels]
         if self.verbose_acquistion:
             print(f"Acquire from channels:  {self._capture_channels}")
         return self._capture_channels
@@ -490,13 +584,14 @@ class Oscilloscope:
             # When acquisition is complete, the instrument is stopped.
             self.write(':DIGitize ' + ", ".join(self._sources))
         ## Read from the scope
-        if self.wav_format[:3] in ['WOR', 'BYT']:
-            self._read_binary(datatype=_datatypes[self.wav_format])
-        elif self.wav_format[:3] == 'ASC':
+        wav_format = self.wav_format[:3]
+        if wav_format in ['WOR', 'BYT']:
+            self._read_binary(datatype=_datatypes[wav_format])
+        elif wav_format[:3] == 'ASC':
             self._read_ascii()
         else:
             raise ValueError(f"Could not capture and read data, waveform format "
-                             f"'{self.wav_format}' is unknown.\n")
+                             f"'{wav_format}' is unknown.\n")
         ## Print to log
         to_log = f"Elapsed time capture and read: {(time.time()-start_time)*1e3:.1f} ms"
         if self.verbose_acquistion:
@@ -536,7 +631,7 @@ class Oscilloscope:
         # Loop through all the sources
         for source in self._sources:
             # Select the channel for which the succeeding WAVeform commands applies to
-            self.write(':WAVeform:SOURce ' + source)
+            self.write(f":WAVeform:SOURce {source}")
             try:
                 # obtain comma separated metadata values for processing of raw data for this source
                 self._metadata.append(self.query(':WAVeform:PREamble?'))
@@ -579,7 +674,7 @@ class Oscilloscope:
         # Loop through all the sources
         for source in self._sources:
             # Select the channel for which the succeeding WAVeform commands applies to
-            self.write(':WAVeform:SOURce ' + source)
+            self.write(f":WAVeform:SOURce {source}")
             # Read out data for this source
             self._raw.append(self.query(':WAVeform:DATA?', action="obtain the waveform"))
         # Get the preamble (used for calculating time axis, which is the same

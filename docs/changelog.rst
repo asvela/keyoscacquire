@@ -102,11 +102,7 @@ v4.0.0 (2020-12)
     * ``Oscilloscope.get_trace()``
 
   - *No compatibility*: Misc
-<<<<<<< HEAD
-  
-=======
 
->>>>>>> a4667078e715ef15060b2ab292e3077d7acc6f44
     * ``Oscilloscope.get_trace()`` now also returns
       also ``Oscilloscope.num_channels``
     * ``Oscilloscope.get_active_channels()`` is now a property ``active_channels``

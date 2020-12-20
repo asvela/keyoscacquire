@@ -109,11 +109,11 @@ The package provides an API for use with your Python code. For example
 .. literalinclude :: ../../keyoscacquire/scripts/example.py
   :linenos:
 
-.. todo :: Expand examples
-
 See :ref:`osc-class` and :ref:`data-proc` for more. The command line programmes
-have a python backend that can integrated in Python scripts or used as
+have a Python backend that can integrated in Python scripts or used as
 examples, see :ref:`py-programmes`.
+
+.. todo :: Expand examples
 
 
 
@@ -143,8 +143,8 @@ The package takes its default options from :mod:`keyoscacquire.config`
 .. literalinclude :: ../../keyoscacquire/config.py
   :linenos:
 
-.. note:: None of the functions access the global variables directly, but they
-  are feed them as default arguments.
+.. note:: Changing these after importing the module with an ``import`` statement
+  will not have any effect.
 
 The command line programmes will save traces in the folder from where they are
 ran as ``_filename+_file_delimiter+<n>+_filetype``, i.e. by default as
@@ -190,9 +190,8 @@ the executable, e.g.
     get_single_trace -f "fname" -a "AVER"
 
 
-
-Scripts in ./scripts
---------------------
+Scripts in ``./scripts``
+------------------------
 
 These can be ran as command line programmes from the scripts folder with
 ``$ python [script].py [options]``, where the options are as for the installed

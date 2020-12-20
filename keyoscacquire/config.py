@@ -13,7 +13,7 @@ _ch_nums = 'active'
 #: {HRESolution, NORMal, AVER<m>} where <m> is the number of averages in range [2, 65536]
 _acq_type = "HRESolution"
 #: default number of averages used if only AVER is given as acquisition type
-_num_avg = 2
+_num_avg = None
 #: default base filename of all traces and pngs exported, a number is appended to the base
 _filename = "data"
 #: delimiter used between :attr:`_filename` and filenumber (before _filetype)

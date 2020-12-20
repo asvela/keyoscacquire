@@ -2,7 +2,7 @@
    sphinx-quickstart on Mon Oct 21 05:06:26 2019.
 
 .. include:: ../README.rst
-  :end-before: command-line-use-marker
+  :end-before: documentation-marker
 
 
 Table of contents

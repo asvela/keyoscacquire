@@ -19,6 +19,7 @@ using a USB connection.
   need to be running on the computer. Installation of Keysight Connection
   Expert might also be necessary.
 
+.. documentation-marker
 
 Documentation
 -------------
