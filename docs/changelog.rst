@@ -30,8 +30,9 @@ v4.0.0 (2020-12)
     can now be used to change attributes of the ``Oscilloscope`` instance.
 
   - Bugfixes and docfixes for the number of points to be transferred from the
-    instrument (``num_points`` argument). Zero will set the to the
-    maximum number of points available.
+    instrument (previously ``num_points`` argument, now a property). Zero will
+    set the to the maximum number of points available, and the number of
+    points can be queried.
 
   - New ``keyoscacquire.traceio.load_trace()`` function for loading saved a trace
     from disk to pandas dataframe or numpy array
@@ -64,12 +65,17 @@ v4.0.0 (2020-12)
       ``Oscilloscope.showplot`` can be set to control its behaviour)
     * ``Oscilloscope.plot_trace()``
 
-  - *New properties*:
+  - *New properties*: New properties getters querying the instrument for the
+    current state and setters to change the state
 
-    * ``Oscilloscope.active_channels`` can now be used to set and get the
-      currently active channels
-    * ``Oscilloscope.timeout`` this was previously just an attribute with no
-      set option
+    * ``Oscilloscope.active_channels``
+    * ``Oscilloscope.acq_type``
+    * ``Oscilloscope.num_averages``
+    * ``Oscilloscope.p_mode``
+    * ``Oscilloscope.num_points``
+    * ``Oscilloscope.wav_format``
+    * ``Oscilloscope.timeout`` (this affects the pyvisa resource, not the scope
+      itself)
 
   - *No compatibility*: Name changes
 

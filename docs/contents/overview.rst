@@ -17,7 +17,7 @@ Quick reference
 ===============
 
 .. include:: ../../README.rst
-  :start-after: command-line-use-marker
+  :start-after: API-use-marker
   :end-before: contribute-marker
 
 
