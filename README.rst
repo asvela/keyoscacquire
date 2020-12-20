@@ -28,7 +28,35 @@ Available at `keyoscacquire.rtfd.io <http://keyoscacquire.readthedocs.io/en/late
 A few examples below, but formatting and links are broken as the snippet is intended
 for the documentation parser.
 
-.. command-line-use-marker
+.. API-use-marker
+
+Python console/API
+------------------
+
+The Reference section (particularly :ref:`osc-class`) gives all the necessary
+information about the API.
+
+As an example of API usage/use in the Python console::
+
+   >>> import keyoscacquire.oscacq as koa
+   >>> scope = koa.Oscilloscope(address='USB0::1234::1234::MY1234567::INSTR')
+   >>> scope.acq_type = 'AVER8'
+   >>> print(scope.num_points)
+   7680
+   >>> time, y, channel_numbers = scope.get_trace(channels=[2, 1, 4])
+   Acquire from channels:  [1, 2, 4]
+   Start acquisition..
+   Points captured per channel: 7,680
+   >>> print(channel_numbers)
+   [1, 2, 4]
+   >>> scope.save_trace(showplot=True)
+   Saving trace to:  data.csv
+   >>> scope.close()
+
+where ``time`` is a vertical numpy (2D) array of time values and ``y`` is a numpy
+array which columns contain the data from the active channels listed in
+``channel_numbers``. The trace saved to ``data.csv`` contains metadata such as
+a timestamp, acquisition type, the channels used etc.
 
 Command line use
 ----------------
@@ -67,24 +95,6 @@ The package installs the following command line programmes in the Python path
   pressed, use with option ``-h`` for instructions
 
 See more under :ref:`cli-programmes-short`.
-
-
-Python console/API
-------------------
-
-In the Python console::
-
-   >>> import keyoscacquire.oscacq as koa
-   >>> osc = koa.Oscilloscope(address='USB0::1234::1234::MY1234567::INSTR')
-   >>> time, y, channel_numbers = osc.set_options_get_trace()
-   >>> osc.close()
-
-where ``time`` is a vertical numpy (2D) array of time values and ``y`` is a numpy
-array which columns contain the data from the active channels listed in
-``channel_numbers``.
-
-Explore the Reference section (particularly :ref:`osc-class`) to get more
-information about the API.
 
 .. contribute-marker
 

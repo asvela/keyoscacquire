@@ -71,13 +71,13 @@ class Oscilloscope:
     verbose_acquistion : bool
         If ``True``: prints that the capturing starts and the number of points
         captured
-    fname : str, default :data:`~keyoscacquire.config._filename`
+    fname : str, default :data:`keyoscacquire.config._filename`
         The filename to which the trace will be saved with :meth:`save_trace()`
-    ext : str, default :data:`~keyoscacquire.config._filetype`
+    ext : str, default :data:`keyoscacquire.config._filetype`
         The extension for saving traces, must include the period, e.g. ``.csv``
-    savepng : bool, default :data:`~keyoscacquire.config._export_png`
+    savepng : bool, default :data:`keyoscacquire.config._export_png`
         If ``True``: will save a png of the plot when :meth:`save_trace()`
-    showplot : bool, default data:`~keyoscacquire.config._show_plot`
+    showplot : bool, default :data:`keyoscacquire.config._show_plot`
         If ``True``: will show a matplotlib plot window when :meth:`save_trace()`
     _inst : :class:`pyvisa.resources.Resource`
         The oscilloscope PyVISA resource
@@ -277,27 +277,26 @@ class Oscilloscope:
     def acq_type(self):
         """Acquisition mode of the oscilloscope
 
-        Can be either
+        Choose between
 
-            * ``'NORMal'`` — sets the oscilloscope in the normal mode.
-            * ``'AVERage'`` or ``'AVER<m>'`` — sets the oscilloscope in the averaging mode.
-              The number of averages can be set with :property:`num_averages`, or
-               <m> will be used as :property:`num_averages` if supplied.
-               <m> can be in the range 2 to 65,536
-            * ``'HRESolution'`` — sets the oscilloscope in the high-resolution mode
-              (also known as smoothing). This mode is used to reduce noise at slower
-              sweep speeds where the digitizer samples faster than needed to fill memory for the displayed time range.
-
-                For example, if the digitizer samples at 200 MSa/s, but the effective sample rate is 1 MSa/s
-                (because of a slower sweep speed), only 1 out of every 200 samples needs to be stored.
-                Instead of storing one sample (and throwing others away), the 200 samples are averaged
-                together to provide the value for one display point. The slower the sweep speed, the greater
-                the number of samples that are averaged together for each display point.
+        * ``'NORMal'`` — sets the oscilloscope in the normal mode.
+        * ``'AVERage'`` or ``'AVER<m>'`` — sets the oscilloscope in the averaging mode.
+          The number of averages can be set with :attr:`num_averages`, or
+          <m> will be used as :attr:`num_averages` if supplied.
+          <m> can be in the range 2 to 65,536
+        * ``'HRESolution'`` — sets the oscilloscope in the high-resolution mode
+          (also known as smoothing). This mode is used to reduce noise at slower
+          sweep speeds where the digitizer samples faster than needed to fill memory for the displayed time range.
+            For example, if the digitizer samples at 200 MSa/s, but the effective sample rate is 1 MSa/s
+            (because of a slower sweep speed), only 1 out of every 200 samples needs to be stored.
+            Instead of storing one sample (and throwing others away), the 200 samples are averaged
+            together to provide the value for one display point. The slower the sweep speed, the greater
+            the number of samples that are averaged together for each display point.
 
         :getter:  Returns the current mode (will not return ``<m>`` for ``AVER``)
         :setter:  Sets the mode, for example ``AVER8``, if :attr:`verbose` will
                   print the type and the number of averages number
-        :type:    ``{'NORMal', 'AVERage', 'AVER<m>', 'HRES'}
+        :type:    ``{'NORMal', 'AVERage', 'AVER<m>', 'HRES'}``
 
         Raises
         ------
@@ -330,7 +329,7 @@ class Oscilloscope:
     @property
     def num_averages(self):
         """The number of averages taken if the scope is in the ``'AVERage'``
-        :property:`acq_type`
+        :attr:`acq_type`
 
         :getter:  Returns the current number of averages
         :setter:  Set the number, will print the number if :attr:`verbose`
@@ -360,7 +359,7 @@ class Oscilloscope:
         1e6 points. Use ``'MAXimum'`` for sources that are not analogue or digital.
 
         :getter:  Returns the current mode
-        :setter:  Set the mode, will check if compatible with the :property:`acq_type`
+        :setter:  Set the mode, will check if compatible with the :attr:`acq_type`
         :type:    ``{'NORMal', 'RAW', 'MAXimum'}``
         """
         return self.query(":WAVeform:POINts:MODE?")
@@ -376,9 +375,9 @@ class Oscilloscope:
 
     @property
     def num_points(self):
-        """The number of points to be acquired for each channel. Use 0 to let
-        get the maximum number given the :property:`p_mode`, otherwise
-        override with a lower number than maximum for the :property:`p_mode`
+        """The number of points to be acquired for each channel. Use 0 to
+        get the maximum number given the :attr:`p_mode`, or override with a
+        lower number than maximum for the given :attr:`p_mode`
 
         .. warning:: If the exact number of points is crucial, always check the
           number of points with the getter after performing the setter.
@@ -388,7 +387,7 @@ class Oscilloscope:
           always stops the scope when getting a trace, the getter will also
           do this to get the actual number of points that will be
           transferred (otherwise the returned number will be capped by the
-          :property:`p_mode` ``NORMal`` (which can be transferred without
+          :attr:`p_mode` ``NORMal`` (which can be transferred without
           stopping the scope)).
 
         :getter:  Returns the number of points that will be acquired (stopping
@@ -455,13 +454,13 @@ class Oscilloscope:
 
         Parameters
         ----------
-        wav_format : {``'WORD'``, ``'BYTE'``, ``'ASCii'``}, default :data:`~keyoscacquire.config._waveform_format`
+        wav_format : {``'WORD'``, ``'BYTE'``, ``'ASCii'``}, default :data:`keyoscacquire.config._waveform_format`
             Select the format of the communication of waveform from the
             oscilloscope, see :attr:`wav_format`
-        acq_type : {``'HRESolution'``, ``'NORMal'``, ``'AVERage'``, ``'AVER<m>'``}, default :data:`~keyoscacquire.config._acq_type`
+        acq_type : {``'HRESolution'``, ``'NORMal'``, ``'AVERage'``, ``'AVER<m>'``}, default :data:`keyoscacquire.config._acq_type`
             Acquisition mode of the oscilloscope. <m> will be used as
             num_averages if supplied, see :attr:`acq_type`
-        num_averages : int, 2 to 65536, default :data:`~keyoscacquire.config._num_avg`
+        num_averages : int, 2 to 65536, default :data:`keyoscacquire.config._num_avg`
             Applies only to the ``'AVERage'`` mode: The number of averages applied
         p_mode : {``'NORMal'``, ``'RAW'``, ``'MAXimum'``}, default ``'RAW'``
             ``'NORMal'`` is limited to 62,500 points, whereas ``'RAW'`` gives up to 1e6 points.
@@ -555,7 +554,7 @@ class Oscilloscope:
         raw : :class:`~numpy.ndarray`
             An ndarray of ints that can be converted to voltage values using the preamble.
         metadata
-            depends on the wav_format
+            depends on the :attr:`wav_format`
 
         Parameters
         ----------
@@ -565,7 +564,7 @@ class Oscilloscope:
         Raises
         ------
         ValueError
-            If :attr:`wav_format` is not {'BYTE', 'WORD', 'ASCii'}
+            If :attr:`wav_format` is not one of ``{'BYTE', 'WORD', 'ASCii'}``
 
         See also
         --------
@@ -695,9 +694,9 @@ class Oscilloscope:
         Parameters
         ----------
         channels : list of ints or ``'active'``, default :data:`~keyoscacquire.config._ch_nums`
-            list of the channel numbers to be acquired, example ``[1, 3]``.
-            Use ``'active'`` or ``[]`` to capture all the currently active
-            channels on the oscilloscope.
+            Optionally change the list of the channel numbers to be acquired,
+            example ``[1, 3]``. Use ``'active'`` or ``[]`` to capture all the
+            currently active channels on the oscilloscope.
         verbose_acquistion : bool or ``None``, default ``None``
             Optionally change :attr:`verbose_acquistion`
 
@@ -798,8 +797,8 @@ class Oscilloscope:
             Applies only to the ``'AVERage'`` mode: The number of averages applied
         p_mode : {``'NORMal'``, ``'RAW'``, ``'MAXimum'``}, default ``'RAW'``
             ``'NORMal'`` is limited to 62,500 points, whereas ``'RAW'`` gives up
-             to 1e6 points. Use ``'MAXimum'`` for sources that are not analogue
-             or digital
+            to 1e6 points. Use ``'MAXimum'`` for sources that are not analogue
+            or digital
         num_points : int, default 0
             Use 0 to let :attr:`p_mode` control the number of points, otherwise
             override with a lower number than maximum for the :attr:`p_mode`
@@ -879,7 +878,7 @@ class Oscilloscope:
 
     def save_trace(self, fname=None, ext=None, additional_header_info=None,
                    savepng=None, showplot=None, nowarn=False):
-        """Save the most recent trace to fname+ext. Will check if the filename
+        """Save the most recent trace to ``fname+ext``. Will check if the filename
         exists, and let the user append to the fname if that is the case.
 
         Parameters

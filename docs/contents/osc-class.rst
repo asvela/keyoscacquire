@@ -38,15 +38,33 @@ Oscilloscope state control
 .. automethod:: Oscilloscope.is_running
 .. autoproperty:: Oscilloscope.active_channels
 
-Acquisition and transfer options
---------------------------------
+Acquisition and transfer properties
+-----------------------------------
+
+These are properties, meaning that they can be used like this::
+
+  with Oscilloscope() as scope:
+    scope.acq_type = 'AVER8'
+    print(f"Number of points that will be captured {scope.num_points}")
+    scope.num_points = 1500
+    print(f"Changed the number of points to be captured to {scope.num_points}")
+
+.. autoproperty:: Oscilloscope.acq_type
+.. autoproperty:: Oscilloscope.num_averages
+.. autoproperty:: Oscilloscope.p_mode
+.. autoproperty:: Oscilloscope.num_points
+.. autoproperty:: Oscilloscope.wav_format
+
+
+Multiple acquisition and transfer options setting functions
+-----------------------------------------------------------
 
 .. automethod:: Oscilloscope.set_channels_for_capture
 .. automethod:: Oscilloscope.set_acquiring_options
 .. automethod:: Oscilloscope.set_waveform_export_options
 
-
---------------
+Other
+-----
 
 .. automethod:: Oscilloscope.capture_and_read
 .. automethod:: Oscilloscope.generate_file_header
