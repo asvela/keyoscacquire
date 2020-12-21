@@ -6,7 +6,7 @@ Andreas Svela // 2019
 """
 
 visa_path = 'C:\\Program Files\\IVI Foundation\\VISA\\Win64\\agvisa\\agbin\\visa32.dll'
-visa_address = 'USB0::0x0957::0x1796::MY59125372::INSTR'
+visa_address = 'USB0::0x0957::0x1796::MY56272971::INSTR'
 
 
 import pyvisa
@@ -19,19 +19,19 @@ format_dict = {0: "BYTE", 1: "WORD", 4: "ASCii"}
 formats = ['BYTE', 'WORD', 'ASCii']
 
 
-print("\n## ~~~~~~~~~~~~~~~~~ KEYOSCAQUIRE ~~~~~~~~~~~~~~~~~~ ##")
+print("\n## ~~~~~~~~~~~~~~~~~ KEYOSCACQUIRE ~~~~~~~~~~~~~~~~~~ ##")
 
 scope = koa.Oscilloscope(address=visa_address)
-scope.set_acquiring_options(num_points=2000)
-scope.set_channels_for_capture(channel_nums=['1'])
-scope.stop()
+scope.num_points = 2000
+scope.set_channels_for_capture(channels=[1])
+# scope.stop()
 
 times, values = [[], []], [[], []]
 for wav_format in formats:
-    print("\nWaveform format", wav_format)
-    scope.set_acquiring_options(wav_format=wav_format)
+    print("\nWaveform format: ", wav_format)
+    scope.wav_format = wav_format
     scope.capture_and_read(set_running=False)
-    time, vals = koa.process_data(scope.raw, scope.metadata, wav_format, acquire_print=True)
+    time, vals = koa.oscacq.process_data(scope._raw, scope._metadata, wav_format, verbose_acquistion=True)
     times[0].append(time)
     values[0].append(vals)
 
@@ -41,7 +41,7 @@ scope.close(set_running=False)
 print("\n## ~~~~~~~~~~~~~~~~~~~ PYVISA ~~~~~~~~~~~~~~~~~~~~~ ##")
 
 # use Keysight VISA and connect to instrument
-rm = pyvisa.ResourceManager(visa_path)
+rm = pyvisa.ResourceManager()#visa_path)
 inst = rm.open_resource(visa_address)
 inst.write('*CLS')  # clears the status data structures, the device-defined error queue, and the Request-for-OPC flag
 id = inst.query('*IDN?').strip() # get the id of the connected device
