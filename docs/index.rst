@@ -41,11 +41,3 @@ License
 -------
 
 The project is licensed under the MIT license, see :ref:`license`.
-
-
-Indices and tables
-------------------
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`

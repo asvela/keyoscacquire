@@ -88,7 +88,9 @@ class Oscilloscope:
             'KEYSIGHT TECHNOLOGIES,MSO9104A,MY12345678,06.30.00609'
 
     _model : str
-        The instrument model name
+        The instrument's model name
+    _serial : str
+        The instrument's serial number
     _address : str
         Visa address of instrument
     _time : :class:`~numpy.ndarray`
@@ -494,7 +496,7 @@ class Oscilloscope:
 
         Parameters
         ----------
-        wav_format : {``'WORD'``, ``'BYTE'``, ``'ASCii'``}, default :data:`~keyoscacquire.config._waveform_format`
+        wav_format : {``'WORD'``, ``'BYTE'``, ``'ASCii'``}, default :data:`keyoscacquire.config._waveform_format`
             Select the format of the communication of waveform from the
             oscilloscope, see :attr:`wav_format`
         p_mode : {``'NORMal'``, ``'RAW'``}, default ``'RAW'``
@@ -519,7 +521,7 @@ class Oscilloscope:
 
         Parameters
         ----------
-        channels : list of ints or ``'active'``, default :data:`~keyoscacquire.config._ch_nums`
+        channels : list of ints or ``'active'``, default :data:`keyoscacquire.config._ch_nums`
             list of the channel numbers to be acquired, example ``[1, 3]``.
             Use ``'active'`` or ``[]`` to capture all the currently active
             channels on the oscilloscope.
@@ -821,9 +823,9 @@ class Oscilloscope:
             additional_line
             time,<chs>
 
-        Where ``<id>`` is the :attr:`~keyoscacquire.oscacq.Oscilloscope.id` of
-        the oscilloscope, ``<mode>`` is the :attr:`~keyoscacquire.oscacq.Oscilloscope.acq_type`,
-        ``<averages>`` :attr:`~keyoscacquire.oscacq.Oscilloscope.num_averages`
+        Where ``<id>`` is the :attr:`_id` of
+        the oscilloscope, ``<mode>`` is the :attr:`acq_type`,
+        ``<averages>`` :attr:`num_averages`
         (``"N/A"`` if not applicable) and ``<chs>`` are the comma separated
         channels used.
 
@@ -883,15 +885,15 @@ class Oscilloscope:
 
         Parameters
         ----------
-        fname : str, default :data:`~keyoscacquire.config._filename`
+        fname : str, default :data:`keyoscacquire.config._filename`
             Filename of trace
-        ext : ``{'.csv', '.npy'}``, default :data:`~keyoscacquire.config._ext`
+        ext : ``{'.csv', '.npy'}``, default :data:`keyoscacquire.config._filetype`
             Choose the filetype of the saved trace
         additional_header_info : str, default ```None``
             Will put this string as a separate line before the column headers
-        savepng : bool, default :data:`~keyoscacquire.config._export_png`
+        savepng : bool, default :data:`keyoscacquire.config._export_png`
             Choose whether to also save a png with the same filename
-        showplot : bool, default :data:`~keyoscacquire.config._show_plot`
+        showplot : bool, default :data:`keyoscacquire.config._show_plot`
             Choose whether to show a plot of the trace
         """
         if not self._time is None:
