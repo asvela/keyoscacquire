@@ -98,7 +98,6 @@ class Oscilloscope:
     _capture_channels : list of ints
         The channels of captured for the most recent trace
     """
-    _capture_active = True
     _capture_channels = None
     _raw = None
     _metadata = None
@@ -542,7 +541,7 @@ class Oscilloscope:
 
         Parameters
         ----------
-        channels : list of ints or ``'active'``, default :data:`~keyoscacquire.config._ch_nums`
+        channels : list of ints or ``'active'``, default
             list of the channel numbers to be acquired, example ``[1, 3]``.
             Use ``'active'`` or ``[]`` to capture all the currently active
             channels on the oscilloscope.
@@ -553,13 +552,10 @@ class Oscilloscope:
             the channels that will be captured, example ``[1, 3]``
         """
         # If no channels specified, find the channels currently active and acquire from those
-        if np.any(channels in [[], ['active'], 'active']) or (self._capture_active and channels is None):
+        if channels is None or np.any(channels in [[], ['active'], 'active']):
             self._capture_channels = self.active_channels
-            # Store that active channels are being used
-            self._capture_active = True
         else:
             self._capture_channels =  channels
-            self._capture_active = False
         # Build list of sources
         self._sources = [f"CHAN{ch}" for ch in self._capture_channels]
         return self._capture_channels
@@ -733,7 +729,8 @@ class Oscilloscope:
         # Possibility to override verbose_acquistion
         if verbose_acquistion is not None:
             self.verbose_acquistion = verbose_acquistion
-        self.set_channels_for_capture(channels=channels)
+        if channels is not None:
+            self.set_channels_for_capture(channels=channels)
         # Capture, read and process data
         self.capture_and_read()
         self._time, self._values = process_data(self._raw, self._metadata, self.wav_format,

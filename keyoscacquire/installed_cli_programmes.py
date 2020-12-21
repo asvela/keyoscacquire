@@ -37,65 +37,82 @@ channels_help = f"List of the channel numbers to be acquired, for example '1 3' 
 points_help = f"Use 0 to get the maximum number of points, or set a specific number (the scope might change it slightly). Defaults to '{config._num_points}."
 delim_help = f"Delimiter used between filename and filenumber (before filetype). Defaults to '{config._file_delimiter}'."
 
+def standard_arguments(parser):
+    connection_gr = parser.add_argument_group('Connection settings')
+    connection_gr.add_argument('-v', '--visa_address',
+                               nargs='?', default=config._visa_address, help=visa_help)
+    connection_gr.add_argument('-t', '--timeout',
+                               nargs='?', type=int, default=config._timeout, help=timeout_help)
+    acquire_gr = parser.add_argument_group('Acquisition settings')
+    acquire_gr.add_argument('-c', '--channels',
+                            nargs='*', type=int, default=None, help=channels_help)
+    acquire_gr.add_argument('-a', '--acq_type',
+                            nargs='?',default=None, help=acq_help)
+    trans_gr = parser.add_argument_group('Transfer and storage settings')
+    trans_gr.add_argument('-w', '--wav_format',
+                          nargs='?', default=config._waveform_format, help=wav_help)
+    trans_gr.add_argument('-p', '--num_points',
+                          nargs='?', type=int, default=config._num_points,  help=points_help)
+    trans_gr.add_argument('-f', '--filename',
+                          nargs='?', default=config._filename, help=file_help)
+    return trans_gr
+
+
 def connect_each_time_cli():
     """Function installed on the command line: Obtains and stores multiple traces,
     connecting to the oscilloscope each time."""
     parser = argparse.ArgumentParser(description=acqprog.get_traces_connect_each_time_loop.__doc__)
-    connection_gr = parser.add_argument_group('Connection settings')
-    connection_gr.add_argument('-v', '--visa_address', nargs='?', help=visa_help, default=config._visa_address)
-    connection_gr.add_argument('-t', '--timeout', nargs='?', help=timeout_help, default=config._timeout, type=int)
-    acquire_gr = parser.add_argument_group('Acquisition settings')
-    acquire_gr.add_argument('-c', '--channels', nargs='*',  type=int, help=channels_help, default=None)
-    acquire_gr.add_argument('-a', '--acq_type', nargs='?', help=acq_help, default=None)
-    trans_gr = parser.add_argument_group('Transfer and storage settings')
-    trans_gr.add_argument('-w', '--wav_format', nargs='?', help=wav_help, default=config._waveform_format)
-    trans_gr.add_argument('-p', '--num_points', nargs='?', help=points_help, default=config._num_points, type=int)
-    trans_gr.add_argument('-f', '--filename', nargs='?', help=file_help, default=config._filename)
+    trans_gr = standard_arguments(parser)
     trans_gr.add_argument('--file_delimiter', nargs='?', help=delim_help, default=config._file_delimiter)
     args = parser.parse_args()
-
-    acqprog.get_traces_connect_each_time_loop(fname=args.filename, address=args.visa_address, timeout=args.timeout, wav_format=args.wav_format,
-                             channels=args.channels, acq_type=args.acq_type, num_points=args.num_points, file_delim=args.file_delimiter)
+    # Convert channels arg to ints
+    if args.channels is not None:
+        args.channels = [int(c) for c in args.channels]
+    acqprog.get_traces_connect_each_time_loop(fname=args.filename,
+                                              address=args.visa_address,
+                                              timeout=args.timeout,
+                                              wav_format=args.wav_format,
+                                              channels=args.channels,
+                                              acq_type=args.acq_type,
+                                              num_points=args.num_points,
+                                              file_delim=args.file_delimiter)
 
 
 def single_connection_cli():
     """Function installed on the command line: Obtains and stores multiple traces,
     keeping a the same connection to the oscilloscope open all the time."""
     parser = argparse.ArgumentParser(description=acqprog.get_traces_single_connection_loop.__doc__)
-    connection_gr = parser.add_argument_group('Connection settings')
-    connection_gr.add_argument('-v', '--visa_address', nargs='?', help=visa_help, default=config._visa_address)
-    connection_gr.add_argument('-t', '--timeout', nargs='?', help=timeout_help, default=config._timeout, type=int)
-    acquire_gr = parser.add_argument_group('Acquisition settings')
-    acquire_gr.add_argument('-c', '--channels', nargs='*',  type=int, help=channels_help, default=None)
-    acquire_gr.add_argument('-a', '--acq_type', nargs='?', help=acq_help, default=None)
-    trans_gr = parser.add_argument_group('Transfer and storage settings')
-    trans_gr.add_argument('-w', '--wav_format', nargs='?', help=wav_help, default=config._waveform_format)
-    trans_gr.add_argument('-p', '--num_points', nargs='?', help=points_help, default=config._num_points, type=int)
-    trans_gr.add_argument('-f', '--filename', nargs='?', help=file_help, default=config._filename)
+    trans_gr = standard_arguments(parser)
     trans_gr.add_argument('--file_delimiter', nargs='?', help=delim_help, default=config._file_delimiter)
     args = parser.parse_args()
-
-    acqprog.get_traces_single_connection_loop(fname=args.filename, address=args.visa_address, timeout=args.timeout, wav_format=args.wav_format,
-                             channels=args.channels, acq_type=args.acq_type, num_points=args.num_points, file_delim=args.file_delimiter)
+    # Convert channels arg to ints
+    if args.channels is not None:
+        args.channels = [int(c) for c in args.channels]
+    acqprog.get_traces_single_connection_loop(fname=args.filename,
+                                              address=args.visa_address,
+                                              timeout=args.timeout,
+                                              wav_format=args.wav_format,
+                                              channels=args.channels,
+                                              acq_type=args.acq_type,
+                                              num_points=args.num_points,
+                                              file_delim=args.file_delimiter)
 
 
 def single_trace_cli():
     """Function installed on the command line: Obtains and stores a single trace."""
     parser = argparse.ArgumentParser(description=acqprog.get_single_trace.__doc__)
-    connection_gr = parser.add_argument_group('Connection settings')
-    connection_gr.add_argument('-v', '--visa_address', nargs='?', help=visa_help, default=config._visa_address)
-    connection_gr.add_argument('-t', '--timeout', nargs='?', help=timeout_help, default=config._timeout, type=int)
-    acquire_gr = parser.add_argument_group('Acquisition settings')
-    acquire_gr.add_argument('-c', '--channels', nargs='*',  type=int, help=channels_help, default=None)
-    acquire_gr.add_argument('-a', '--acq_type', nargs='?', help=acq_help, default=None)
-    trans_gr = parser.add_argument_group('Transfer and storage settings')
-    trans_gr.add_argument('-w', '--wav_format', nargs='?', help=wav_help, default=config._waveform_format)
-    trans_gr.add_argument('-p', '--num_points', nargs='?', help=points_help, default=config._num_points, type=int)
-    trans_gr.add_argument('-f', '--filename', nargs='?', help=file_help, default=config._filename)
+    standard_arguments(parser)
     args = parser.parse_args()
-
-    acqprog.get_single_trace(fname=args.filename, address=args.visa_address, timeout=args.timeout, wav_format=args.wav_format,
-                             channels=args.channels, acq_type=args.acq_type, num_points=args.num_points)
+    # Convert channels arg to ints
+    if args.channels is not None:
+        args.channels = [int(c) for c in args.channels]
+    acqprog.get_single_trace(fname=args.filename,
+                             address=args.visa_address,
+                             timeout=args.timeout,
+                             wav_format=args.wav_format,
+                             channels=args.channels,
+                             acq_type=args.acq_type,
+                             num_points=args.num_points)
 
 def num_traces_cli():
     """Function installed on the command line: Obtains and stores a single trace."""
@@ -103,21 +120,20 @@ def num_traces_cli():
     # postitional arg
     parser.add_argument('num', help='The number of successive traces to obtain.', type=int)
     # optional args
-    connection_gr = parser.add_argument_group('Connection settings')
-    connection_gr.add_argument('-v', '--visa_address', nargs='?', help=visa_help, default=config._visa_address)
-    connection_gr.add_argument('-t', '--timeout', nargs='?', help=timeout_help, default=config._timeout, type=int)
-    acquire_gr = parser.add_argument_group('Acquisition settings')
-    acquire_gr.add_argument('-c', '--channels', nargs='*',  type=int, help=channels_help, default=None)
-    acquire_gr.add_argument('-a', '--acq_type', nargs='?', help=acq_help, default=None)
-    trans_gr = parser.add_argument_group('Transfer and storage settings')
-    trans_gr.add_argument('-w', '--wav_format', nargs='?', help=wav_help, default=config._waveform_format)
-    trans_gr.add_argument('-p', '--num_points', nargs='?', help=points_help, default=config._num_points, type=int)
-    trans_gr.add_argument('-f', '--filename', nargs='?', help=file_help, default=config._filename)
+    trans_gr = standard_arguments(parser)
     trans_gr.add_argument('--file_delimiter', nargs='?', help=delim_help, default=config._file_delimiter)
     args = parser.parse_args()
-
-    acqprog.get_num_traces(num=args.num, fname=args.filename, address=args.visa_address, timeout=args.timeout, wav_format=args.wav_format,
-                             channels=args.channels, acq_type=args.acq_type, num_points=args.num_points)
+    # Convert channels arg to ints
+    if args.channels is not None:
+        args.channels = [int(c) for c in args.channels]
+    acqprog.get_num_traces(num=args.num,
+                           fname=args.filename,
+                           address=args.visa_address,
+                           timeout=args.timeout,
+                           wav_format=args.wav_format,
+                           channels=args.channels,
+                           acq_type=args.acq_type,
+                           num_points=args.num_points)
 
 def list_visa_devices_cli():
     """Function installed on the command line: Lists VISA devices"""
