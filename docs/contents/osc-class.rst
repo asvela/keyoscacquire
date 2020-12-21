@@ -68,6 +68,7 @@ Other
 
 .. automethod:: Oscilloscope.capture_and_read
 .. automethod:: Oscilloscope.generate_file_header
+.. automethod:: Oscilloscope.print_acq_settings
 
 
 Auxiliary to the class

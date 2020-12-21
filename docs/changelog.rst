@@ -29,6 +29,11 @@ v4.0.0 (2020-12)
     for most functions the arguments stay the same as before. The arguments
     can now be used to change attributes of the ``Oscilloscope`` instance.
 
+  - ``Oscilloscope.__init__`` and other functions will no longer use default
+    settings in ``keyoscacquire.config`` that changes the settings of the
+    *Oscilloscope*, like active channels and acquisition type, but only set
+    default connection and transfer settings
+
   - Bugfixes and docfixes for the number of points to be transferred from the
     instrument (previously ``num_points`` argument, now a property). Zero will
     set the to the maximum number of points available, and the number of
@@ -43,12 +48,13 @@ v4.0.0 (2020-12)
   - ``Oscilloscope.query()`` will now try to read the error from the
     instrument if pyvisa fails
 
-  - Importing ``keyoscacquire.programmes`` in module ``init.py`` to make it accessible
+  - Importing ``keyoscacquire.programmes`` in module ``init.py`` to make it
+    accessible after importing the module
 
   - Changes in ``list_visa_devices`` and cli programme: now displaying different
     errors more clearly; cli programme now has ``-n`` flag that can be set to not
     ask for instrument IDNs; and the cli programme will display the instrument's
-    firmware rather than Keysight model series.
+    serial rather than Keysight model series.
 
   - Indicating functions for internal use only and read only attributes with
     prefix ``_``, see name changes below
@@ -90,7 +96,7 @@ v4.0.0 (2020-12)
     * ``Oscilloscope.inst`` -> ``Oscilloscope._inst``
     * ``Oscilloscope.id`` -> ``Oscilloscope._id``
     * ``Oscilloscope.address`` -> ``Oscilloscope._address``
-    * ``Oscilloscope._model`` -> ``Oscilloscope._model``
+    * ``Oscilloscope.model`` -> ``Oscilloscope._model``
     * ``Oscilloscope.model_series`` -> ``Oscilloscope._model_series``
 
   - *No compatibility*: Moved functions
@@ -98,7 +104,7 @@ v4.0.0 (2020-12)
     * ``interpret_visa_id()`` from ``oscacq`` to ``auxiliary``
     * ``check_file()`` from ``oscacq`` to ``auxiliary``
 
-  - *No compatibility*: Several functions no longer take ``sources`` and
+  - *No compatibility*: Some functions no longer take ``sources`` and
     ``sourcesstring`` as arguments, rather ``Oscilloscope._sources`` must be set by
     ``Oscilloscope.set_channels_for_capture()`` and ``sourcesstring`` is not in
     use anymore
@@ -109,10 +115,13 @@ v4.0.0 (2020-12)
 
   - *No compatibility*: Misc
 
-    * ``Oscilloscope.get_trace()`` now also returns
-      also ``Oscilloscope.num_channels``
+    * ``Oscilloscope.get_trace()`` now also returns ``Oscilloscope.num_channels``
     * ``Oscilloscope.get_active_channels()`` is now a property ``active_channels``
       and returns a list of ints, not chars
+    * ``keyoscacquire.config`` does not have the ``_acq_type``, ``_num_avg``,
+      and ``_ch_nums`` static variables anymore as these will not be used
+    * ``keyoscacquire.config`` has two new static variables, ``_num_points``
+      and ``_p_mode``
 
 
 

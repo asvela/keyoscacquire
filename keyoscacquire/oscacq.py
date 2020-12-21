@@ -41,7 +41,7 @@ class Oscilloscope:
     """PyVISA communication with the oscilloscope.
 
     Init opens a connection to an instrument and chooses default settings
-    for the connection and acquisition.
+    for the connection and acquisition as specified in :mod:`keyoscacquire.config`.
 
     Leading underscores indicate that an attribute or method is read-only or
     suggested to be for interal use only.
@@ -65,12 +65,12 @@ class Oscilloscope:
 
     Attributes
     ----------
-    verbose : bool
+    verbose : bool, default ``True``
         If ``True``: prints when the connection to the device is opened, the
         acquistion mode, etc
-    verbose_acquistion : bool
-        If ``True``: prints that the capturing starts and the number of points
-        captured
+    verbose_acquistion : bool, defaulting to ``self.verbose``
+        If ``True``: prints that the capturing starts, the channels
+        acquired from and the number of points captured
     fname : str, default :data:`keyoscacquire.config._filename`
         The filename to which the trace will be saved with :meth:`save_trace()`
     ext : str, default :data:`keyoscacquire.config._filetype`
@@ -98,6 +98,8 @@ class Oscilloscope:
     _capture_channels : list of ints
         The channels of captured for the most recent trace
     """
+    _capture_active = True
+    _capture_channels = None
     _raw = None
     _metadata = None
     _time = None
@@ -106,12 +108,12 @@ class Oscilloscope:
     ext = config._filetype
     savepng = config._export_png
     showplot = config._show_plot
+    verbose_acquistion = False
 
     def __init__(self, address=config._visa_address, timeout=config._timeout, verbose=True):
         """See class docstring"""
         self._address = address
         self.verbose = verbose
-        self.verbose_acquistion = verbose
         # Connect to the scope
         try:
             rm = pyvisa.ResourceManager()
@@ -119,7 +121,7 @@ class Oscilloscope:
         except pyvisa.Error as err:
             print(f"\n\nCould not connect to '{address}', see traceback below:\n")
             raise
-        self._timeout = timeout
+        self.timeout = timeout
         # For TCP/IP socket connections enable the read Termination Character, or reads will timeout
         if self._inst.resource_name.endswith('SOCKET'):
             self._inst.read_termination = '\n'
@@ -130,27 +132,36 @@ class Oscilloscope:
         self.write(':WAVeform:BYTeorder LSBFirst') # MSBF is default, must be overridden for WORD to work
         # Get information about the connected device
         self._id = self.query('*IDN?')
-        if self.verbose:
-            print(f"Connected to '{self._id}'")
-        _, self._model, _, _, self._model_series = auxiliary.interpret_visa_id(self._id)
+        try:
+            maker, self._model, self._serial, _, self._model_series = auxiliary.interpret_visa_id(self._id)
+            if self.verbose:
+                print(f"Connected to:")
+                print(f"  {maker}")
+                print(f"  {self._model} (serial {self._serial})")
+        except Exception:
+            if self.verbose:
+                print(f"Connected to '{self._id}'")
+            print("(!) Failed to intepret the VISA IDN string")
         if not self._model_series in _supported_series:
-                print("(!) WARNING: This model (%s) is not yet fully supported by keyoscacquire," % self._model)
-                print("             but might work to some extent. keyoscacquire supports Keysight's")
-                print("             InfiniiVision X-series oscilloscopes.")
-        # Populate attributes and set standard settings
-        if self.verbose:
-            print("Using settings:")
-        self.set_acquiring_options(wav_format=config._waveform_format, acq_type=config._acq_type,
-                                   num_averages=config._num_avg, p_mode='RAW', num_points=0,
-                                   verbose_acquistion=verbose)
-        print("  ", end="")
-        self.set_channels_for_capture(channels=config._ch_nums)
+                print(f"(!) WARNING: This model ({self._model}) is not yet fully supported by keyoscacquire,")
+                print( "             but might work to some extent. keyoscacquire supports Keysight's")
+                print( "             InfiniiVision X-series oscilloscopes.")
+        # Set standard settings
+        self.set_acquiring_options(wav_format=config._waveform_format, p_mode=config._p_mode,
+                                   num_points=config._num_points)
+        # Will set channels to the active channels
+        self.set_channels_for_capture()
+        self.verbose_acquistion = verbose
 
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
-        self.close()
+        if exc_type is not None:
+            # Do not try to set running if an exception ocurred
+            self.close(set_running=False)
+        else:
+            self.close()
 
     def write(self, command):
         """Write a VISA command to the oscilloscope.
@@ -181,11 +192,11 @@ class Oscilloscope:
             else:
                 msg = f"query '{command}'"
             print(f"\nVisaError: {err}\n  When trying {msg}.")
-            print(f"  Have you checked that the timeout (currently {self._timeout:,d} ms) is sufficently long?")
+            print(f"  Have you checked that the timeout (currently {self.timeout:,d} ms) is sufficently long?")
             try:
                 print(f"Latest error from the oscilloscope: '{self.get_error()}'\n")
             except Exception:
-                print("Could not retrieve error from the oscilloscope")
+                print("Could not retrieve error from the oscilloscope\n")
             raise
 
     def close(self, set_running=True):
@@ -248,7 +259,7 @@ class Oscilloscope:
     @timeout.setter
     def timeout(self, timeout: int):
         """See getter"""
-        self._inst.timeout = val
+        self._inst.timeout = timeout
 
     @property
     def active_channels(self):
@@ -310,8 +321,6 @@ class Oscilloscope:
         """See getter"""
         acq_type = type[:4].upper()
         self.write(f":ACQuire:TYPE {acq_type}")
-        if self.verbose:
-            print(f"  Acquisition type:  {acq_type}")
         # Handle AVER<m> expressions
         if acq_type == 'AVER':
             if len(type) > 4 and not type[4:].lower() == 'age':
@@ -321,10 +330,6 @@ class Oscilloscope:
                     ValueError(f"\nValueError: Failed to convert '{type[4:]}' to an integer, "
                                 "check that acquisition type is on the form AVER or AVER<m> "
                                f"where <m> is an integer (currently acq. type is '{type}').\n")
-            else:
-                num = self.num_averages
-                if self.verbose:
-                    print(f"  # of averages:  {num}")
 
     @property
     def num_averages(self):
@@ -348,8 +353,14 @@ class Oscilloscope:
         if not (2 <= num <= 65536):
                 raise ValueError(f"\nThe number of averages {num} is out of range.")
         self.write(f":ACQuire:COUNt {num}")
-        if self.verbose and self.acq_type == 'AVER':
-            print(f"  # of averages:  {num}")
+
+    def print_acq_settings(self):
+        """Print the current settings for acquistion from the scope"""
+        acq_type = self.acq_type
+        print(f"Acquisition type: {acq_type}")
+        if acq_type == 'AVER':
+            print(f"# of averages:    {self.num_averages}")
+        print(f"From channels:    {self._capture_channels}")
 
     @property
     def p_mode(self):
@@ -372,6 +383,7 @@ class Oscilloscope:
             _log.info(f":WAVeform:POINts:MODE overridden (from {p_mode}) to "
                         "NORMal due to :ACQuire:TYPE:AVERage.")
         self.write(f":WAVeform:POINts:MODE {p_mode}")
+        _log.debug(f"Points mode set to:  {p_mode}")
 
     @property
     def num_points(self):
@@ -395,6 +407,11 @@ class Oscilloscope:
         :setter:  Set the number, but beware that the scope might change the
                   number depending on memory depth, time axis settings, etc.
         :type:    int
+
+        Raises
+        ------
+        ValueError
+            If a negative integer or other datatypes are given.
         """
         # Must stop the scope to be able to read the actual number of points
         # that will be transferred in the RAW or MAX mode
@@ -415,6 +432,8 @@ class Oscilloscope:
             if self._model_series in ['9000']:
                 self.write(f":ACQuire:POINts {num_points}")
             else:
+                if num_points > 7680:
+                    self.p_mode = 'RAW'
                 # Must stop the scope to set the number of points to avoid
                 # getting an error in the scopes' log (however, it seems to
                 # be working regardless, only the get_error() will return -222)
@@ -422,6 +441,9 @@ class Oscilloscope:
                 self.write(f":WAVeform:POINts {num_points}")
                 self.run()
             _log.debug(f"Number of points set to:  {num_points}")
+        else:
+            ValueError(f"Cannot set points mode ('{num_points}' is not a "
+                        "non-negative integer)")
 
     @property
     def wav_format(self):
@@ -446,6 +468,7 @@ class Oscilloscope:
     def wav_format(self, wav_format: str):
         """See getter"""
         self.write(f":WAVeform:FORMat {wav_format}")
+        _log.debug(f"Waveform format set to:  {wav_format}")
 
     def set_acquiring_options(self, wav_format=None, acq_type=None,
                               num_averages=None, p_mode=None, num_points=None,
@@ -460,14 +483,14 @@ class Oscilloscope:
         acq_type : {``'HRESolution'``, ``'NORMal'``, ``'AVERage'``, ``'AVER<m>'``}, default :data:`keyoscacquire.config._acq_type`
             Acquisition mode of the oscilloscope. <m> will be used as
             num_averages if supplied, see :attr:`acq_type`
-        num_averages : int, 2 to 65536, default :data:`keyoscacquire.config._num_avg`
+        num_averages : int, 2 to 65536
             Applies only to the ``'AVERage'`` mode: The number of averages applied
-        p_mode : {``'NORMal'``, ``'RAW'``, ``'MAXimum'``}, default ``'RAW'``
+        p_mode : {``'NORMal'``, ``'RAW'``, ``'MAXimum'``}, default :data:`keyoscacquire.config._p_mode`
             ``'NORMal'`` is limited to 62,500 points, whereas ``'RAW'`` gives up to 1e6 points.
             Use ``'MAXimum'`` for sources that are not analogue or digital
-        num_points : int, default 0
-            Use 0 to get the maximum amount of points, otherwise
-            override with a lower number than maximum for the :attr:`p_mode`
+        num_points : int, default :data:`keyoscacquire.config._num_points`
+            Use 0 to get the maximum amount of points for the current :attr:`p_mode`,
+            otherwise override with a lower number than maximum for the :attr:`p_mode`
         verbose_acquistion : bool or ``None``, default ``None``
             Temporarily control attribute which decides whether to print
             information while acquiring: bool sets it to the bool value,
@@ -497,9 +520,9 @@ class Oscilloscope:
         wav_format : {``'WORD'``, ``'BYTE'``, ``'ASCii'``}, default :data:`~keyoscacquire.config._waveform_format`
             Select the format of the communication of waveform from the
             oscilloscope, see :attr:`wav_format`
-        p_mode : {``'NORMal'``, ``'RAW'``}, default ``'RAW'``
+        p_mode : {``'NORMal'``, ``'RAW'``}, default :data:`keyoscacquire.config._p_mode`
             ``'NORMal'`` is limited to 62,500 points, whereas ``'RAW'`` gives up to 1e6 points.
-        num_points : int, default 0
+        num_points : int, default :data:`keyoscacquire.config._num_points`
             Use 0 to get the maximum amount of points, otherwise
             override with a lower number than maximum for the :attr:`p_mode`
         """
@@ -539,8 +562,6 @@ class Oscilloscope:
             self._capture_active = False
         # Build list of sources
         self._sources = [f"CHAN{ch}" for ch in self._capture_channels]
-        if self.verbose_acquistion:
-            print(f"Acquire from channels:  {self._capture_channels}")
         return self._capture_channels
 
     def capture_and_read(self, set_running=True):
@@ -570,9 +591,10 @@ class Oscilloscope:
         --------
         :func:`process_data`
         """
-        ## Capture data
+        wav_format = self.wav_format
         if self.verbose_acquistion:
-            print("Start acquisition..")
+            self.print_acq_settings()
+            print(f"Acquiring  (format '{wav_format}').. ", end="", flush=True)
         start_time = time.time() # time the acquiring process
         # If the instrument is not running, we presumably want the data
         # on the screen and hence don't want to use DIGitize as digitize
@@ -583,20 +605,18 @@ class Oscilloscope:
             # When acquisition is complete, the instrument is stopped.
             self.write(':DIGitize ' + ", ".join(self._sources))
         ## Read from the scope
-        wav_format = self.wav_format[:3]
+        wav_format = wav_format[:3]
         if wav_format in ['WOR', 'BYT']:
             self._read_binary(datatype=_datatypes[wav_format])
         elif wav_format[:3] == 'ASC':
             self._read_ascii()
         else:
-            raise ValueError(f"Could not capture and read data, waveform format "
+            raise ValueError(f"\nCould not capture and read data, waveform format "
                              f"'{wav_format}' is unknown.\n")
-        ## Print to log
-        to_log = f"Elapsed time capture and read: {(time.time()-start_time)*1e3:.1f} ms"
         if self.verbose_acquistion:
-            _log.info(to_log)
-        else:
-            _log.debug(to_log)
+            print("done")
+        to_log = f"Elapsed time capture and read: {(time.time()-start_time)*1e3:.1f} ms"
+        _log.debug(to_log)
         if set_running:
             self.run()
 
@@ -631,9 +651,9 @@ class Oscilloscope:
         for source in self._sources:
             # Select the channel for which the succeeding WAVeform commands applies to
             self.write(f":WAVeform:SOURce {source}")
+            # obtain comma separated metadata values for processing of raw data for this source
+            self._metadata.append(self.query(':WAVeform:PREamble?'))
             try:
-                # obtain comma separated metadata values for processing of raw data for this source
-                self._metadata.append(self.query(':WAVeform:PREamble?'))
                 # obtain the data
                 # read out data for this source
                 self._raw.append(self._inst.query_binary_values(':WAVeform:DATA?',
@@ -641,7 +661,7 @@ class Oscilloscope:
                                                                container=np.array))
             except pyvisa.Error as err:
                 print(f"\n\nVisaError: {err}\n  When trying to obtain the waveform.")
-                print(f"  Have you checked that the timeout (currently {self._timeout:,d} ms) is sufficently long?")
+                print(f"  Have you checked that the timeout (currently {self.timeout:,d} ms) is sufficently long?")
                 try:
                     print(f"Latest error from the oscilloscope: '{self.get_error()}'\n")
                 except Exception:
@@ -693,7 +713,7 @@ class Oscilloscope:
 
         Parameters
         ----------
-        channels : list of ints or ``'active'``, default :data:`~keyoscacquire.config._ch_nums`
+        channels : list of ints or ``'active'``, uses oscilloscope setting by default
             Optionally change the list of the channel numbers to be acquired,
             example ``[1, 3]``. Use ``'active'`` or ``[]`` to capture all the
             currently active channels on the oscilloscope.
@@ -710,10 +730,10 @@ class Oscilloscope:
         _capture_channels : list of ints
             list of the channels obtaied from, example ``[1, 3]``
         """
-        self.set_channels_for_capture(channels=channels)
         # Possibility to override verbose_acquistion
         if verbose_acquistion is not None:
             self.verbose_acquistion = verbose_acquistion
+        self.set_channels_for_capture(channels=channels)
         # Capture, read and process data
         self.capture_and_read()
         self._time, self._values = process_data(self._raw, self._metadata, self.wav_format,
@@ -726,7 +746,7 @@ class Oscilloscope:
 
         Parameters
         ----------
-        channels : list of ints or ``'active'``, default :data:`~keyoscacquire.config._ch_nums`
+        channels : list of ints or ``'active'``, uses active channels by default
             list of the channel numbers to be acquired, example ``[1, 3]``.
             Use ``'active'`` or ``[]`` to capture all the currently active
             channels on the oscilloscope.
@@ -736,14 +756,14 @@ class Oscilloscope:
         acq_type : {``'HRESolution'``, ``'NORMal'``, ``'AVERage'``, ``'AVER<m>'``}, default :data:`~keyoscacquire.config._acq_type`
             Acquisition mode of the oscilloscope. <m> will be used as
             num_averages if supplied, see :attr:`acq_type`
-        num_averages : int, 2 to 65536, default :data:`~keyoscacquire.config._num_avg`
+        num_averages : int, 2 to 65536, uses oscilloscope setting by default
             Applies only to the ``'AVERage'`` mode: The number of averages applied
-        p_mode : {``'NORMal'``, ``'RAW'``, ``'MAXimum'``}, default ``'RAW'``
+        p_mode : {``'NORMal'``, ``'RAW'``, ``'MAXimum'``}, default :data:`keyoscacquire.config._p_mode`
             ``'NORMal'`` is limited to 62,500 points, whereas ``'RAW'`` gives
             up to 1e6 points. Use ``'MAXimum'`` for sources that are not analogue or digital
-        num_points : int, default 0
-            Use 0 to let :attr:`p_mode` control the number of points, otherwise
-            override with a lower number than maximum for the :attr:`p_mode`
+        num_points : int, default :data:`keyoscacquire.config._num_points`
+            Use 0 to get the maximum amount of points for the current :attr:`p_mode`,
+            otherwise override with a lower number than maximum for the :attr:`p_mode`
 
         Returns
         -------
@@ -755,11 +775,10 @@ class Oscilloscope:
         _capture_channels : list of ints
             list of the channels obtaied from, example ``[1, 3]``
         """
-        ## Connect to instrument and specify acquiring settings
+        self.set_channels_for_capture(channels=channels)
         self.set_acquiring_options(wav_format=wav_format, acq_type=acq_type,
                                    num_averages=num_averages, p_mode=p_mode,
                                    num_points=num_points)
-        ## Capture, read and process data
         self.get_trace()
         return self._time, self._values, self._capture_channels
 
@@ -783,7 +802,7 @@ class Oscilloscope:
             Filename of trace
         ext : str, default :data:`~keyoscacquire.config._filetype`
             Choose the filetype of the saved trace
-        channels : list of ints or ``'active'``, default :data:`~keyoscacquire.config._ch_nums`
+        channels : list of ints or ``'active'``, uses active channels by default
             list of the channel numbers to be acquired, example ``[1, 3]``.
             Use ``'active'`` or ``[]`` to capture all the currently active
             channels on the oscilloscope.
@@ -793,15 +812,15 @@ class Oscilloscope:
         acq_type : {``'HRESolution'``, ``'NORMal'``, ``'AVERage'``, ``'AVER<m>'``}, default :data:`~keyoscacquire.config._acq_type`
             Acquisition mode of the oscilloscope. <m> will be used as
             num_averages if supplied, see :attr:`acq_type`
-        num_averages : int, 2 to 65536, default :data:`~keyoscacquire.config._num_avg`
+        num_averages : int, 2 to 65536, uses oscilloscope setting by default
             Applies only to the ``'AVERage'`` mode: The number of averages applied
-        p_mode : {``'NORMal'``, ``'RAW'``, ``'MAXimum'``}, default ``'RAW'``
+        p_mode : {``'NORMal'``, ``'RAW'``, ``'MAXimum'``}, default :data:`keyoscacquire.config._p_mode`
             ``'NORMal'`` is limited to 62,500 points, whereas ``'RAW'`` gives up
             to 1e6 points. Use ``'MAXimum'`` for sources that are not analogue
             or digital
-        num_points : int, default 0
-            Use 0 to let :attr:`p_mode` control the number of points, otherwise
-            override with a lower number than maximum for the :attr:`p_mode`
+        num_points : int, default :data:`keyoscacquire.config._num_points`
+            Use 0 to get the maximum amount of points for the current :attr:`p_mode`,
+            otherwise override with a lower number than maximum for the :attr:`p_mode`
         additional_header_info : str, default ```None``
             Will put this string as a separate line before the column headers
         """
@@ -1002,9 +1021,9 @@ def _process_data_binary(raw, preambles, verbose_acquistion=True):
     xIncr, xOrig, xRef = float(preamble[4]), float(preamble[5]), float(preamble[6])
     time = np.array([(np.arange(num_samples)-xRef)*xIncr + xOrig]) # compute x-values
     time = time.T # make x values vertical
+    _log.debug(f"Points captured per channel:  {num_samples:,d}")
     if verbose_acquistion:
-        print(f"Points captured per channel: {num_samples:,d}")
-        _log.info(f"Points captured per channel: {num_samples:,d}")
+        print(f"Points captured per channel:  {num_samples:,d}")
     y = np.empty((len(raw), num_samples))
     for i, data in enumerate(raw): # process each channel individually
         preamble = preambles[i].split(',')
@@ -1043,9 +1062,9 @@ def _process_data_ascii(raw, metadata, verbose_acquistion=True):
     # Compute time axis and wrap in extra [] to make it 2D
     time = np.array([(np.arange(num_samples)-xRef)*xIncr + xOrig])
     time = time.T # Make list vertical
+    _log.debug(f"Points captured per channel:  {num_samples:,d}")
     if verbose_acquistion:
-        print(f"Points captured per channel: {num_samples:,d}")
-        _log.info(f"Points captured per channel: {num_samples:,d}")
+        print(f"Points captured per channel:  {num_samples:,d}")
     y = []
     for data in raw:
         if model_series in ['2000']:

@@ -31,10 +31,10 @@ import keyoscacquire.config as config
 acq_help = f"The acquire type: {{HRESolution, NORMal, AVER<m>}} where <m> is the number of averages in range [2, 65536]. Defaults to '{config._acq_type}'."
 wav_help = f"The waveform format: {{BYTE, WORD, ASCii}}. \nDefaults to '{config._waveform_format}'."
 file_help = f"The filename base, (without extension, '{config._filetype}' is added). Defaults to '{config._filename}'."
-visa_help = f"Visa address of instrument. To find the visa addresses of the instruments connected to the computer run 'list_visa_devices' in the command line. Defaults to '{config._visa_address}."
+visa_help = f"Visa address of instrument. To find the visa addresses of the instruments connected to the computer run 'list_visa_devices' in the command line. Defaults to '{config._visa_address}'."
 timeout_help = f"Milliseconds before timeout on the channel to the instrument. Defaults to {config._timeout}."
-channels_help = f"List of the channel numbers to be acquired, for example '1 3' (without ') or 'active' (without ') to capture all the currently active channels on the oscilloscope. Defaults to {config._ch_nums}'."
-points_help = f"Use 0 to get the maximum number of points, or set a smaller number to speed up the acquisition and transfer. Defaults to 0."
+channels_help = f"List of the channel numbers to be acquired, for example '1 3' (without ') or 'active' (without ') to capture all the currently active channels on the oscilloscope. Defaults to the currently active channels."
+points_help = f"Use 0 to get the maximum number of points, or set a specific number (the scope might change it slightly). Defaults to '{config._num_points}."
 delim_help = f"Delimiter used between filename and filenumber (before filetype). Defaults to '{config._file_delimiter}'."
 
 def connect_each_time_cli():
@@ -44,12 +44,12 @@ def connect_each_time_cli():
     connection_gr = parser.add_argument_group('Connection settings')
     connection_gr.add_argument('-v', '--visa_address', nargs='?', help=visa_help, default=config._visa_address)
     connection_gr.add_argument('-t', '--timeout', nargs='?', help=timeout_help, default=config._timeout, type=int)
-    acquire_gr = parser.add_argument_group('Acquiring settings')
-    acquire_gr.add_argument('-c', '--channels', nargs='*',  type=int, help=channels_help, default=config._ch_nums)
-    acquire_gr.add_argument('-a', '--acq_type', nargs='?', help=acq_help, default=config._acq_type)
+    acquire_gr = parser.add_argument_group('Acquisition settings')
+    acquire_gr.add_argument('-c', '--channels', nargs='*',  type=int, help=channels_help, default=None)
+    acquire_gr.add_argument('-a', '--acq_type', nargs='?', help=acq_help, default=None)
     trans_gr = parser.add_argument_group('Transfer and storage settings')
     trans_gr.add_argument('-w', '--wav_format', nargs='?', help=wav_help, default=config._waveform_format)
-    trans_gr.add_argument('-p', '--num_points', nargs='?', help=points_help, default=0, type=int)
+    trans_gr.add_argument('-p', '--num_points', nargs='?', help=points_help, default=config._num_points, type=int)
     trans_gr.add_argument('-f', '--filename', nargs='?', help=file_help, default=config._filename)
     trans_gr.add_argument('--file_delimiter', nargs='?', help=delim_help, default=config._file_delimiter)
     args = parser.parse_args()
@@ -65,12 +65,12 @@ def single_connection_cli():
     connection_gr = parser.add_argument_group('Connection settings')
     connection_gr.add_argument('-v', '--visa_address', nargs='?', help=visa_help, default=config._visa_address)
     connection_gr.add_argument('-t', '--timeout', nargs='?', help=timeout_help, default=config._timeout, type=int)
-    acquire_gr = parser.add_argument_group('Acquiring settings')
-    acquire_gr.add_argument('-c', '--channels', nargs='*',  type=int, help=channels_help, default=config._ch_nums)
-    acquire_gr.add_argument('-a', '--acq_type', nargs='?', help=acq_help, default=config._acq_type)
+    acquire_gr = parser.add_argument_group('Acquisition settings')
+    acquire_gr.add_argument('-c', '--channels', nargs='*',  type=int, help=channels_help, default=None)
+    acquire_gr.add_argument('-a', '--acq_type', nargs='?', help=acq_help, default=None)
     trans_gr = parser.add_argument_group('Transfer and storage settings')
     trans_gr.add_argument('-w', '--wav_format', nargs='?', help=wav_help, default=config._waveform_format)
-    trans_gr.add_argument('-p', '--num_points', nargs='?', help=points_help, default=0, type=int)
+    trans_gr.add_argument('-p', '--num_points', nargs='?', help=points_help, default=config._num_points, type=int)
     trans_gr.add_argument('-f', '--filename', nargs='?', help=file_help, default=config._filename)
     trans_gr.add_argument('--file_delimiter', nargs='?', help=delim_help, default=config._file_delimiter)
     args = parser.parse_args()
@@ -85,12 +85,12 @@ def single_trace_cli():
     connection_gr = parser.add_argument_group('Connection settings')
     connection_gr.add_argument('-v', '--visa_address', nargs='?', help=visa_help, default=config._visa_address)
     connection_gr.add_argument('-t', '--timeout', nargs='?', help=timeout_help, default=config._timeout, type=int)
-    acquire_gr = parser.add_argument_group('Acquiring settings')
-    acquire_gr.add_argument('-c', '--channels', nargs='*',  type=int, help=channels_help, default=config._ch_nums)
-    acquire_gr.add_argument('-a', '--acq_type', nargs='?', help=acq_help, default=config._acq_type)
+    acquire_gr = parser.add_argument_group('Acquisition settings')
+    acquire_gr.add_argument('-c', '--channels', nargs='*',  type=int, help=channels_help, default=None)
+    acquire_gr.add_argument('-a', '--acq_type', nargs='?', help=acq_help, default=None)
     trans_gr = parser.add_argument_group('Transfer and storage settings')
     trans_gr.add_argument('-w', '--wav_format', nargs='?', help=wav_help, default=config._waveform_format)
-    trans_gr.add_argument('-p', '--num_points', nargs='?', help=points_help, default=0, type=int)
+    trans_gr.add_argument('-p', '--num_points', nargs='?', help=points_help, default=config._num_points, type=int)
     trans_gr.add_argument('-f', '--filename', nargs='?', help=file_help, default=config._filename)
     args = parser.parse_args()
 
@@ -106,12 +106,12 @@ def num_traces_cli():
     connection_gr = parser.add_argument_group('Connection settings')
     connection_gr.add_argument('-v', '--visa_address', nargs='?', help=visa_help, default=config._visa_address)
     connection_gr.add_argument('-t', '--timeout', nargs='?', help=timeout_help, default=config._timeout, type=int)
-    acquire_gr = parser.add_argument_group('Acquiring settings')
-    acquire_gr.add_argument('-c', '--channels', nargs='*',  type=int, help=channels_help, default=config._ch_nums)
-    acquire_gr.add_argument('-a', '--acq_type', nargs='?', help=acq_help, default=config._acq_type)
+    acquire_gr = parser.add_argument_group('Acquisition settings')
+    acquire_gr.add_argument('-c', '--channels', nargs='*',  type=int, help=channels_help, default=None)
+    acquire_gr.add_argument('-a', '--acq_type', nargs='?', help=acq_help, default=None)
     trans_gr = parser.add_argument_group('Transfer and storage settings')
     trans_gr.add_argument('-w', '--wav_format', nargs='?', help=wav_help, default=config._waveform_format)
-    trans_gr.add_argument('-p', '--num_points', nargs='?', help=points_help, default=0, type=int)
+    trans_gr.add_argument('-p', '--num_points', nargs='?', help=points_help, default=config._num_points, type=int)
     trans_gr.add_argument('-f', '--filename', nargs='?', help=file_help, default=config._filename)
     trans_gr.add_argument('--file_delimiter', nargs='?', help=delim_help, default=config._file_delimiter)
     args = parser.parse_args()
