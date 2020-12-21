@@ -187,7 +187,7 @@ def _load_trace_with_header(fname, ext, skip_lines='auto', column_names='auto',
     # Load the file
     df = pd.read_csv(fname+ext, delimiter=",", skiprows=skip_lines, names=column_names)
     # Return df or array
-    if return_df:
+    if return_as_df:
         return df, header
     else:
         return np.array([df[col].values for col in df.columns]), header
