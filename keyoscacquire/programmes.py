@@ -22,7 +22,7 @@ from tqdm import tqdm
 
 # local file with default options:
 import keyoscacquire.config as config
-import keyoscacquire.config as auxiliary
+import keyoscacquire.auxiliary as auxiliary
 
 
 def list_visa_devices(ask_idn=True):
@@ -63,7 +63,7 @@ def list_visa_devices(ask_idn=True):
                     try:
                         current_resource_info.extend(auxiliary.interpret_visa_id(id))
                     except Exception as ex:
-                        print(f"Instrument #{i}: Could not interpret VISA id, got"
+                        print(f"Instrument #{i}: Could not interpret VISA id, got "
                               f"exception {ex.__class__.__name__}: VISA id returned was '{id}'")
                         could_not_connect.append(i)
                         current_resource_info.extend(["failed to interpret"]*5)
@@ -72,9 +72,9 @@ def list_visa_devices(ask_idn=True):
             # transpose to lists of property
             nums, addrs, aliases, makers, models, serials, firmwares, model_series = (list(category) for category in zip(*information))
             # select what properties to list
-            selection = (nums, addrs, makers, models, firmware, aliases)
+            selection = (nums, addrs, makers, models, serials, aliases)
             # name columns
-            header_fields = (' #', 'address', 'maker', 'model', 'firmware', 'alias')
+            header_fields = (' #', 'address', 'maker', 'model', 'serial', 'alias')
             row_format = "{:>{p[0]}s}  {:{p[1]}s}  {:{p[2]}s}  {:{p[3]}s}  {:{p[4]}s}  {:{p[5]}s}"
         else:
             selection = [list(category) for category in zip(*information)]
@@ -101,20 +101,22 @@ def path_of_config():
 
 def get_single_trace(fname=config._filename, ext=config._filetype, address=config._visa_address,
                      timeout=config._timeout, wav_format=config._waveform_format,
-                     channels=config._ch_nums, source_type='CHANnel', acq_type=config._acq_type,
-                     num_averages=config._num_avg, p_mode='RAW', num_points=0):
+                     channels=None, acq_type=config._acq_type, num_averages=None,
+                     p_mode=config._p_mode, num_points=config._num_points):
     """This programme captures and stores a single trace."""
     with acq.Oscilloscope(address=address, timeout=timeout) as scope:
         scope.set_options_get_trace_save(fname=fname, ext=ext, wav_format=wav_format,
-                              channels=channels, source_type=source_type, acq_type=acq_type,
-                              num_averages=num_averages, p_mode=p_mode, num_points=num_points)
+                                         channels=channels, acq_type=acq_type,
+                                         num_averages=num_averages, p_mode=p_mode,
+                                         num_points=num_points)
     print("Done")
 
 
 def get_traces_connect_each_time_loop(fname=config._filename, ext=config._filetype, address=config._visa_address,
                                       timeout=config._timeout, wav_format=config._waveform_format,
-                                      channels=config._ch_nums, source_type='CHANnel', acq_type=config._acq_type,
-                                      num_averages=config._num_avg, p_mode='RAW', num_points=0, start_num=0, file_delim=config._file_delimiter):
+                                      channels=None, acq_type=config._acq_type, num_averages=None,
+                                      p_mode=config._p_mode, num_points=config._num_points,
+                                      start_num=0, file_delim=config._file_delimiter):
     """This program consists of a loop in which the program connects to the oscilloscope,
     a trace from the active channels are captured and stored for each loop.
 
@@ -127,24 +129,27 @@ def get_traces_connect_each_time_loop(fname=config._filename, ext=config._filety
     # Check that file does not exist from before, append to name if it does
     n = start_num
     fname = auxiliary.check_file(fname, ext, num=f"{file_delim}{n}")
-    print("Running a loop where at every 'enter' oscilloscope traces will be saved as %s<n>%s," % (fname, ext))
+    print(f"Running a loop where at every 'enter' oscilloscope traces will be saved as {fname}<n>{ext},")
     print("where <n> increases by one for each captured trace. Press 'q'+'enter' to quit the programme.")
     while sys.stdin.read(1) != 'q': # breaks the loop if q+enter is given as input. For any other character (incl. enter)
         fnum = f"{file_delim}{n}"
         with acq.Oscilloscope(address=address, timeout=timeout) as scope:
             scope.ext = ext
             scope.set_options_get_trace(wav_format=wav_format,
-                                  channels=channels, source_type=source_type, acq_type=acq_type,
-                                  num_averages=num_averages, p_mode=p_mode, num_points=num_points)
+                                        channels=channels, acq_type=acq_type,
+                                        num_averages=num_averages, p_mode=p_mode,
+                                        num_points=num_points)
             scope.save_trace(fname+fnum)
         n += 1
     print("Quit")
 
 
-def get_traces_single_connection_loop(fname=config._filename, ext=config._filetype, address=config._visa_address,
-                                      timeout=config._timeout, wav_format=config._waveform_format,
-                                      channels=config._ch_nums, source_type='CHANnel', acq_type=config._acq_type,
-                                      num_averages=config._num_avg, p_mode='RAW', num_points=0, start_num=0, file_delim=config._file_delimiter):
+def get_traces_single_connection_loop(fname=config._filename, ext=config._filetype,
+                                      address=config._visa_address, timeout=config._timeout,
+                                      wav_format=config._waveform_format,
+                                      channels=None, acq_type=config._acq_type,
+                                      num_averages=None, p_mode=config._p_mode, num_points=config._num_points,
+                                      start_num=0, file_delim=config._file_delimiter):
     """This program connects to the oscilloscope, sets options for the acquisition and then
     enters a loop in which the program captures and stores traces each time 'enter' is pressed.
 
@@ -155,19 +160,18 @@ def get_traces_single_connection_loop(fname=config._filename, ext=config._filety
     changing thoughout the measurements.
     """
     with acq.Oscilloscope(address=address, timeout=timeout) as scope:
-        ## Initialise
         scope.set_acquiring_options(wav_format=wav_format, acq_type=acq_type,
                                    num_averages=num_averages, p_mode=p_mode,
                                    num_points=num_points)
         scope.ext = ext
         scope.set_channels_for_capture(channels=channels)
+        scope.print_acq_settings()
         # Check that file does not exist from before, append to name if it does
         n = start_num
         fname = auxiliary.check_file(fname, ext, num=f"{file_delim}{n}")
-        print("Running a loop where at every 'enter' oscilloscope traces will be saved as %s<n>%s," % (fname, ext))
+        print(f"Running a loop where at every 'enter' oscilloscope traces will be saved as {fname}<n>{ext},")
         print("where <n> increases by one for each captured trace. Press 'q'+'enter' to quit the programme.")
         while sys.stdin.read(1) != 'q': # breaks the loop if q+enter is given as input. For any other character (incl. enter)
-            scope.verbose_acquistion = (i==n)
             fnum = f"{file_delim}{n}"
             scope.get_trace()
             scope.save_trace(fname+fnum)
@@ -175,27 +179,33 @@ def get_traces_single_connection_loop(fname=config._filename, ext=config._filety
     print("Quit")
 
 
-def get_num_traces(fname=config._filename, ext=config._filetype, num=1, address=config._visa_address,
-                   timeout=config._timeout, wav_format=config._waveform_format,
-                   channels=config._ch_nums, source_type='CHANnel', acq_type=config._acq_type,
-                   num_averages=config._num_avg, p_mode='RAW', num_points=0, start_num=0, file_delim=config._file_delimiter):
+def get_num_traces(fname=config._filename, ext=config._filetype, num=1,
+                   address=config._visa_address, timeout=config._timeout,
+                   wav_format=config._waveform_format, channels=None,
+                   acq_type=config._acq_type, num_averages=None,
+                   p_mode=config._p_mode, num_points=config._num_points,
+                   start_num=0, file_delim=config._file_delimiter):
     """This program connects to the oscilloscope, sets options for the
     acquisition, and captures and stores 'num' traces.
     """
     with acq.Oscilloscope(address=address, timeout=timeout) as scope:
         scope.set_acquiring_options(wav_format=wav_format, acq_type=acq_type,
                                    num_averages=num_averages, p_mode=p_mode,
-                                   num_points=num_points, acq_print=False)
+                                   num_points=num_points)
         scope.ext = ext
-        ## Select sources
+        scope.verbose_acquistion = False
         scope.set_channels_for_capture(channels=channels)
+        scope.print_acq_settings()
         n = start_num
         fnum = file_delim+str(n)
         # Check that file does not exist from before, append to name if it does
         fname = auxiliary.check_file(fname, ext, num=fnum)
         for i in tqdm(range(n, n+num)):
-            fnum = file_delim+str(i)
-            scope.verbose_acquistion = (i==n)
-            scope.get_trace()
-            scope.save_trace(fname+fnum)
+            try:
+                fnum = file_delim+str(i)
+                scope.get_trace()
+                scope.save_trace(fname+fnum)
+            except KeyboardInterrupt:
+                print("Stopping the programme")
+                return
     print("Done")

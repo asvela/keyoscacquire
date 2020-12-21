@@ -104,13 +104,14 @@ def plot_trace(time, y, channels, fname="", showplot=config._show_plot,
     savepng : bool, default :data:`~keyoscacquire.config._export_png`
         ``True`` exports the plot to ``fname``.png
     """
+    fig, ax = plt.subplots()
     for i, vals in enumerate(np.transpose(y)): # for each channel
-        plt.plot(time, vals, color=oscacq._screen_colors[channels[i]])
+        ax.plot(time, vals, color=oscacq._screen_colors[channels[i]])
     if savepng:
-        plt.savefig(fname+".png", bbox_inches='tight')
+        fig.savefig(fname+".png", bbox_inches='tight')
     if showplot:
-        plt.show()
-    plt.close()
+        plt.show(fig)
+    plt.close(fig)
 
 
 ## Trace loading ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
