@@ -592,7 +592,7 @@ class Oscilloscope:
         wav_format = self.wav_format
         if self.verbose_acquistion:
             self.print_acq_settings()
-            print(f"Acquiring  (format '{wav_format}').. ", end="", flush=True)
+            print(f"Acquiring (format '{wav_format}').. ", end="", flush=True)
         start_time = time.time() # time the acquiring process
         # If the instrument is not running, we presumably want the data
         # on the screen and hence don't want to use DIGitize as digitize

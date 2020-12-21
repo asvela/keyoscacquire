@@ -38,25 +38,51 @@ information about the API.
 
 As an example of API usage/use in the Python console::
 
-   >>> import keyoscacquire.oscacq as koa
-   >>> scope = koa.Oscilloscope(address='USB0::1234::1234::MY1234567::INSTR')
-   >>> scope.acq_type = 'AVER8'
-   >>> print(scope.num_points)
-   7680
-   >>> time, y, channel_numbers = scope.get_trace(channels=[2, 1, 4])
-   Acquire from channels:  [1, 2, 4]
-   Start acquisition..
-   Points captured per channel: 7,680
-   >>> print(channel_numbers)
-   [1, 2, 4]
-   >>> scope.save_trace(showplot=True)
-   Saving trace to:  data.csv
-   >>> scope.close()
+  >>> import keyoscacquire.oscacq as koa
+  >>> scope = koa.Oscilloscope(address='USB0::1234::1234::MY1234567::INSTR')
+  Connected to:
+     AGILENT TECHNOLOGIES
+     DSO-X 2024A (serial MY1234567)
+  >>> scope.acq_type = 'AVER8'
+  >>> print(scope.num_points)
+  7680
+  >>> time, y, channel_numbers = scope.get_trace(channels=[2, 1, 4])
+  Acquisition type: AVER
+  # of averages:    8
+  From channels:    [1, 2, 4]
+  Acquiring ('WORD').. done
+  Points captured per channel: 7,680
+  >>> print(channel_numbers)
+  [1, 2, 4]
+  >>> scope.save_trace(showplot=True)
+  Saving trace to:  data.csv
+  >>> scope.close()
 
 where ``time`` is a vertical numpy (2D) array of time values and ``y`` is a numpy
 array which columns contain the data from the active channels listed in
-``channel_numbers``. The trace saved to ``data.csv`` contains metadata such as
-a timestamp, acquisition type, the channels used etc.
+``channel_numbers``. The trace saved to ``data.csv`` also contains metadata
+(can be further customised) in the first lines::
+
+  # AGILENT TECHNOLOGIES,DSO-X 2024A,MY1234567,02.50.2019022736
+  # AVER,8
+  # 2020-12-21 03:13:18.184028
+  # time,1,2,4
+  -5.000063390000000080e-03,-4.853398528000013590e-03,-5.247737759999995810e-03,-5.247737759999995810e-03
+  ...
+
+The trace can be easily loaded from disk to a Pandas dataframe with::
+
+  >>> df, metadata = koa.traceio.load_trace("data")
+  >>> df.head()
+      time         1         2         4
+  0 -0.005 -0.004853 -0.005248 -0.005248
+  1 -0.005 -0.005406 -0.005017 -0.005248
+  2 -0.005 -0.004964 -0.005190 -0.005248
+  3 -0.005 -0.005185 -0.005363 -0.005248
+  4 -0.005 -0.005517 -0.005074 -0.005248
+  >>> metadata
+  ['AGILENT TECHNOLOGIES,DSO-X 2024A,MY1234567,02.50.2019022736', 'AVER,8', '2020-12-21 03:13:18.184028', 'time,1,2,4']
+
 
 Command line use
 ----------------
