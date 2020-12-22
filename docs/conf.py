@@ -21,8 +21,8 @@ with open(os.path.join(source_dir, 'keyoscacquire', 'VERSION')) as version_file:
 
 # -- Project information -----------------------------------------------------
 
-project = 'keyoscacquire'#'Keysight oscilloscope acquire'
-copyright = '2019-2020, Andreas Svela'
+project = 'keyoscacquire'
+copyright = '2020, Andreas Svela'
 author = 'Andreas Svela'
 
 # The full version, including alpha/beta/rc tags

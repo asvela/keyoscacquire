@@ -2,12 +2,15 @@ keyoscacquire: Keysight oscilloscope acquire
 ============================================
 
 .. image:: https://img.shields.io/codefactor/grade/github/asvela/keyoscacquire?style=flat-square
-  :alt: CodeFactor Grade
+  :target: https://www.codefactor.io/repository/github/asvela/keyoscacquire
+  :alt: CodeFactor
 
 .. image:: https://img.shields.io/readthedocs/keyoscacquire?style=flat-square
+  :target: https://keyoscacquire.rtfd.io
   :alt: Read the Docs Building
 
 .. image:: https://img.shields.io/pypi/l/keyoscacquire?style=flat-square
+  :target: https://keyoscacquire.readthedocs.io/en/dev-v4.0.0/contents/license.html
   :alt: License
 
 keyoscacquire is a Python package for acquiring traces from Keysight
