@@ -129,13 +129,21 @@ def load_trace(fname, ext=config._filetype, column_names='auto', skip_lines='aut
         Filename of trace, with or without extension
     ext : str, default :data:`~keyoscacquire.config._filetype`
         The filetype of the saved trace (with the period, e.g. '.csv')
-    column_names : ``{'auto' or list-like}``, default ``'auto'``
-        Only useful if using with ``return_df=True``:
-        To infer df column names from the last line of the header, use ``'auto'``
-        (expecting '# <comma separated column headers>' as the last line of the
-        header), or specify the column names manually
     skip_lines : ``{'auto' or int}``, default ``'auto'``
-
+        Number of lines from the top of the files to skip before parsing as
+        dataframe. Essentially the ``pandas.read_csv()`` ``skiprows`` argument.
+        ``'auto'``  will count the number of lines starting with ``'#'`` and
+        skip these lines
+    column_names : ``{'auto', 'header', 'first line of data', or list-like}``, default ``'auto'``
+        Only useful if using with ``return_df=True``:
+        * ``'header'``: Infer df column names from the last line of the header
+          (expecting '# <comma separated column headers>' as the last line of the
+          header)
+        * 'first line of data': Will use the first line that is parsed as names,
+          i.e. the first line after ``skip_lines`` lines in the file
+        * ``'auto'``: Equivalent to ``'header'`` if there is more than zero lines
+          of header, otherwise ``'first line of data'``
+        * list-like: Specify the column names manually
     return_as_df : bool, default True
         If the loaded trace is not a .npy file, decide to return the data as
         a Pandas dataframe if ``True``, or as an ndarray otherwise
@@ -183,7 +191,15 @@ def _load_trace_with_header(fname, ext, skip_lines='auto', column_names='auto',
     if skip_lines == 'auto':
         skip_lines = len(header)
     if column_names == 'auto':
+        # Use the header if it is not empty
+        if len(header) > 0:
+            column_names = 'header'
+        else:
+            column_names = 'first line of data'
+    if column_names == 'header':
         column_names = header[-1].split(",")
+    elif column_names =='first line of data':
+        column_names = None
     # Load the file
     df = pd.read_csv(fname+ext, delimiter=",", skiprows=skip_lines, names=column_names)
     # Return df or array
