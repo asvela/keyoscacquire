@@ -1,6 +1,10 @@
 keyoscacquire: Keysight oscilloscope acquire
 ============================================
 
+.. image:: https://img.shields.io/pypi/v/keyoscacquire?style=flat-square
+  :target: https://pypi.org/project/keyoscacquire/
+  :alt: PyPI
+
 .. image:: https://img.shields.io/codefactor/grade/github/asvela/keyoscacquire?style=flat-square
   :target: https://www.codefactor.io/repository/github/asvela/keyoscacquire
   :alt: CodeFactor

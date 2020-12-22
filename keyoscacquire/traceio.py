@@ -137,14 +137,19 @@ def load_trace(fname, ext=config._filetype, column_names='auto', skip_lines='aut
         skip these lines
     column_names : ``{'auto', 'header', 'first line of data', or list-like}``, default ``'auto'``
         Only useful if using with ``return_df=True``:
+
         * ``'header'``: Infer df column names from the last line of the header
           (expecting '# <comma separated column headers>' as the last line of the
           header)
-        * 'first line of data': Will use the first line that is parsed as names,
+
+        * ``'first line of data'``: Will use the first line that is parsed as names,
           i.e. the first line after ``skip_lines`` lines in the file
+
         * ``'auto'``: Equivalent to ``'header'`` if there is more than zero lines
           of header, otherwise ``'first line of data'``
+
         * list-like: Specify the column names manually
+
     return_as_df : bool, default True
         If the loaded trace is not a .npy file, decide to return the data as
         a Pandas dataframe if ``True``, or as an ndarray otherwise

@@ -14,9 +14,13 @@ Known issues and suggested improvements
 
   - (feature) include capture of MATH waveform
   - (feature) expand API to include
+
     * waveform measurements
+
     * trigger settings
+
     * time and voltage axes settings
+
   - (feature) pickling trace to disk for later post-processing to give speed-up
     in consecutive measurements
   - (instrument support) expand support for Infiniium oscilloscopes
