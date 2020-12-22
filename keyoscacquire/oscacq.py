@@ -23,7 +23,7 @@ import keyoscacquire.config as config
 import keyoscacquire.auxiliary as auxiliary
 import keyoscacquire.traceio as traceio
 
-# for compatibility (discouraged to use)
+# for backwards compatibility (but rather use the Oscilloscope methods)
 from keyoscacquire.traceio import save_trace, save_trace_npy, plot_trace
 
 #: Supported Keysight DSO/MSO InfiniiVision series

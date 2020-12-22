@@ -6,6 +6,7 @@ Auxiliary functions for the keyoscacquire package
 
 import os
 import logging; _log = logging.getLogger(__name__)
+
 import keyoscacquire.config as config
 
 
