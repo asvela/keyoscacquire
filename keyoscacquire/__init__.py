@@ -21,4 +21,4 @@ import keyoscacquire.programmes as programmes
 import keyoscacquire.auxiliary as auxiliary
 
 
-from keyoscacquire.oscacq import Oscilloscope
+from keyoscacquire.oscacq import Oscilloscope, _screen_colors
