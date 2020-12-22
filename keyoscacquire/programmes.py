@@ -36,20 +36,19 @@ def list_visa_devices(ask_idn=True):
     print(f"\nFound {len(resources)} resources. Now obtaining information about them..")
     information = []
     # Loop through resources to learn more about them
-    for address in resources:
-        current_resource_info = auxiliary.obtain_instrument_information(rm, address, ask_idn)
+    for i, address in enumerate(resources):
+        current_resource_info = auxiliary.obtain_instrument_information(rm, address, i, ask_idn)
         information.append(current_resource_info)
-    nums = [str(i) for i in range(len(current_resource_info))]
     if ask_idn:
         # transpose to lists of property
-        addrs, aliases, makers, models, serials, firmwares, model_series = (list(category) for category in zip(*information))
+        nums, addrs, aliases, makers, models, serials, firmwares, model_series = (list(category) for category in zip(*information))
         # select what properties to list
         selection = (nums, addrs, makers, models, serials, aliases)
         # name columns
         header_fields = (' #', 'address', 'maker', 'model', 'serial', 'alias')
         row_format = "{:>{p[0]}s}  {:{p[1]}s}  {:{p[2]}s}  {:{p[3]}s}  {:{p[4]}s}  {:{p[5]}s}"
     else:
-        addrs, aliases = [list(category) for category in zip(*information)]
+        nums, addrs, aliases = [list(category) for category in zip(*information)]
         selection = (nums, addrs, aliases)
         header_fields = (' #', 'address', 'alias')
         row_format = "{:>{p[0]}s}  {:{p[1]}s}  {:{p[2]}s}"
