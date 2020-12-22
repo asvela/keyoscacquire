@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Script to test obtaining data with different waveform formats for Keysight DSO2024A
+Script to test obtaining data with different waveform wformat for Keysight DSO2024A
 
 Andreas Svela // 2019
 """
@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 import keyoscacquire as koa
 
 format_dict = {0: "BYTE", 1: "WORD", 4: "ASCii"}
-formats = ['BYTE', 'WORD', 'ASCii']
+wformat = ['BYTE', 'WORD', 'ASCii']
 
 
 print("\n## ~~~~~~~~~~~~~~~~~ KEYOSCACQUIRE ~~~~~~~~~~~~~~~~~~ ##")
@@ -27,7 +27,7 @@ scope.set_channels_for_capture(channels=[1])
 # scope.stop()
 
 times, values = [[], []], [[], []]
-for wav_format in formats:
+for wav_format in wformat:
     print("\nWaveform format: ", wav_format)
     scope.wav_format = wav_format
     scope.capture_and_read(set_running=False)
@@ -44,13 +44,13 @@ print("\n## ~~~~~~~~~~~~~~~~~~~ PYVISA ~~~~~~~~~~~~~~~~~~~~~ ##")
 rm = pyvisa.ResourceManager()#visa_path)
 inst = rm.open_resource(visa_address)
 inst.write('*CLS')  # clears the status data structures, the device-defined error queue, and the Request-for-OPC flag
-id = inst.query('*IDN?').strip() # get the id of the connected device
-print("Connected to\n\t\'%s\'" % id)
+idn = inst.query('*IDN?').strip() # get the id of the connected device
+print(f"Connected to\n\t'{idn}'")
 
 # obtain trace from channel 1
 inst.write(':WAVeform:SOURce CHAN1')
 
-for wav_format in formats:
+for wav_format in wformat:
     inst.write(':WAVeform:FORMat ' +  wav_format) # choose format for the transmitted waveform
     inst.write(':WAVeform:BYTeorder LSBFirst') # MSBF is default, must be overridden for WORD to work
     inst.write(':WAVeform:UNSigned OFF') # make sure the scope is sending signed ints
@@ -94,22 +94,22 @@ for wav_format in formats:
 
 
 # Plotting the signals obtained for visual comparison
-fig, axs = plt.subplots(nrows=len(formats), ncols=2, sharex=True, sharey=True)
+fig, axs = plt.subplots(nrows=len(wformat), ncols=2, sharex=True, sharey=True)
 for i, (time, value, ax) in enumerate(zip(times, values, axs.T)):
-    for j, (t, v, a, format) in enumerate(zip(time, value, ax, formats)):
+    for j, (t, v, a, wformat) in enumerate(zip(time, value, ax, wformat)):
         try:
             a.plot(t, v*1000)
         except ValueError as err:
             print("Could not plot, check dimensions:", err)
-        a.set_title(format)
+        a.set_title(wformat)
         if i == 0: a.set_ylabel("signal [v]")
         if j == len(axs)-1: a.set_xlabel("time [s]")
 fig.suptitle("keyoscacquire      pure pyvisa")
 
-print("\nCalculating the difference between same waveform formats")
+print("\nCalculating the difference between same waveform wformat")
 diffs = [values[0][i].T-values[1][i].T for i in range(3)]
-for diff, format in zip(diffs, formats):
-    print("Difference in "+format+" signals: "+str(sum(sum(diff))))
+for diff, wformat in zip(diffs, wformat):
+    print(f"Difference in {wformat} signals: {sum(sum(diff))}")
 
 plt.show()
 

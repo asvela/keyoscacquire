@@ -8,7 +8,7 @@ which is used when saving directly from the ``Oscilloscope`` class.
 """
 
 import os
-import logging; _log = logging.getLogger(__name__)
+import logging
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -16,6 +16,7 @@ import matplotlib.pyplot as plt
 import keyoscacquire.config as config
 import keyoscacquire.oscacq as oscacq
 
+_log = logging.getLogger(__name__)
 
 ## Trace saving and plotting ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
 
@@ -165,10 +166,9 @@ def load_trace(fname, ext=config._filetype, column_names='auto', skip_lines='aut
     # Format dependent
     if ext == '.npy':
         return np.load(fname+ext), None
-    else:
-        return _load_trace_with_header(fname, ext, column_names=column_names,
-                                       skip_lines=skip_lines,
-                                       return_as_df=return_as_df)
+    return _load_trace_with_header(fname, ext, column_names=column_names,
+                                   skip_lines=skip_lines,
+                                   return_as_df=return_as_df)
 
 
 def _load_trace_with_header(fname, ext, skip_lines='auto', column_names='auto',
@@ -205,8 +205,7 @@ def _load_trace_with_header(fname, ext, skip_lines='auto', column_names='auto',
     # Return df or array
     if return_as_df:
         return df, header
-    else:
-        return np.array([df[col].values for col in df.columns]), header
+    return np.array([df[col].values for col in df.columns]), header
 
 def load_header(fname, ext=config._filetype):
     """Open a trace file and get the header

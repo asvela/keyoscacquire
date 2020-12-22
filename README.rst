@@ -1,6 +1,15 @@
 keyoscacquire: Keysight oscilloscope acquire
 ============================================
 
+.. image:: https://img.shields.io/codefactor/grade/github/asvela/keyoscacquire?style=flat-square
+  :alt: CodeFactor Grade
+
+.. image:: https://img.shields.io/readthedocs/keyoscacquire?style=flat-square
+  :alt: Read the Docs Building
+
+.. image:: https://img.shields.io/pypi/l/keyoscacquire?style=flat-square
+  :alt: License
+
 keyoscacquire is a Python package for acquiring traces from Keysight
 InfiniiVision oscilloscopes through a VISA interface.
 

@@ -13,10 +13,10 @@ import os
 import sys
 import pyvisa
 import time
+import logging
 import datetime as dt
 import numpy as np
 import matplotlib.pyplot as plt
-import logging; _log = logging.getLogger(__name__)
 
 # local file with default options:
 import keyoscacquire.config as config
@@ -25,6 +25,8 @@ import keyoscacquire.traceio as traceio
 
 # for backwards compatibility (but rather use the Oscilloscope methods)
 from keyoscacquire.traceio import save_trace, save_trace_npy, plot_trace
+
+_log = logging.getLogger(__name__)
 
 #: Supported Keysight DSO/MSO InfiniiVision series
 _supported_series = ['1000', '2000', '3000', '4000', '6000']
@@ -318,19 +320,19 @@ class Oscilloscope:
         return self.query(":ACQuire:TYPE?")
 
     @acq_type.setter
-    def acq_type(self, type: str):
+    def acq_type(self, a_type: str):
         """See getter"""
-        acq_type = type[:4].upper()
+        acq_type = a_type[:4].upper()
         self.write(f":ACQuire:TYPE {acq_type}")
         # Handle AVER<m> expressions
         if acq_type == 'AVER':
-            if len(type) > 4 and not type[4:].lower() == 'age':
+            if len(a_type) > 4 and not a_type[4:].lower() == 'age':
                 try:
-                    self.num_averages = int(type[4:])
+                    self.num_averages = int(a_type[4:])
                 except ValueError:
-                    ValueError(f"\nValueError: Failed to convert '{type[4:]}' to an integer, "
+                    ValueError(f"\nValueError: Failed to convert '{a_type[4:]}' to an integer, "
                                 "check that acquisition type is on the form AVER or AVER<m> "
-                               f"where <m> is an integer (currently acq. type is '{type}').\n")
+                               f"where <m> is an integer (currently acq. type is '{a_type}').\n")
 
     @property
     def num_averages(self):
@@ -985,11 +987,13 @@ def process_data(raw, metadata, wav_format, verbose_acquistion=True):
     :func:`Oscilloscope.capture_and_read`
     """
     if wav_format[:3] in ['WOR', 'BYT']:
-        return _process_data_binary(raw, metadata, verbose_acquistion)
+        process_fn = _process_data_binary
     elif wav_format[:3] == 'ASC':
-        return _process_data_ascii(raw, metadata, verbose_acquistion)
+        processing_fn = _process_data_ascii
     else:
         raise ValueError("Could not process data, waveform format \'{}\' is unknown.".format(wav_format))
+    return processing_fn(raw, metadata, verbose_acquistion)
+
 
 def _process_data_binary(raw, preambles, verbose_acquistion=True):
     """Process raw 8/16-bit data to time values and y voltage values as received

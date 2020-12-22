@@ -15,15 +15,15 @@ integrated in python scripts or used as examples.
 import os
 import sys
 import pyvisa
-import logging; _log = logging.getLogger(__name__)
+import logging
 import keyoscacquire.oscacq as acq
 import numpy as np
 from tqdm import tqdm
 
-# local file with default options:
 import keyoscacquire.config as config
 import keyoscacquire.auxiliary as auxiliary
 
+_log = logging.getLogger(__name__)
 
 def list_visa_devices(ask_idn=True):
     """Prints a list of the VISA instruments connected to the computer,
@@ -32,65 +32,38 @@ def list_visa_devices(ask_idn=True):
     resources = rm.list_resources()
     if len(resources) == 0:
         print("\nNo VISA devices found!")
+        return
+    print(f"\nFound {len(resources)} resources. Now obtaining information about them..")
+    information = []
+    # Loop through resources to learn more about them
+    for address in resources:
+        current_resource_info = auxiliary.obtain_instrument_information(rm, address, ask_idn)
+        information.append(current_resource_info)
+    nums = [str(i) for i in range(len(current_resource_info))]
+    if ask_idn:
+        # transpose to lists of property
+        addrs, aliases, makers, models, serials, firmwares, model_series = (list(category) for category in zip(*information))
+        # select what properties to list
+        selection = (nums, addrs, makers, models, serials, aliases)
+        # name columns
+        header_fields = (' #', 'address', 'maker', 'model', 'serial', 'alias')
+        row_format = "{:>{p[0]}s}  {:{p[1]}s}  {:{p[2]}s}  {:{p[3]}s}  {:{p[4]}s}  {:{p[5]}s}"
     else:
-        print(f"\nFound {len(resources)} resources. Now obtaining information about them..")
-        information, could_not_connect = [], []
-        # Loop through resources to learn more about them
-        for i, address in enumerate(resources):
-            current_resource_info = []
-            info_object = rm.resource_info(address)
-            alias = info_object.alias if info_object.alias is not None else "N/A"
-            current_resource_info.extend((str(i), address, alias))
-            if ask_idn:
-                # Open the instrument and get the identity string
-                try:
-                    error_flag = False
-                    instrument = rm.open_resource(address)
-                    id = instrument.query("*IDN?").strip()
-                    instrument.close()
-                except pyvisa.Error as e:
-                    error_flag = True
-                    could_not_connect.append(i)
-                    current_resource_info.extend(["no IDN response"]*5)
-                    print(f"Instrument #{i}: Did not respond to *IDN?: {e}")
-                except Exception as ex:
-                    error_flag = True
-                    print(f"Instrument #{i}: Got exception {ex.__class__.__name__} "
-                          f"when asking for its identity.")
-                    could_not_connect.append(i)
-                    current_resource_info.extend(["Error"]*5)
-                if not error_flag:
-                    try:
-                        current_resource_info.extend(auxiliary.interpret_visa_id(id))
-                    except Exception as ex:
-                        print(f"Instrument #{i}: Could not interpret VISA id, got "
-                              f"exception {ex.__class__.__name__}: VISA id returned was '{id}'")
-                        could_not_connect.append(i)
-                        current_resource_info.extend(["failed to interpret"]*5)
-            information.append(current_resource_info)
-        if ask_idn:
-            # transpose to lists of property
-            nums, addrs, aliases, makers, models, serials, firmwares, model_series = (list(category) for category in zip(*information))
-            # select what properties to list
-            selection = (nums, addrs, makers, models, serials, aliases)
-            # name columns
-            header_fields = (' #', 'address', 'maker', 'model', 'serial', 'alias')
-            row_format = "{:>{p[0]}s}  {:{p[1]}s}  {:{p[2]}s}  {:{p[3]}s}  {:{p[4]}s}  {:{p[5]}s}"
-        else:
-            selection = [list(category) for category in zip(*information)]
-            header_fields = (' #', 'address', 'alias')
-            row_format = "{:>{p[0]}s}  {:{p[1]}s}  {:{p[2]}s}"
-        # find max number of characters for each property to use as padding
-        padding = [max([len(instance) for instance in property]) for property in selection]
-        # make sure the padding is not smaller than the header field length
-        padding = [max(pad, len(field)) for pad, field in zip(padding, header_fields)]
-        header = row_format.format(*header_fields, p=padding)
-        # print the table
-        print("\nVISA devices connected:")
-        print(header)
-        print("="*(len(header)+2))
-        for info in zip(*selection):
-            print(row_format.format(*info, p=padding))
+        addrs, aliases = [list(category) for category in zip(*information)]
+        selection = (nums, addrs, aliases)
+        header_fields = (' #', 'address', 'alias')
+        row_format = "{:>{p[0]}s}  {:{p[1]}s}  {:{p[2]}s}"
+    # find max number of characters for each property to use as padding
+    padding = [max([len(instance) for instance in property]) for property in selection]
+    # make sure the padding is not smaller than the header field length
+    padding = [max(pad, len(field)) for pad, field in zip(padding, header_fields)]
+    header = row_format.format(*header_fields, p=padding)
+    # print the table
+    print("\nVISA devices connected:\n")
+    print(header)
+    print("="*(len(header)+2))
+    for info in zip(*selection):
+        print(row_format.format(*info, p=padding))
 
 
 def path_of_config():
