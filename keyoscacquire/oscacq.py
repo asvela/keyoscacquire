@@ -23,15 +23,13 @@ import keyoscacquire.config as config
 import keyoscacquire.auxiliary as auxiliary
 import keyoscacquire.traceio as traceio
 
+from keyoscacquire.auxiliary import _screen_colors
 # for backwards compatibility (but rather use the Oscilloscope methods)
 from keyoscacquire.traceio import save_trace, save_trace_npy, plot_trace
 
 _log = logging.getLogger(__name__)
 
-#: Supported Keysight DSO/MSO InfiniiVision series
-_supported_series = ['1000', '2000', '3000', '4000', '6000']
-#: Keysight colour map for the channels
-_screen_colors = {1:'C1', 2:'C2', 3:'C0', 4:'C3'}
+
 #: Datatype is ``'h'`` for 16 bit signed int (``WORD``), ``'b'`` for 8 bit signed bit (``BYTE``).
 #: Same naming as for structs `docs.python.org/3/library/struct.html#format-characters`
 _datatypes = {'BYT':'b', 'WOR':'h', 'BYTE':'b', 'WORD':'h'}
@@ -145,7 +143,7 @@ class Oscilloscope:
             if self.verbose:
                 print(f"Connected to '{self._id}'")
             print("(!) Failed to intepret the VISA IDN string")
-        if not self._model_series in _supported_series:
+        if not self._model_series in auxiliary._supported_series:
                 print(f"(!) WARNING: This model ({self._model}) is not yet fully supported by keyoscacquire,")
                 print( "             but might work to some extent. keyoscacquire supports Keysight's")
                 print( "             InfiniiVision X-series oscilloscopes.")

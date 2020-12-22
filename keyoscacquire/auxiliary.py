@@ -11,6 +11,10 @@ _log = logging.getLogger(__name__)
 
 import keyoscacquire.config as config
 
+#: Supported Keysight DSO/MSO InfiniiVision series
+_supported_series = ['1000', '2000', '3000', '4000', '6000']
+#: Keysight colour map for the channels
+_screen_colors = {1:'C1', 2:'C2', 3:'C0', 4:'C3'}
 
 def interpret_visa_id(idn):
     """Interprets a VISA ID, including finding a oscilloscope model series

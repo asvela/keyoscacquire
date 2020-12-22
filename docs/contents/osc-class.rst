@@ -30,6 +30,7 @@ Connection and VISA commands
 .. automethod:: Oscilloscope.query
 .. automethod:: Oscilloscope.get_error
 
+
 Oscilloscope state control
 --------------------------
 
@@ -37,6 +38,7 @@ Oscilloscope state control
 .. automethod:: Oscilloscope.stop
 .. automethod:: Oscilloscope.is_running
 .. autoproperty:: Oscilloscope.active_channels
+
 
 Acquisition and transfer properties
 -----------------------------------
@@ -63,20 +65,13 @@ Multiple acquisition and transfer options setting functions
 .. automethod:: Oscilloscope.set_acquiring_options
 .. automethod:: Oscilloscope.set_waveform_export_options
 
+
 Other
 -----
 
 .. automethod:: Oscilloscope.capture_and_read
 .. automethod:: Oscilloscope.generate_file_header
 .. automethod:: Oscilloscope.print_acq_settings
-
-
-Auxiliary to the class
-======================
-
-.. autodata:: _supported_series
-.. autodata:: _screen_colors
-.. autodata:: _datatypes
 
 
 .. _preamble:

@@ -21,5 +21,6 @@ import keyoscacquire.config as config
 import keyoscacquire.programmes as programmes
 import keyoscacquire.auxiliary as auxiliary
 
-from keyoscacquire.oscacq import Oscilloscope, _screen_colors
+from keyoscacquire.oscacq import Oscilloscope
 from keyoscacquire.traceio import save_trace, load_trace
+from keyoscacquire.auxiliary import _screen_colors

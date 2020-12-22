@@ -99,10 +99,12 @@ v4.0.0 (2020-12)
     * ``Oscilloscope.model`` -> ``Oscilloscope._model``
     * ``Oscilloscope.model_series`` -> ``Oscilloscope._model_series``
 
-  - *No compatibility*: Moved functions
+  - *No compatibility*: Moved functions and attributes
 
     * ``interpret_visa_id()`` from ``oscacq`` to ``auxiliary``
     * ``check_file()`` from ``oscacq`` to ``auxiliary``
+    * ``_screen_colors`` from ``oscacq`` to ``auxiliary``
+    * ``_supported_series`` from ``oscacq`` to ``auxiliary``
 
   - *No compatibility*: Some functions no longer take ``sources`` and
     ``sourcesstring`` as arguments, rather ``Oscilloscope._sources`` must be set by

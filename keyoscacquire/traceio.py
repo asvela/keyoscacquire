@@ -14,7 +14,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 import keyoscacquire.config as config
-import keyoscacquire.oscacq as oscacq
+import keyoscacquire.auxiliary as auxiliary
 
 _log = logging.getLogger(__name__)
 
@@ -107,7 +107,7 @@ def plot_trace(time, y, channels, fname="", showplot=config._show_plot,
     """
     fig, ax = plt.subplots()
     for i, vals in enumerate(np.transpose(y)): # for each channel
-        ax.plot(time, vals, color=oscacq._screen_colors[channels[i]])
+        ax.plot(time, vals, color=auxiliary._screen_colors[channels[i]])
     if savepng:
         fig.savefig(fname+".png", bbox_inches='tight')
     if showplot:
