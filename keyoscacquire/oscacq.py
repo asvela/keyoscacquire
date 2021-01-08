@@ -54,6 +54,11 @@ class Oscilloscope:
         Example address ``'USB0::1234::1234::MY1234567::INSTR'``
     timeout : int, default :data:`~keyoscacquire.config._timeout`
         Milliseconds before timeout on the channel to the instrument
+    get_errors_on_init : bool
+        The error queue of the scope is by default cleared when __init__ is called;
+        however, when this parameter is ``True``, the error queue is extracted
+        from the scope before the log is cleared, it is printed to the terminal and
+        the attribute ``errors`` is populated with the errors
     verbose : bool, default ``True``
         If ``True``: prints when the connection to the device is opened etc,
         and sets attr:`verbose_acquistion` to ``True``
@@ -111,7 +116,8 @@ class Oscilloscope:
     showplot = config._show_plot
     verbose_acquistion = False
 
-    def __init__(self, address=config._visa_address, timeout=config._timeout, verbose=True):
+    def __init__(self, address=config._visa_address, timeout=config._timeout,
+                 get_errors_on_init=False, verbose=True):
         """See class docstring"""
         self._address = address
         self.verbose = verbose
@@ -126,6 +132,8 @@ class Oscilloscope:
         # For TCP/IP socket connections enable the read Termination Character, or reads will timeout
         if self._inst.resource_name.endswith('SOCKET'):
             self._inst.read_termination = '\n'
+        if get_errors_on_init:
+            self.get_full_error_queue(verbose=True)
         # Clear the status data structures, the device-defined error queue, and the Request-for-OPC flag
         self.write('*CLS')
         # Make sure WORD and BYTE data is transeferred as signed ints and lease significant bit first
@@ -193,11 +201,13 @@ class Oscilloscope:
             else:
                 msg = f"query '{command}'"
             print(f"\nVisaError: {err}\n  When trying {msg}.")
-            print(f"  Have you checked that the timeout (currently {self.timeout:,d} ms) is sufficently long?")
+            print(f"  Have you checked that the timeout (currently "
+                  f"{self.timeout:,d} ms) is sufficently long?")
             try:
-                print(f"Latest error from the oscilloscope: '{self.get_error()}'\n")
+                self.get_full_error_queue(verbose=True)
+                print("")
             except Exception:
-                print("Could not retrieve error from the oscilloscope\n")
+                print("Could not retrieve errors from the oscilloscope\n")
             raise
 
     def close(self, set_running=True):
@@ -216,7 +226,9 @@ class Oscilloscope:
         _log.debug(f"Closed connection to '{self._id}'")
 
     def get_error(self):
-        """Get the latest error
+        """Get the first error in the error queue, a FIFO queue of max length 30.
+        The queue is reset when ``*CLS`` is written to the scope, which happens
+        in __init__().
 
         Returns
         -------
@@ -226,13 +238,34 @@ class Oscilloscope:
         # Do not use self.query here as that can lead to infinite nesting!
         return self._inst.query(":SYSTem:ERRor?").strip()
 
+    def get_full_error_queue(self, verbose=True):
+        """All the latest errors from the oscilloscope, upto 30 errors
+        (and store to the attribute ``errors``)"""
+        self.errors = []
+        for i in range(30):
+            err = self.get_error()
+            if err[:2] == "+0": # no error
+                # stop querying
+                break
+            else:
+                # store the error
+                self.errors.append(e)
+        if verbose:
+            if not self.errors:
+                print("Error queue empty")
+            else:
+                print("Latest errors from the oscilloscope (FIFO queue, upto 30 errors)")
+                for i, err in enumerate(self.errors):
+                    print(f"{i:>2}: {err}")
+        return self.errors
+
     def run(self):
-        """Set the ocilloscope to running mode."""
-        self.write(':RUN')
+        """Set the oscilloscope to running mode."""
+        self.write(":RUN")
 
     def stop(self):
         """Stop the oscilloscope."""
-        self.write(':STOP')
+        self.write(":STOP")
 
     def is_running(self):
         """Determine if the oscilloscope is running.
@@ -243,7 +276,7 @@ class Oscilloscope:
             ``True`` if running, ``False`` otherwise
         """
         # The third bit of the operation register is 1 if the instrument is running
-        reg = int(self.query(':OPERegister:CONDition?'))
+        reg = int(self.query(":OPERegister:CONDition?"))
         return (reg & 8) == 8
 
     @property
