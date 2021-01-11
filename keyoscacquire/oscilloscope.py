@@ -20,16 +20,17 @@ import matplotlib.pyplot as plt
 
 # local file with default options:
 import keyoscacquire.config as config
-import keyoscacquire.auxiliary as auxiliary
-import keyoscacquire.traceio as traceio
+import keyoscacquire.visa_utils as visa_utils
+import keyoscacquire.fileio as fileio
+import keyoscacquire.dataprocessing as dataprocessing
 
-from keyoscacquire.auxiliary import _screen_colors
 # for backwards compatibility (but rather use the Oscilloscope methods)
-from keyoscacquire.traceio import save_trace, save_trace_npy, plot_trace
+from .fileio import save_trace, save_trace_npy
 
 _log = logging.getLogger(__name__)
 
-
+#: Supported Keysight DSO/MSO InfiniiVision series
+_supported_series = ['1000', '2000', '3000', '4000', '6000']
 #: Datatype is ``'h'`` for 16 bit signed int (``WORD``), ``'b'`` for 8 bit signed bit (``BYTE``).
 #: Same naming as for structs `docs.python.org/3/library/struct.html#format-characters`
 _datatypes = {'BYT':'b', 'WOR':'h', 'BYTE':'b', 'WORD':'h'}
@@ -142,7 +143,7 @@ class Oscilloscope:
         # Get information about the connected device
         self._id = self.query('*IDN?')
         try:
-            maker, self._model, self._serial, _, self._model_series = auxiliary.interpret_visa_id(self._id)
+            maker, self._model, self._serial, _, self._model_series = visa_utils.interpret_visa_id(self._id)
             if self.verbose:
                 print(f"Connected to:")
                 print(f"  {maker}")
@@ -151,7 +152,7 @@ class Oscilloscope:
             if self.verbose:
                 print(f"Connected to '{self._id}'")
             print("(!) Failed to intepret the VISA IDN string")
-        if not self._model_series in auxiliary._supported_series:
+        if not self._model_series in _supported_series:
                 print(f"(!) WARNING: This model ({self._model}) is not yet fully supported by keyoscacquire,")
                 print( "             but might work to some extent. keyoscacquire supports Keysight's")
                 print( "             InfiniiVision X-series oscilloscopes.")
@@ -200,7 +201,7 @@ class Oscilloscope:
                 msg = f"{action} (command '{command}')"
             else:
                 msg = f"query '{command}'"
-            print(f"\nVisaError: {err}\n  When trying {msg}.")
+            print(f"\n\nVisaError: {err}\n  When trying {msg}.")
             print(f"  Have you checked that the timeout (currently "
                   f"{self.timeout:,d} ms) is sufficently long?")
             try:
@@ -601,7 +602,7 @@ class Oscilloscope:
         The parameters are provided by :func:`set_channels_for_capture`.
 
         The populated attributes raw and metadata should be processed
-        by :func:`process_data`.
+        by :func:`dataprocessing.process_data`.
 
         raw : :class:`~numpy.ndarray`
             An ndarray of ints that can be converted to voltage values using the preamble.
@@ -620,7 +621,7 @@ class Oscilloscope:
 
         See also
         --------
-        :func:`process_data`
+        :func:`dataprocessing.process_data`
         """
         wav_format = self.wav_format
         if self.verbose_acquistion:
@@ -656,11 +657,11 @@ class Oscilloscope:
         when waveform format is ``'WORD'`` or ``'BYTE'``.
 
         The parameters are provided by :func:`set_channels_for_capture`.
-        The output should be processed by :func:`process_data_binary`.
+        The output should be processed by :func:`dataprocessing._process_data_binary`.
 
         Populates the following attributes
         raw : :class:`~numpy.ndarray`
-            Raw data to be processed by :func:`process_data_binary`.
+            Raw data to be processed by :func:`dataprocessing._process_data_binary`.
             An ndarray of ints that can be converted to voltage values using the preamble.
         metadata : list of str
             List of preamble metadata (comma separated ascii values) for each channel
@@ -672,7 +673,7 @@ class Oscilloscope:
             on :attr:`wav_format`. Datatype is ``'h'`` for 16 bit signed int
             (``'WORD'``), for 8 bit signed bit (``'BYTE'``) (same naming as for
             structs, `https://docs.python.org/3/library/struct.html#format-characters`).
-            ``'standard'`` will evaluate :data:`oscacq._datatypes[self.wav_format]`
+            ``'standard'`` will evaluate :data:`oscilloscope._datatypes[self.wav_format]`
              to automatically choose according to the waveform format
         set_running : bool, default ``True``
             ``True`` leaves oscilloscope running after data capture
@@ -704,11 +705,11 @@ class Oscilloscope:
         when waveform format is ASCii.
 
         The parameters are provided by :func:`set_channels_for_capture`.
-        The output should be processed by :func:`process_data_ascii`.
+        The output should be processed by :func:`dataprocessing._process_data_ascii`.
 
         Populates the following attributes
         raw : str
-            Raw data to be processed by :func:`process_data_ascii`.
+            Raw data to be processed by :func:`dataprocessing._process_data_ascii`.
             The raw data is a list of one IEEE block per channel with a head
             and then comma separated ascii values.
         metadata : tuple of str
@@ -768,8 +769,8 @@ class Oscilloscope:
             self.set_channels_for_capture(channels=channels)
         # Capture, read and process data
         self.capture_and_read()
-        self._time, self._values = process_data(self._raw, self._metadata, self.wav_format,
-                                                verbose_acquistion=self.verbose_acquistion)
+        self._time, self._values = dataprocessing.process_data(self._raw, self._metadata, self.wav_format,
+                                                               verbose_acquistion=self.verbose_acquistion)
         return self._time, self._values, self._capture_channels
 
     def set_options_get_trace(self, channels=None, wav_format=None, acq_type=None,
@@ -958,11 +959,11 @@ class Oscilloscope:
             if self.fname[-4:] in ['.npy', '.csv']:
                 self.ext = self.fname[-4:]
                 self.fname = self.fname[:-4]
-            self.fname = auxiliary.check_file(self.fname, self.ext)
-            traceio.plot_trace(self._time, self._values, self._capture_channels, fname=self.fname,
+            self.fname = fileio.check_file(self.fname, self.ext)
+            fileio.plot_trace(self._time, self._values, self._capture_channels, fname=self.fname,
                                showplot=self.showplot, savepng=self.savepng)
             head = self.generate_file_header(additional_line=additional_header_info)
-            traceio.save_trace(self.fname, self._time, self._values, fileheader=head, ext=self.ext,
+            fileio.save_trace(self.fname, self._time, self._values, fileheader=head, ext=self.ext,
                                print_filename=self.verbose_acquistion, nowarn=nowarn)
         else:
             print("(!) No trace has been acquired yet, use get_trace()")
@@ -971,145 +972,12 @@ class Oscilloscope:
     def plot_trace(self):
         """Plot and show the most recent trace"""
         if not self._time is None:
-            traceio.plot_trace(self._time, self._values, self._capture_channels,
+            fileio.plot_trace(self._time, self._values, self._capture_channels,
                                savepng=False, showplot=True)
         else:
             print("(!) No trace has been acquired yet, use get_trace()")
             _log.info("(!) No trace has been acquired yet, use get_trace()")
 
-##============================================================================##
-##                           DATA PROCESSING                                  ##
-##============================================================================##
-
-def process_data(raw, metadata, wav_format, verbose_acquistion=True):
-    """Wrapper function for choosing the correct process_data function
-    according to :attr:`wav_format` for the data obtained from
-    :func:`Oscilloscope.capture_and_read`
-
-    Parameters
-    ----------
-    raw : ~numpy.ndarray or str
-        From :func:`~Oscilloscope.capture_and_read`: Raw data, type depending
-        on :attr:`wav_format`
-    metadata : list or tuple
-        From :func:`~Oscilloscope.capture_and_read`: List of preambles or
-        tuple of preamble and model series depending on :attr:`wav_format`.
-        See :ref:`preamble`.
-    wav_format : {``'WORD'``, ``'BYTE'``, ``'ASCii'``}
-        Specify what waveform type was used for acquiring to choose the correct
-        processing function.
-    verbose_acquistion : bool
-        True prints the number of points captured per channel
-
-    Returns
-    -------
-    time : :class:`~numpy.ndarray`
-        Time axis for the measurement
-    y : :class:`~numpy.ndarray`
-        Voltage values, each row represents one channel
-
-    Raises
-    ------
-    ValueError
-        If ``wav_format`` is not {'BYTE', 'WORD', 'ASCii'}
-
-    See also
-    --------
-    :func:`Oscilloscope.capture_and_read`
-    """
-    if wav_format[:3] in ['WOR', 'BYT']:
-        process_fn = _process_data_binary
-    elif wav_format[:3] == 'ASC':
-        processing_fn = _process_data_ascii
-    else:
-        raise ValueError("Could not process data, waveform format \'{}\' is unknown.".format(wav_format))
-    return processing_fn(raw, metadata, verbose_acquistion)
-
-
-def _process_data_binary(raw, preambles, verbose_acquistion=True):
-    """Process raw 8/16-bit data to time values and y voltage values as received
-    from :func:`Oscilloscope.capture_and_read_binary`.
-
-    Parameters
-    ----------
-    raw : ~numpy.ndarray
-        From :func:`~Oscilloscope.capture_and_read_binary`: An ndarray of ints
-        that is converted to voltage values using the preamble.
-    preambles : list of str
-        From :func:`~Oscilloscope.capture_and_read_binary`: List of preamble
-        metadata for each channel (list of comma separated ascii values,
-        see :ref:`preamble`)
-    verbose_acquistion : bool
-        True prints the number of points captured per channel
-
-    Returns
-    -------
-    time : :class:`~numpy.ndarray`
-        Time axis for the measurement
-    y : :class:`~numpy.ndarray`
-        Voltage values, each row represents one channel
-    """
-    # Pick one preamble and use for calculating the time values (same for all channels)
-    preamble = preambles[0].split(',')  # values separated by commas
-    num_samples = int(float(preamble[2]))
-    xIncr, xOrig, xRef = float(preamble[4]), float(preamble[5]), float(preamble[6])
-    time = np.array([(np.arange(num_samples)-xRef)*xIncr + xOrig]) # compute x-values
-    time = time.T # make x values vertical
-    _log.debug(f"Points captured per channel:  {num_samples:,d}")
-    if verbose_acquistion:
-        print(f"Points captured per channel:  {num_samples:,d}")
-    y = np.empty((len(raw), num_samples))
-    for i, data in enumerate(raw): # process each channel individually
-        preamble = preambles[i].split(',')
-        yIncr, yOrig, yRef = float(preamble[7]), float(preamble[8]), float(preamble[9])
-        y[i,:] = (data-yRef)*yIncr + yOrig
-    y = y.T # convert y to np array and transpose for vertical channel columns in csv file
-    return time, y
-
-def _process_data_ascii(raw, metadata, verbose_acquistion=True):
-    """Process raw comma separated ascii data to time values and y voltage
-    values as received from :func:`Oscilloscope.capture_and_read_ascii`
-
-    Parameters
-    ----------
-    raw : str
-        From :func:`~Oscilloscope.capture_and_read_ascii`: A string containing
-        a block header and comma separated ascii values
-    metadata : tuple
-        From :func:`~Oscilloscope.capture_and_read_ascii`: Tuple of the
-        preamble for one of the channels to calculate time axis (same for
-        all channels) and the model series. See :ref:`preamble`.
-    verbose_acquistion : bool
-        True prints the number of points captured per channel
-
-    Returns
-    -------
-    time : :class:`~numpy.ndarray`
-        Time axis for the measurement
-    y : :class:`~numpy.ndarray`
-        Voltage values, each row represents one channel
-    """
-    preamble, model_series = metadata
-    preamble = preamble.split(',')  # Values separated by commas
-    num_samples = int(float(preamble[2]))
-    xIncr, xOrig, xRef = float(preamble[4]), float(preamble[5]), float(preamble[6])
-    # Compute time axis and wrap in extra [] to make it 2D
-    time = np.array([(np.arange(num_samples)-xRef)*xIncr + xOrig])
-    time = time.T # Make list vertical
-    _log.debug(f"Points captured per channel:  {num_samples:,d}")
-    if verbose_acquistion:
-        print(f"Points captured per channel:  {num_samples:,d}")
-    y = []
-    for data in raw:
-        if model_series in ['2000']:
-            data = data.split(data[:10])[1] # remove first 10 characters (IEEE block header)
-        elif model_series in ['9000']:
-            data = data.strip().strip(",") # remove newline character at the end of the string
-        data = data.split(',') # samples separated by commas
-        data = np.array([float(sample) for sample in data])
-        y.append(data) # add ascii data for this channel to y array
-    y = np.transpose(np.array(y))
-    return time, y
 
 
 ## Module main function ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##

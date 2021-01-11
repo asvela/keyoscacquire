@@ -7,7 +7,7 @@ Instrument communication: The Oscilloscope class
 Oscilloscope API
 ================
 
-.. py:currentmodule:: keyoscacquire.oscacq
+.. py:currentmodule:: keyoscacquire.oscilloscope
 
 .. autoclass:: Oscilloscope
 

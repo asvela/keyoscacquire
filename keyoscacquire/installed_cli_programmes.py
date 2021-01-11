@@ -14,13 +14,12 @@ The loop runs each time 'enter' is hit. Alternatively one can input n-1 characte
 Optional argument from the command line: string setting the base filename of the output files.
 Change _visa_address in keyoscacquire.config to the desired instrument's address.
 
-Andreas Svela // 2019
 """
 
 import sys
 import argparse
 
-import keyoscacquire.programmes as acqprog
+import keyoscacquire.programmes as programmes
 import keyoscacquire.config as config
 
 ##============================================================================##
@@ -36,6 +35,7 @@ timeout_help = f"Milliseconds before timeout on the channel to the instrument. D
 channels_help = f"List of the channel numbers to be acquired, for example '1 3' (without ') or 'active' (without ') to capture all the currently active channels on the oscilloscope. Defaults to the currently active channels."
 points_help = f"Use 0 to get the maximum number of points, or set a specific number (the scope might change it slightly). Defaults to '{config._num_points}."
 delim_help = f"Delimiter used between filename and filenumber (before filetype). Defaults to '{config._file_delimiter}'."
+
 
 def standard_arguments(parser):
     connection_gr = parser.add_argument_group('Connection settings')
@@ -61,62 +61,63 @@ def standard_arguments(parser):
 def connect_each_time_cli():
     """Function installed on the command line: Obtains and stores multiple traces,
     connecting to the oscilloscope each time."""
-    parser = argparse.ArgumentParser(description=acqprog.get_traces_connect_each_time_loop.__doc__)
+    parser = argparse.ArgumentParser(description=programmes.get_traces_connect_each_time_loop.__doc__)
     trans_gr = standard_arguments(parser)
     trans_gr.add_argument('--file_delimiter', nargs='?', help=delim_help, default=config._file_delimiter)
     args = parser.parse_args()
     # Convert channels arg to ints
     if args.channels is not None:
         args.channels = [int(c) for c in args.channels]
-    acqprog.get_traces_connect_each_time_loop(fname=args.filename,
-                                              address=args.visa_address,
-                                              timeout=args.timeout,
-                                              wav_format=args.wav_format,
-                                              channels=args.channels,
-                                              acq_type=args.acq_type,
-                                              num_points=args.num_points,
-                                              file_delim=args.file_delimiter)
+    programmes.get_traces_connect_each_time_loop(fname=args.filename,
+                                                 address=args.visa_address,
+                                                 timeout=args.timeout,
+                                                 wav_format=args.wav_format,
+                                                 channels=args.channels,
+                                                 acq_type=args.acq_type,
+                                                 num_points=args.num_points,
+                                                 file_delim=args.file_delimiter)
 
 
 def single_connection_cli():
     """Function installed on the command line: Obtains and stores multiple traces,
     keeping a the same connection to the oscilloscope open all the time."""
-    parser = argparse.ArgumentParser(description=acqprog.get_traces_single_connection_loop.__doc__)
+    parser = argparse.ArgumentParser(description=programmes.get_traces_single_connection_loop.__doc__)
     trans_gr = standard_arguments(parser)
     trans_gr.add_argument('--file_delimiter', nargs='?', help=delim_help, default=config._file_delimiter)
     args = parser.parse_args()
     # Convert channels arg to ints
     if args.channels is not None:
         args.channels = [int(c) for c in args.channels]
-    acqprog.get_traces_single_connection_loop(fname=args.filename,
-                                              address=args.visa_address,
-                                              timeout=args.timeout,
-                                              wav_format=args.wav_format,
-                                              channels=args.channels,
-                                              acq_type=args.acq_type,
-                                              num_points=args.num_points,
-                                              file_delim=args.file_delimiter)
+    programmes.get_traces_single_connection_loop(fname=args.filename,
+                                                 address=args.visa_address,
+                                                 timeout=args.timeout,
+                                                 wav_format=args.wav_format,
+                                                 channels=args.channels,
+                                                 acq_type=args.acq_type,
+                                                 num_points=args.num_points,
+                                                 file_delim=args.file_delimiter)
 
 
 def single_trace_cli():
     """Function installed on the command line: Obtains and stores a single trace."""
-    parser = argparse.ArgumentParser(description=acqprog.get_single_trace.__doc__)
+    parser = argparse.ArgumentParser(description=programmes.get_single_trace.__doc__)
     standard_arguments(parser)
     args = parser.parse_args()
     # Convert channels arg to ints
     if args.channels is not None:
         args.channels = [int(c) for c in args.channels]
-    acqprog.get_single_trace(fname=args.filename,
-                             address=args.visa_address,
-                             timeout=args.timeout,
-                             wav_format=args.wav_format,
-                             channels=args.channels,
-                             acq_type=args.acq_type,
-                             num_points=args.num_points)
+    programmes.get_single_trace(fname=args.filename,
+                                address=args.visa_address,
+                                timeout=args.timeout,
+                                wav_format=args.wav_format,
+                                channels=args.channels,
+                                acq_type=args.acq_type,
+                                num_points=args.num_points)
+
 
 def num_traces_cli():
     """Function installed on the command line: Obtains and stores a single trace."""
-    parser = argparse.ArgumentParser(description=acqprog.get_num_traces.__doc__)
+    parser = argparse.ArgumentParser(description=programmes.get_num_traces.__doc__)
     # postitional arg
     parser.add_argument('num', help='The number of successive traces to obtain.', type=int)
     # optional args
@@ -126,26 +127,28 @@ def num_traces_cli():
     # Convert channels arg to ints
     if args.channels is not None:
         args.channels = [int(c) for c in args.channels]
-    acqprog.get_num_traces(num=args.num,
-                           fname=args.filename,
-                           address=args.visa_address,
-                           timeout=args.timeout,
-                           wav_format=args.wav_format,
-                           channels=args.channels,
-                           acq_type=args.acq_type,
-                           num_points=args.num_points)
+    programmes.get_num_traces(num=args.num,
+                              fname=args.filename,
+                              address=args.visa_address,
+                              timeout=args.timeout,
+                              wav_format=args.wav_format,
+                              channels=args.channels,
+                              acq_type=args.acq_type,
+                              num_points=args.num_points)
+
 
 def list_visa_devices_cli():
     """Function installed on the command line: Lists VISA devices"""
-    parser = argparse.ArgumentParser(description=acqprog.list_visa_devices.__doc__)
+    parser = argparse.ArgumentParser(description=programmes.list_visa_devices.__doc__)
     parser.add_argument('-n', action="store_false",
                         help=("If this flag is set, the programme will not query "
                               "the instruments for their IDNs."))
     args = parser.parse_args()
-    acqprog.list_visa_devices(ask_idn=args.n)
+    programmes.list_visa_devices(ask_idn=args.n)
+
 
 def path_of_config_cli():
     """Function installed on the command line: Prints the full path of the config module"""
-    parser = argparse.ArgumentParser(description=acqprog.path_of_config.__doc__)
+    parser = argparse.ArgumentParser(description=programmes.path_of_config.__doc__)
     args = parser.parse_args()
-    acqprog.path_of_config()
+    programmes.path_of_config()

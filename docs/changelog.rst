@@ -39,11 +39,11 @@ v4.0.0 (2020-12)
     set the to the maximum number of points available, and the number of
     points can be queried.
 
-  - New ``keyoscacquire.traceio.load_trace()`` function for loading saved a trace
-    from disk to pandas dataframe or numpy array
-
-  - Moved save and plot functions to ``keyoscacquire.traceio``, but are imported
+  - Moved save and plot functions to ``keyoscacquire.fileio``, but are imported
     in ``oscacq`` to keep compatibility
+
+  - New ``keyoscacquire.fileio.load_trace()`` function for loading saved a trace
+    from disk to pandas dataframe or numpy array
 
   - ``Oscilloscope.query()`` will now try to read the error from the
     instrument if pyvisa fails
@@ -101,10 +101,11 @@ v4.0.0 (2020-12)
 
   - *No compatibility*: Moved functions and attributes
 
-    * ``interpret_visa_id()`` from ``oscacq`` to ``auxiliary``
-    * ``check_file()`` from ``oscacq`` to ``auxiliary``
-    * ``_screen_colors`` from ``oscacq`` to ``auxiliary``
-    * ``_supported_series`` from ``oscacq`` to ``auxiliary``
+    * ``check_file()`` from ``oscacq`` to ``fileio``
+    * ``interpret_visa_id()`` from ``oscacq`` to ``visa_utils``
+    * ``process_data()`` (as well as ``_process_data_ascii`` and
+      ``_process_data_binary``) from ``oscacq`` to ``dataprocessing``
+    * ``_screen_colors`` from ``oscacq`` to ``fileio``
 
   - *No compatibility*: Some functions no longer take ``sources`` and
     ``sourcesstring`` as arguments, rather ``Oscilloscope._sources`` must be set by

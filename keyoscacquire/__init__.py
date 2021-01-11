@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Andreas Svela // 2019
+Andreas Svela // 2019-2021
 """
 
 
@@ -15,12 +15,11 @@ with open(os.path.join(current_dir, 'VERSION')) as version_file:
 import logging
 _log = logging.getLogger(__name__)
 
-import keyoscacquire.oscacq as oscacq
-import keyoscacquire.traceio as traceio
+import keyoscacquire.oscilloscope as oscilloscope
+import keyoscacquire.fileio as fileio
 import keyoscacquire.config as config
 import keyoscacquire.programmes as programmes
-import keyoscacquire.auxiliary as auxiliary
+import keyoscacquire.visa_utils as visa_utils
 
-from keyoscacquire.oscacq import Oscilloscope
-from keyoscacquire.traceio import save_trace, load_trace
-from keyoscacquire.auxiliary import _screen_colors
+from .oscilloscope import Oscilloscope, _supported_series
+from .fileio import save_trace, load_trace, _screen_colors

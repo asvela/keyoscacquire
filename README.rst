@@ -54,7 +54,7 @@ information about the API.
 
 As an example of API usage/use in the Python console::
 
-  >>> import keyoscacquire.oscacq as koa
+  >>> import keyoscacquire koa
   >>> scope = koa.Oscilloscope(address='USB0::1234::1234::MY1234567::INSTR')
   Connected to:
      AGILENT TECHNOLOGIES
@@ -88,7 +88,7 @@ array which columns contain the data from the active channels listed in
 
 The trace can be easily loaded from disk to a Pandas dataframe with::
 
-  >>> df, metadata = koa.traceio.load_trace("data")
+  >>> df, metadata = koa.fileio.load_trace("data")
   >>> df.head()
       time         1         2         4
   0 -0.005 -0.004853 -0.005248 -0.005248

@@ -89,8 +89,8 @@ for from the ocilloscope. The keyoscacquire package supports all three formats
 and does the conversion for the integer transfer types, i.e. the output files
 will be ASCII format anyway, it is simply a question of how the data is
 transferred to and processed on the computer
-(see :func:`~keyoscacquire.oscacq.Oscilloscope.capture_and_read` and
-:func:`~keyoscacquire.oscacq.process_data`).
+(see :func:`~keyoscacquire.oscilloscope.Oscilloscope.capture_and_read` and
+:func:`~keyoscacquire.dataprocessing.process_data`).
 
 The 16-bit values format is approximately 10x faster than ascii and gives the
 same vertical resolution. 8-bit has significantly lower vertical resolution
@@ -98,7 +98,7 @@ than the two others, but gives an even higher speed-up.
 
 The default waveform type can be set in with
 :const:`~keyoscacquire.config._waveform_format`, see :ref:`default-options`,
-or using the API :attr:`~keyoscacquire.oscacq.Oscilloscope.wav_format`.
+or using the API :attr:`~keyoscacquire.oscilloscope.Oscilloscope.wav_format`.
 
 
 Using the API

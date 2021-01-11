@@ -14,11 +14,76 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 import keyoscacquire.config as config
-import keyoscacquire.auxiliary as auxiliary
+
 
 _log = logging.getLogger(__name__)
 
-## Trace saving and plotting ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
+#: Keysight colour map for the channels
+_screen_colors = {1:'C1', 2:'C2', 3:'C0', 4:'C3'}
+
+
+def check_file(fname, ext=config._filetype, num=""):
+    """Checking if file ``fname+num+ext`` exists. If it does, the user is
+    prompted for a string to append to fname until a unique fname is found.
+
+    Parameters
+    ----------
+    fname : str
+        Base filename to test
+    ext : str, default :data:`~keyoscacquire.config._filetype`
+        File extension
+    num : str, default ""
+        Filename suffix that is tested for, but the appended part to the fname
+        will be placed before it,and the suffix will not be part of the
+        returned fname
+
+    Returns
+    -------
+    fname : str
+        New fname base
+    """
+    while os.path.exists(fname+num+ext):
+        append = input(f"File '{fname+num+ext}' exists! Append to filename '{fname}' before saving: ")
+        fname += append
+    return fname
+
+
+## Trace plotting ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
+
+def plot_trace(time, y, channels, fname="", showplot=config._show_plot,
+               savepng=config._export_png):
+    """Plots the trace with oscilloscope channel screen colours according to
+    the Keysight colourmap and saves as a png.
+
+    .. Caution:: No filename check for the saved plot, can overwrite
+      existing png files.
+
+    Parameters
+    ----------
+    time : ~numpy.ndarray
+        Time axis for the measurement
+    y : ~numpy.ndarray
+        Voltage values, same sequence as channel_nums
+    channels : list of ints
+        list of the channels obtained, example [1, 3]
+    fname : str, default ``""``
+        Filename of possible exported png
+    show : bool, default :data:`~keyoscacquire.config._show_plot`
+        True shows the plot (must be closed before the programme proceeds)
+    savepng : bool, default :data:`~keyoscacquire.config._export_png`
+        ``True`` exports the plot to ``fname``.png
+    """
+    fig, ax = plt.subplots()
+    for i, vals in enumerate(np.transpose(y)): # for each channel
+        ax.plot(time, vals, color=_screen_colors[channels[i]])
+    if savepng:
+        fig.savefig(fname+".png", bbox_inches='tight')
+    if showplot:
+        plt.show(fig)
+    plt.close(fig)
+
+
+## Trace saving ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
 
 def save_trace(fname, time, y, fileheader="", ext=config._filetype,
                print_filename=True, nowarn=False):
@@ -82,44 +147,11 @@ def save_trace_npy(fname, time, y, print_filename=True, **kwargs):
     save_trace(fname, time, y, ext=".npy", nowarn=True, print_filename=print_filename)
 
 
-def plot_trace(time, y, channels, fname="", showplot=config._show_plot,
-               savepng=config._export_png):
-    """Plots the trace with oscilloscope channel screen colours according to
-    the Keysight colourmap and saves as a png.
-
-    .. Caution:: No filename check for the saved plot, can overwrite
-      existing png files.
-
-    Parameters
-    ----------
-    time : ~numpy.ndarray
-        Time axis for the measurement
-    y : ~numpy.ndarray
-        Voltage values, same sequence as channel_nums
-    channels : list of ints
-        list of the channels obtained, example [1, 3]
-    fname : str, default ``""``
-        Filename of possible exported png
-    show : bool, default :data:`~keyoscacquire.config._show_plot`
-        True shows the plot (must be closed before the programme proceeds)
-    savepng : bool, default :data:`~keyoscacquire.config._export_png`
-        ``True`` exports the plot to ``fname``.png
-    """
-    fig, ax = plt.subplots()
-    for i, vals in enumerate(np.transpose(y)): # for each channel
-        ax.plot(time, vals, color=auxiliary._screen_colors[channels[i]])
-    if savepng:
-        fig.savefig(fname+".png", bbox_inches='tight')
-    if showplot:
-        plt.show(fig)
-    plt.close(fig)
-
-
 ## Trace loading ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
 
 def load_trace(fname, ext=config._filetype, column_names='auto', skip_lines='auto',
                return_as_df=True):
-    """Load a trace saved with keyoscacquire.oscacq.save_file()
+    """Load a trace saved with keyoscacquire.oscilloscope.save_file()
 
     What is returned depends on the format of the file (.npy files contain no
     headers), and if a dataframe format is chosen for the return.

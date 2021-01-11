@@ -1,20 +1,16 @@
 # -*- coding: utf-8 -*-
 """
-Auxiliary functions for the keyoscacquire package
+Visa-related auxiliary functions for the keyoscacquire package
 
 """
 
 import os
 import pyvisa
 import logging
-_log = logging.getLogger(__name__)
 
 import keyoscacquire.config as config
 
-#: Supported Keysight DSO/MSO InfiniiVision series
-_supported_series = ['1000', '2000', '3000', '4000', '6000']
-#: Keysight colour map for the channels
-_screen_colors = {1:'C1', 2:'C2', 3:'C0', 4:'C3'}
+_log = logging.getLogger(__name__)
 
 def interpret_visa_id(idn):
     """Interprets a VISA ID, including finding a oscilloscope model series
@@ -105,29 +101,3 @@ def obtain_instrument_information(resource_manager, address, num, ask_idn=True):
                       f"exception {ex.__class__.__name__}: VISA id returned was '{idn}'")
                 resource_info.extend(["failed to interpret"]*5)
     return resource_info
-
-
-def check_file(fname, ext=config._filetype, num=""):
-    """Checking if file ``fname+num+ext`` exists. If it does, the user is
-    prompted for a string to append to fname until a unique fname is found.
-
-    Parameters
-    ----------
-    fname : str
-        Base filename to test
-    ext : str, default :data:`~keyoscacquire.config._filetype`
-        File extension
-    num : str, default ""
-        Filename suffix that is tested for, but the appended part to the fname
-        will be placed before it,and the suffix will not be part of the
-        returned fname
-
-    Returns
-    -------
-    fname : str
-        New fname base
-    """
-    while os.path.exists(fname+num+ext):
-        append = input(f"File '{fname+num+ext}' exists! Append to filename '{fname}' before saving: ")
-        fname += append
-    return fname

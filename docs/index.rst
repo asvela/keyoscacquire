@@ -20,11 +20,11 @@ Table of contents
    :maxdepth: 3
    :caption: Reference
 
-   contents/osc-class
+   contents/oscillocope
    contents/dataprocessing
    contents/programmes
    contents/config
-   contents/auxiliary
+   contents/visa_utils
 
 
 .. toctree::

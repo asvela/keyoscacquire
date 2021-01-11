@@ -21,7 +21,7 @@ The file header in the ascii files saved is::
     <timestamp>
     time,<chs>
 
-Where ``<id>`` is the :attr:`~keyoscacquire.oscacq.Oscilloscope.id` of the
+Where ``<id>`` is the :attr:`~keyoscacquire.oscilloscope.Oscilloscope.id` of the
 oscilloscope, and ``<chs>`` are the comma separated channels used. For example::
 
     # AGILENT TECHNOLOGIES,DSO-X 2024A,MY1234567,12.34.1234567890

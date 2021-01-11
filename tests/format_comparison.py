@@ -31,7 +31,7 @@ for wav_format in wformat:
     print("\nWaveform format: ", wav_format)
     scope.wav_format = wav_format
     scope.capture_and_read(set_running=False)
-    time, vals = koa.oscacq.process_data(scope._raw, scope._metadata, wav_format, verbose_acquistion=True)
+    time, vals = koa.dataprocessing.process_data(scope._raw, scope._metadata, wav_format, verbose_acquistion=True)
     times[0].append(time)
     values[0].append(vals)
 
