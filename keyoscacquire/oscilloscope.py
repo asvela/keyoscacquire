@@ -201,14 +201,16 @@ class Oscilloscope:
                 msg = f"{action} (command '{command}')"
             else:
                 msg = f"query '{command}'"
-            print(f"\n\nVisaError: {err}\n  When trying {msg}.")
+            print(f"\n\nVisaError: {err}\n  When trying {msg}  (full traceback below).")
             print(f"  Have you checked that the timeout (currently "
                   f"{self.timeout:,d} ms) is sufficently long?")
             try:
                 self.get_full_error_queue(verbose=True)
                 print("")
-            except Exception:
-                print("Could not retrieve errors from the oscilloscope\n")
+            except Exception as excep:
+                print("Could not retrieve errors from the oscilloscope:")
+                print(excep)
+                print("")
             raise
 
     def close(self, set_running=True):
@@ -250,7 +252,7 @@ class Oscilloscope:
                 break
             else:
                 # store the error
-                self.errors.append(e)
+                self.errors.append(err)
         if verbose:
             if not self.errors:
                 print("Error queue empty")
@@ -692,12 +694,17 @@ class Oscilloscope:
                                                                datatype=datatype,
                                                                container=np.array))
             except pyvisa.Error as err:
-                print(f"\n\nVisaError: {err}\n  When trying to obtain the waveform.")
-                print(f"  Have you checked that the timeout (currently {self.timeout:,d} ms) is sufficently long?")
+                print(f"\n\nVisaError: {err}\n  When trying to obtain the "
+                      f"waveform (full traceback below).")
+                print(f"  Have you checked that the timeout (currently"
+                      f"{self.timeout:,d} ms) is sufficently long?")
                 try:
-                    print(f"Latest error from the oscilloscope: '{self.get_error()}'\n")
-                except Exception:
-                    print("Could not retrieve error from the oscilloscope")
+                    self.get_full_error_queue(verbose=True)
+                    print("")
+                except Exception as excep:
+                    print("Could not retrieve errors from the oscilloscope:")
+                    print(excep)
+                    print("")
                 raise
 
     def _read_ascii(self):
