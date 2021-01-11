@@ -20,7 +20,7 @@ Table of contents
    :maxdepth: 3
    :caption: Reference
 
-   contents/oscillocope
+   contents/oscilloscope
    contents/dataprocessing
    contents/programmes
    contents/config

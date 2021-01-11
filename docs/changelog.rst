@@ -34,13 +34,17 @@ v4.0.0 (2020-12)
     *Oscilloscope*, like active channels and acquisition type, but only set
     default connection and transfer settings
 
+  - Changed the name of the module ``oscacq`` to ``oscilloscope`` and moved
+    functions not within the ``Oscilloscope`` class to other modules, see
+    details below
+
   - Bugfixes and docfixes for the number of points to be transferred from the
     instrument (previously ``num_points`` argument, now a property). Zero will
     set the to the maximum number of points available, and the number of
     points can be queried.
 
   - Moved save and plot functions to ``keyoscacquire.fileio``, but are imported
-    in ``oscacq`` to keep compatibility
+    in the ``oscilloscope`` (prev ``oscacq``) module to keep compatibility
 
   - New ``keyoscacquire.fileio.load_trace()`` function for loading saved a trace
     from disk to pandas dataframe or numpy array
@@ -85,6 +89,7 @@ v4.0.0 (2020-12)
 
   - *No compatibility*: Name changes
 
+    * module ``oscacq`` to ``oscilloscope``
     * ``Oscilloscope.determine_channels()`` -> ``Oscilloscope.set_channels_for_capture()``
     * ``Oscilloscope.acquire_print`` -> ``Oscilloscope.verbose_acquistion``
     * ``Oscilloscope.set_acquire_print()`` set ``Oscilloscope.verbose_acquistion``
