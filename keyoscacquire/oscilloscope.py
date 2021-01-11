@@ -604,7 +604,7 @@ class Oscilloscope:
         The parameters are provided by :func:`set_channels_for_capture`.
 
         The populated attributes raw and metadata should be processed
-        by :func:`dataprocessing.process_data`.
+        by :func:`keyoscacquire.dataprocessing.process_data`.
 
         raw : :class:`~numpy.ndarray`
             An ndarray of ints that can be converted to voltage values using the preamble.
@@ -623,7 +623,7 @@ class Oscilloscope:
 
         See also
         --------
-        :func:`dataprocessing.process_data`
+        :func:`keyoscacquire.dataprocessing.process_data`
         """
         wav_format = self.wav_format
         if self.verbose_acquistion:
@@ -659,11 +659,11 @@ class Oscilloscope:
         when waveform format is ``'WORD'`` or ``'BYTE'``.
 
         The parameters are provided by :func:`set_channels_for_capture`.
-        The output should be processed by :func:`dataprocessing._process_data_binary`.
+        The output should be processed by :func:`keyoscacquire.dataprocessing._process_data_binary`.
 
         Populates the following attributes
         raw : :class:`~numpy.ndarray`
-            Raw data to be processed by :func:`dataprocessing._process_data_binary`.
+            Raw data to be processed by :func:`keyoscacquire.dataprocessing._process_data_binary`.
             An ndarray of ints that can be converted to voltage values using the preamble.
         metadata : list of str
             List of preamble metadata (comma separated ascii values) for each channel

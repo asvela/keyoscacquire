@@ -1,11 +1,12 @@
 .. _osc-class:
 
-Instrument communication: The Oscilloscope class
-************************************************
+Instrument communication
+************************
 
+The :mod:`keyoscacquire.oscilloscope` is responsible for the instrument communication.
 
-Oscilloscope API
-================
+The Oscilloscope class
+======================
 
 .. py:currentmodule:: keyoscacquire.oscilloscope
 

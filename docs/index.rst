@@ -18,7 +18,7 @@ Table of contents
 
 .. toctree::
    :maxdepth: 3
-   :caption: Reference
+   :caption: Reference/API
 
    contents/oscilloscope
    contents/dataprocessing

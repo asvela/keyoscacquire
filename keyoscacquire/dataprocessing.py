@@ -1,7 +1,15 @@
 # -*- coding: utf-8 -*-
 """
 This module provides functions for processing the data captured from the
-oscillscope to time and voltage values
+oscilloscope to time and voltage values
+
+The output from the :func:`Oscilloscope.capture_and_read` function is processed
+by :func:`process_data`, a wrapper function that sends the data to the
+respective binary or ascii processing functions.
+
+This function is kept outside the Oscilloscope class as one might want to
+post-process data separately from capturing it.
+
 """
 
 import logging
@@ -13,17 +21,17 @@ _log = logging.getLogger(__name__)
 def process_data(raw, metadata, wav_format, verbose_acquistion=True):
     """Wrapper function for choosing the correct _process_data function
     according to :attr:`wav_format` for the data obtained from
-    :func:`Oscilloscope.capture_and_read`
+    :func:`~keyoscacquire.oscilloscope.Oscilloscope.capture_and_read`
 
     Parameters
     ----------
     raw : ~numpy.ndarray or str
-        From :func:`~Oscilloscope.capture_and_read`: Raw data, type depending
-        on :attr:`wav_format`
+        From :func:`~keyoscacquire.oscilloscope.Oscilloscope.capture_and_read`:
+        Raw data, type depending on :attr:`wav_format`
     metadata : list or tuple
-        From :func:`~Oscilloscope.capture_and_read`: List of preambles or
-        tuple of preamble and model series depending on :attr:`wav_format`.
-        See :ref:`preamble`.
+        From :func:`~keyoscacquire.oscilloscope.Oscilloscope.capture_and_read`:
+        List of preambles or tuple of preamble and model series depending on
+        :attr:`wav_format`. See :ref:`preamble`.
     wav_format : {``'WORD'``, ``'BYTE'``, ``'ASCii'``}
         Specify what waveform type was used for acquiring to choose the correct
         processing function.
@@ -44,7 +52,7 @@ def process_data(raw, metadata, wav_format, verbose_acquistion=True):
 
     See also
     --------
-    :func:`Oscilloscope.capture_and_read`
+    :func:`keyoscacquire.oscilloscope.Oscilloscope.capture_and_read`
     """
     if wav_format[:3] in ['WOR', 'BYT']:
         processing_fn = _process_data_binary
@@ -62,12 +70,12 @@ def _process_data_binary(raw, preambles, verbose_acquistion=True):
     Parameters
     ----------
     raw : ~numpy.ndarray
-        From :func:`~Oscilloscope.capture_and_read_binary`: An ndarray of ints
-        that is converted to voltage values using the preamble.
+        From :func:`~keyoscacquire.oscilloscope.Oscilloscope.capture_and_read_binary`:
+        An ndarray of ints that is converted to voltage values using the preamble.
     preambles : list of str
-        From :func:`~Oscilloscope.capture_and_read_binary`: List of preamble
-        metadata for each channel (list of comma separated ascii values,
-        see :ref:`preamble`)
+        From :func:`~keyoscacquire.oscilloscope.Oscilloscope.capture_and_read_binary`:
+        List of preamble metadata for each channel (list of comma separated
+        ascii values, see :ref:`preamble`)
     verbose_acquistion : bool
         True prints the number of points captured per channel
 
@@ -102,11 +110,11 @@ def _process_data_ascii(raw, metadata, verbose_acquistion=True):
     Parameters
     ----------
     raw : str
-        From :func:`~Oscilloscope.capture_and_read_ascii`: A string containing
-        a block header and comma separated ascii values
+        From :func:`~keyoscacquire.oscilloscope.Oscilloscope.capture_and_read_ascii`:
+        A string containing a block header and comma separated ascii values
     metadata : tuple
-        From :func:`~Oscilloscope.capture_and_read_ascii`: Tuple of the
-        preamble for one of the channels to calculate time axis (same for
+        From :func:`~keyoscacquire.oscilloscope.Oscilloscope.capture_and_read_ascii`:
+        Tuple of the preamble for one of the channels to calculate time axis (same for
         all channels) and the model series. See :ref:`preamble`.
     verbose_acquistion : bool
         True prints the number of points captured per channel

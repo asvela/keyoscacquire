@@ -4,22 +4,14 @@ Data processing, file saving & loading
 **************************************
 
 The :mod:`keyoscacquire.dataprocessing` module contains a function for processing
-the raw data captured with :class:`Oscilloscope`, and :mod:`keyoscacquire.fileio`
+the raw data captured with :class:`oscilloscope.Oscilloscope`, and :mod:`keyoscacquire.fileio`
 for saving the processed data to files and plots.
 
 Data processing (:mod:`keyoscacquire.dataprocessing`)
 -----------------------------------------------------
 
-.. py:currentmodule:: keyoscacquire.dataprocessing
-
-The output from the :func:`Oscilloscope.capture_and_read` function is processed
-by :func:`process_data`, a wrapper function that sends the data to the
-respective binary or ascii processing functions.
-
-This function is kept outside the Oscilloscope class as one might want to
-post-process data after capturing it.
-
-.. autofunction:: process_data
+.. automodule:: keyoscacquire.dataprocessing
+  :members:
 
 
 File saving and loading (:mod:`keyoscacquire.fileio`)
