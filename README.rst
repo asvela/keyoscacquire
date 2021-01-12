@@ -54,7 +54,7 @@ information about the API.
 
 As an example of API usage/use in the Python console::
 
-  >>> import keyoscacquire koa
+  >>> import keyoscacquire as koa
   >>> scope = koa.Oscilloscope(address='USB0::1234::1234::MY1234567::INSTR')
   Connected to:
      AGILENT TECHNOLOGIES
