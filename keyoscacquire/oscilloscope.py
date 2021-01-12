@@ -18,7 +18,6 @@ import datetime as dt
 import numpy as np
 import matplotlib.pyplot as plt
 
-# local file with default options:
 import keyoscacquire.config as config
 import keyoscacquire.visa_utils as visa_utils
 import keyoscacquire.fileio as fileio
@@ -30,10 +29,10 @@ from .fileio import save_trace, save_trace_npy
 _log = logging.getLogger(__name__)
 
 #: Supported Keysight DSO/MSO InfiniiVision series
-_supported_series = ['1000', '2000', '3000', '4000', '6000']
+_SUPPORTED_SERIES = ['1000', '2000', '3000', '4000', '6000']
 #: Datatype is ``'h'`` for 16 bit signed int (``WORD``), ``'b'`` for 8 bit signed bit (``BYTE``).
 #: Same naming as for structs `docs.python.org/3/library/struct.html#format-characters`
-_datatypes = {'BYT':'b', 'WOR':'h', 'BYTE':'b', 'WORD':'h'}
+_DATATYPES = {'BYT':'b', 'WOR':'h', 'BYTE':'b', 'WORD':'h'}
 
 
 ## ========================================================================= ##
@@ -152,7 +151,7 @@ class Oscilloscope:
             if self.verbose:
                 print(f"Connected to '{self._id}'")
             print("(!) Failed to intepret the VISA IDN string")
-        if not self._model_series in _supported_series:
+        if not self._model_series in _SUPPORTED_SERIES:
                 print(f"(!) WARNING: This model ({self._model}) is not yet fully supported by keyoscacquire,")
                 print( "             but might work to some extent. keyoscacquire supports Keysight's")
                 print( "             InfiniiVision X-series oscilloscopes.")
@@ -641,7 +640,7 @@ class Oscilloscope:
         ## Read from the scope
         wav_format = wav_format[:3]
         if wav_format in ['WOR', 'BYT']:
-            self._read_binary(datatype=_datatypes[wav_format])
+            self._read_binary(datatype=_DATATYPES[wav_format])
         elif wav_format[:3] == 'ASC':
             self._read_ascii()
         else:
@@ -675,7 +674,7 @@ class Oscilloscope:
             on :attr:`wav_format`. Datatype is ``'h'`` for 16 bit signed int
             (``'WORD'``), for 8 bit signed bit (``'BYTE'``) (same naming as for
             structs, `https://docs.python.org/3/library/struct.html#format-characters`).
-            ``'standard'`` will evaluate :data:`oscilloscope._datatypes[self.wav_format]`
+            ``'standard'`` will evaluate :data:`oscilloscope._DATATYPES[self.wav_format]`
              to automatically choose according to the waveform format
         set_running : bool, default ``True``
             ``True`` leaves oscilloscope running after data capture

@@ -19,7 +19,7 @@ import keyoscacquire.config as config
 _log = logging.getLogger(__name__)
 
 #: Keysight colour map for the channels
-_screen_colors = {1:'C1', 2:'C2', 3:'C0', 4:'C3'}
+_SCREEN_COLORS = {1:'C1', 2:'C2', 3:'C0', 4:'C3'}
 
 
 def check_file(fname, ext=config._filetype, num=""):
@@ -75,7 +75,7 @@ def plot_trace(time, y, channels, fname="", showplot=config._show_plot,
     """
     fig, ax = plt.subplots()
     for i, vals in enumerate(np.transpose(y)): # for each channel
-        ax.plot(time, vals, color=_screen_colors[channels[i]])
+        ax.plot(time, vals, color=_SCREEN_COLORS[channels[i]])
     if savepng:
         fig.savefig(fname+".png", bbox_inches='tight')
     if showplot:

@@ -103,6 +103,7 @@ v4.0.0 (2021-01)
     * ``Oscilloscope.address`` -> ``Oscilloscope._address``
     * ``Oscilloscope.model`` -> ``Oscilloscope._model``
     * ``Oscilloscope.model_series`` -> ``Oscilloscope._model_series``
+    * ``oscacq._screen_colors`` -> ``fileio._SCREEN_COLORS``
 
   - *No compatibility*: Moved functions and attributes
 
@@ -110,7 +111,7 @@ v4.0.0 (2021-01)
     * ``interpret_visa_id()`` from ``oscacq`` to ``visa_utils``
     * ``process_data()`` (as well as ``_process_data_ascii`` and
       ``_process_data_binary``) from ``oscacq`` to ``dataprocessing``
-    * ``_screen_colors`` from ``oscacq`` to ``fileio``
+    * ``_SCREEN_COLORS`` (prev. ``_screen_colors``) from ``oscacq`` to ``fileio``
 
   - *No compatibility*: Some functions no longer take ``sources`` and
     ``sourcesstring`` as arguments, rather ``Oscilloscope._sources`` must be set by

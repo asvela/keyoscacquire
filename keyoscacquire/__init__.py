@@ -22,4 +22,4 @@ import keyoscacquire.programmes as programmes
 import keyoscacquire.visa_utils as visa_utils
 
 from .oscilloscope import Oscilloscope, _supported_series
-from .fileio import save_trace, load_trace, _screen_colors
+from .fileio import save_trace, load_trace, _SCREEN_COLORS
