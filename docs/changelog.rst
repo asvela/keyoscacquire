@@ -13,7 +13,7 @@ That means that there are quite a few non-compatible changes to previous version
 all of which are detailed below. I am not planning further extensive revisions
 like this.
 
-v4.0.0 (2020-12)
+v4.0.0 (2021-01)
   - More attributes are used to make the information accessible not only through
     returns
 
