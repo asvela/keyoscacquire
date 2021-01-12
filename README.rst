@@ -26,14 +26,8 @@ format files (default csv) or numpy `npy <https://numpy.org/doc/stable/reference
 and a png of the trace plot. The package also provides an API for integration
 in other Python code.
 
-keyoscacquire uses the :py:mod:`logging` module, see :ref:`logging`.
-
 The code has been tested on Windows 7 and 10 with a Keysight DSO2024A model
 using a USB connection.
-
-.. note:: In order to connect to a VISA instrument, NI MAX or similar might
-  need to be running on the computer. Installation of Keysight Connection
-  Expert might also be necessary.
 
 .. documentation-marker
 
@@ -41,15 +35,26 @@ Documentation
 -------------
 
 Available at `keyoscacquire.rtfd.io <http://keyoscacquire.readthedocs.io/en/latest/>`_.
-A few examples below, but formatting and links are broken as the snippet is intended
+A few examples below, but formatting and links are broken as this file is intended
 for the documentation parser.
+
+
+Installation
+------------
+
+Install the package with pip::
+
+  pip install keyoscacquire
+
+or download locally and install with ``$ python setup.py install`` or
+by running ``install.bat``.
 
 .. API-use-marker
 
 Python console/API
 ------------------
 
-The Reference section (particularly :ref:`osc-class`) gives all the necessary
+The Reference/API section (particularly :ref:`osc-class`) gives all the necessary
 information about the API.
 
 As an example of API usage/use in the Python console::
@@ -140,9 +145,14 @@ See more under :ref:`cli-programmes-short`.
 
 .. contribute-marker
 
-Contribute
-----------
+Contribute/report issues
+------------------------
 
-Contributions are welcome, find the project on
+Please report any issues with the package with the
+`issue tracker on Github <https://github.com/asvela/keyoscacquire/issues>`_.
+
+Contributions are welcome via
 `github <https://github.com/asvela/keyoscacquire.git>`_.
+
+
 The package is written and maintained by Andreas Svela.

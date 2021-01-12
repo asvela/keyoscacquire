@@ -12,13 +12,7 @@ see :ref:`cli-programmes`. Default options are found in :mod:`keyoscacquire.conf
 and the :mod:`keyoscacquire.fileio` provides functions for plotting, saving,
 and loading traces from disk.
 
-
-Quick reference
-===============
-
-.. include:: ../../README.rst
-  :start-after: API-use-marker
-  :end-before: contribute-marker
+keyoscacquire uses the :py:mod:`logging` module, see :ref:`logging`.
 
 
 Installation
@@ -35,16 +29,24 @@ or download locally and install with ``$ python setup.py install`` or
 by running ``install.bat``.
 
 
-Building the docs
------------------
-To build a local copy of the sphinx docs make sure the necessary packages
-are installed
+Building a local copy of the docs (optional)
+--------------------------------------------
+Should you wish to build a local copy of the sphinx docs, make sure the
+necessary packages are installed
 
 .. prompt:: bash
 
     pip install sphinx sphinx-prompt furo recommonmark
 
-Then build by executing ``make html`` in the ``docs`` folder.
+and then build by executing ``make html`` in the ``docs`` folder.
+
+
+Quick reference
+===============
+
+.. include:: ../../README.rst
+  :start-after: API-use-marker
+  :end-before: contribute-marker
 
 
 .. include:: ../known-issues.rst

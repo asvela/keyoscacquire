@@ -41,3 +41,7 @@ License
 -------
 
 The project is licensed under the MIT license, see :ref:`license`.
+
+
+.. include:: ../README.rst
+  :start-after: contribute-marker

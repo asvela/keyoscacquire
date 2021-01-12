@@ -3,7 +3,7 @@
 Instrument communication
 ************************
 
-The :mod:`keyoscacquire.oscilloscope` is responsible for the instrument communication.
+The :mod:`keyoscacquire.oscilloscope` module is responsible for the instrument communication.
 
 The Oscilloscope class
 ======================
