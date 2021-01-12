@@ -102,8 +102,10 @@ for i, (time, value, ax) in enumerate(zip(times, values, axs.T)):
         except ValueError as err:
             print("Could not plot, check dimensions:", err)
         a.set_title(wformat)
-        if i == 0: a.set_ylabel("signal [v]")
-        if j == len(axs)-1: a.set_xlabel("time [s]")
+        if i == 0:
+            a.set_ylabel("signal [v]")
+        if j == len(axs)-1:
+            a.set_xlabel("time [s]")
 fig.suptitle("keyoscacquire      pure pyvisa")
 
 print("\nCalculating the difference between same waveform wformat")
