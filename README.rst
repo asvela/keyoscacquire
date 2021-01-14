@@ -26,6 +26,10 @@ format files (default csv) or numpy `npy <https://numpy.org/doc/stable/reference
 and a png of the trace plot. The package also provides an API for integration
 in other Python code.
 
+By default, the package uses the binary ``WORD`` format for the waveform
+transfer from the oscilloscope, giving roughly an order of magnitude speed-up
+over the ``ASCII`` *transfer* type.
+
 The code has been tested on Windows 7 and 10 with a Keysight DSO2024A model
 using a USB connection.
 
@@ -121,13 +125,17 @@ The ``get_single_trace`` programme takes several other arguments too, see them w
 
   get_single_trace -h
 
-
 If you need to find the VISA address of your oscilloscope, simply use the
 command line programme ``list_visa_devices`` provided by this package
 
 .. prompt:: bash
 
   list_visa_devices
+
+If you want to set a default VISA address (and other default options too),
+run ``path_of_config`` to find the folder of the :mod:`keyoscacquire.config`
+module, locate it and change the ``_visa_address`` variable to the VISA address
+of your chosen default instrument.
 
 The package installs the following command line programmes in the Python path
 
