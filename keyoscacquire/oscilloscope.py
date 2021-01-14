@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-The PyVISA communication with the oscilloscope.
+The PyVISA communication with the oscilloscope
 
 See Keysight's Programmer's Guide for reference on the VISA commands.
-
-Andreas Svela // 2019
 """
 
 __docformat__ = "restructuredtext en"
@@ -771,8 +769,7 @@ class Oscilloscope:
         # Possibility to override verbose_acquistion
         if verbose_acquistion is not None:
             self.verbose_acquistion = verbose_acquistion
-        if channels is not None:
-            self.set_channels_for_capture(channels=channels)
+        self.set_channels_for_capture(channels=channels)
         # Capture, read and process data
         self.capture_and_read()
         self._time, self._values = dataprocessing.process_data(self._raw, self._metadata, self.wav_format,

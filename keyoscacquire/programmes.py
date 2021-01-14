@@ -9,7 +9,6 @@ integrated in python scripts or used as examples.
 * :func:`get_traces_single_connection_loop` :func:`get_traces_connect_each_time_loop`:
   two programmes for taking multiple traces when a key is pressed, see descriptions for difference
 * :func:`get_num_traces`: get a specific number of traces
-
 """
 
 import os

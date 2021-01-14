@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 """
+Docs avaliable at keyoscacquire.rtfd.io
+
 Andreas Svela // 2019-2021
 """
 

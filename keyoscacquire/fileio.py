@@ -4,7 +4,6 @@ This module provides functions for saving traces to ``npy`` format files
 (see :mod:`numpy.lib.format`) or ascii files. The latter is slower but permits
 a header with metadata for the measurement, see :func:`Oscilloscope.generate_file_header`
 which is used when saving directly from the ``Oscilloscope`` class.
-
 """
 
 import os

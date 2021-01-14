@@ -13,7 +13,6 @@ The loop runs each time 'enter' is hit. Alternatively one can input n-1 characte
 
 Optional argument from the command line: string setting the base filename of the output files.
 Change _visa_address in keyoscacquire.config to the desired instrument's address.
-
 """
 
 import sys
