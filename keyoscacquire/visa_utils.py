@@ -47,7 +47,8 @@ def interpret_visa_id(idn):
     return maker, model, serial, firmware, model_series
 
 
-def obtain_instrument_information(resource_manager, address, num, ask_idn=True):
+def obtain_instrument_information(resource_manager, address, num,
+                                  ask_idn=True, timeout=200):
     """Obtain more information about a VISA resource
 
     Parameters
@@ -60,6 +61,8 @@ def obtain_instrument_information(resource_manager, address, num, ask_idn=True):
     ask_idn : bool
         If ``True``: will query the instrument's IDN and interpret it
         if possible
+    timeout : int, default 200
+        VISA connection timeout
 
     Returns
     -------
@@ -81,12 +84,12 @@ def obtain_instrument_information(resource_manager, address, num, ask_idn=True):
         # Open the instrument and get the identity string
         try:
             error_flag = False
-            instrument = resource_manager.open_resource(address)
+            instrument = resource_manager.open_resource(address, timeout=timeout)
             idn = instrument.query("*IDN?").strip()
             instrument.close()
         except pyvisa.Error as e:
             error_flag = True
-            resource_info.extend(["no IDN response"]*5)
+            resource_info.extend(["no IDN reply"]*5)
             print(f"Instrument #{num}: Did not respond to *IDN?: {e}")
         except Exception as ex:
             error_flag = True
