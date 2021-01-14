@@ -811,11 +811,10 @@ class Oscilloscope:
         _capture_channels : list of ints
             list of the channels obtaied from, example ``[1, 3]``
         """
-        self.set_channels_for_capture(channels=channels)
         self.set_acquiring_options(wav_format=wav_format, acq_type=acq_type,
                                    num_averages=num_averages, p_mode=p_mode,
                                    num_points=num_points)
-        self.get_trace()
+        self.get_trace(channels=channels)
         return self._time, self._values, self._capture_channels
 
     def set_options_get_trace_save(self, fname=None, ext=None,
