@@ -19,7 +19,7 @@ import logging
 import numpy as np
 from tqdm import tqdm
 
-import keyoscacquire.oscilloscope as oscillocope
+import keyoscacquire.oscilloscope as oscilloscope
 import keyoscacquire.config as config
 import keyoscacquire.fileio as fileio
 import keyoscacquire.visa_utils as visa_utils
