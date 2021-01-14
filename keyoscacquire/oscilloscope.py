@@ -138,6 +138,15 @@ class Oscilloscope:
         self.write(':WAVeform:UNSigned OFF')
         self.write(':WAVeform:BYTeorder LSBFirst') # MSBF is default, must be overridden for WORD to work
         # Get information about the connected device
+        self._information_about_device()
+        # Set standard settings
+        self.set_acquiring_options(wav_format=config._waveform_format, p_mode=config._p_mode,
+                                   num_points=config._num_points)
+        # Will set channels to the active channels
+        self.set_channels_for_capture()
+        self.verbose_acquistion = verbose
+
+    def _information_about_device(self):
         self._id = self.query('*IDN?')
         try:
             maker, self._model, self._serial, _, self._model_series = visa_utils.interpret_visa_id(self._id)
@@ -150,15 +159,9 @@ class Oscilloscope:
                 print(f"Connected to '{self._id}'")
             print("(!) Failed to intepret the VISA IDN string")
         if not self._model_series in _SUPPORTED_SERIES:
-                print(f"(!) WARNING: This model ({self._model}) is not yet fully supported by keyoscacquire,")
-                print( "             but might work to some extent. keyoscacquire supports Keysight's")
-                print( "             InfiniiVision X-series oscilloscopes.")
-        # Set standard settings
-        self.set_acquiring_options(wav_format=config._waveform_format, p_mode=config._p_mode,
-                                   num_points=config._num_points)
-        # Will set channels to the active channels
-        self.set_channels_for_capture()
-        self.verbose_acquistion = verbose
+            print(f"(!) WARNING: This model ({self._model}) is not yet fully supported by keyoscacquire,")
+            print( "             but might work to some extent. keyoscacquire supports Keysight's")
+            print( "             InfiniiVision X-series oscilloscopes.")
 
     def __enter__(self):
         return self
@@ -244,20 +247,24 @@ class Oscilloscope:
         self.errors = []
         for i in range(30):
             err = self.get_error()
-            if err[:2] == "+0": # no error
-                # stop querying
+            if err[:2] == "+0":  # No error
+                # Stop querying
                 break
             else:
-                # store the error
+                # Store the error
                 self.errors.append(err)
         if verbose:
-            if not self.errors:
-                print("Error queue empty")
-            else:
-                print("Latest errors from the oscilloscope (FIFO queue, upto 30 errors)")
-                for i, err in enumerate(self.errors):
-                    print(f"{i:>2}: {err}")
+            self._print_errors(self.errors)
         return self.errors
+
+    def _print_errors(self, errors):
+        """Print the errors obtained by :func:`Oscilloscope.get_full_error_queue`"""
+        if not errors:
+            print("Error queue empty")
+        else:
+            print("Latest errors from the oscilloscope (FIFO queue, upto 30 errors)")
+            for i, err in enumerate(errors):
+                print(f"{i:>2}: {err}")
 
     def run(self):
         """Set the oscilloscope to running mode."""
@@ -357,13 +364,24 @@ class Oscilloscope:
         self.write(f":ACQuire:TYPE {acq_type}")
         # Handle AVER<m> expressions
         if acq_type == 'AVER':
-            if len(a_type) > 4 and not a_type[4:].lower() == 'age':
-                try:
-                    self.num_averages = int(a_type[4:])
-                except ValueError:
-                    ValueError(f"\nValueError: Failed to convert '{a_type[4:]}' to an integer, "
-                                "check that acquisition type is on the form AVER or AVER<m> "
-                               f"where <m> is an integer (currently acq. type is '{a_type}').\n")
+            self._handle_aver(a_type)
+
+    def _handle_aver(self, a_type: str):
+        """Handle ``AVER*`` acquisition types, using a possible int after
+        ``*`` as the number of averages
+
+        Raises
+        ------
+        ValueError
+            If * cannot be converted to int
+        """
+        if len(a_type) > 4 and not a_type[4:].lower() == 'age':
+            try:
+                self.num_averages = int(a_type[4:])
+            except ValueError:
+                ValueError(f"\nValueError: Failed to convert '{a_type[4:]}' to an integer, "
+                            "check that acquisition type is on the form AVER or AVER<m> "
+                           f"where <m> is an integer (currently acq. type is '{a_type}').\n")
 
     @property
     def num_averages(self):
@@ -385,7 +403,7 @@ class Oscilloscope:
     def num_averages(self, num: int):
         """See getter"""
         if not (2 <= num <= 65536):
-                raise ValueError(f"\nThe number of averages {num} is out of range.")
+            raise ValueError(f"\nThe number of averages {num} is out of range.")
         self.write(f":ACQuire:COUNt {num}")
 
     def print_acq_settings(self):
@@ -966,7 +984,7 @@ class Oscilloscope:
                                showplot=self.showplot, savepng=self.savepng)
             head = self.generate_file_header(additional_line=additional_header_info)
             fileio.save_trace(self.fname, self._time, self._values, fileheader=head, ext=self.ext,
-                               print_filename=self.verbose_acquistion, nowarn=nowarn)
+                              print_filename=self.verbose_acquistion, nowarn=nowarn)
         else:
             print("(!) No trace has been acquired yet, use get_trace()")
             _log.info("(!) No trace has been acquired yet, use get_trace()")
@@ -975,7 +993,7 @@ class Oscilloscope:
         """Plot and show the most recent trace"""
         if not self._time is None:
             fileio.plot_trace(self._time, self._values, self._capture_channels,
-                               savepng=False, showplot=True)
+                              savepng=False, showplot=True)
         else:
             print("(!) No trace has been acquired yet, use get_trace()")
             _log.info("(!) No trace has been acquired yet, use get_trace()")
