@@ -160,7 +160,7 @@ Please report any issues with the package with the
 `issue tracker on Github <https://github.com/asvela/keyoscacquire/issues>`_.
 
 Contributions are welcome via
-`github <https://github.com/asvela/keyoscacquire.git>`_.
+`Github <https://github.com/asvela/keyoscacquire.git>`_.
 
 
 The package is written and maintained by Andreas Svela.
