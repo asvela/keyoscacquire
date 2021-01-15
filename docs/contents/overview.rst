@@ -29,18 +29,6 @@ or download locally and install with ``$ python setup.py install`` or
 by running ``install.bat``.
 
 
-Building a local copy of the docs (optional)
---------------------------------------------
-Should you wish to build a local copy of the sphinx docs, make sure the
-necessary packages are installed
-
-.. prompt:: bash
-
-    pip install sphinx sphinx-prompt furo recommonmark
-
-and then build by executing ``make html`` in the ``docs`` folder.
-
-
 Quick reference
 ===============
 

@@ -37,6 +37,14 @@ Table of contents
    GitHub repository <https://github.com/asvela/keyoscacquire>
 
 
+Building a local copy of the docs
+---------------------------------
+
+.. include:: ../README.rst
+ :start-after: start-local-copy-documentation-marker
+ :end-before: end-local-copy-documentation-marker
+
+
 License
 -------
 

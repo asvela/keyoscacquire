@@ -9,6 +9,10 @@ keyoscacquire: Keysight oscilloscope acquire
   :target: https://www.codefactor.io/repository/github/asvela/keyoscacquire
   :alt: CodeFactor
 
+.. image:: https://img.shields.io/codeclimate/maintainability/asvela/keyoscacquire?style=flat-square
+  :target: https://codeclimate.com/github/asvela/keyoscacquire
+  :alt: Code Climate maintainability
+
 .. image:: https://img.shields.io/readthedocs/keyoscacquire?style=flat-square
   :target: https://keyoscacquire.rtfd.io
   :alt: Read the Docs Building
@@ -42,6 +46,21 @@ Available at `keyoscacquire.rtfd.io <http://keyoscacquire.readthedocs.io/en/late
 A few examples below, but formatting and links are broken as this file is intended
 for the documentation parser.
 
+Building a local copy of the docs
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. start-local-copy-documentation-marker
+
+Should you wish to build a local copy of the sphinx docs, make sure the
+necessary packages are installed
+
+.. prompt:: bash
+
+    pip install sphinx sphinx-prompt furo recommonmark
+
+and then build by executing ``make html`` in the ``docs`` folder.
+
+.. end-local-copy-documentation-marker
 
 Installation
 ------------

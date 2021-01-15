@@ -1,6 +1,11 @@
 Changelog
 =========
 
+If you require a specific version, for example 3.0.2, use pip::
+
+  pip install keyoscacquire==3.0.2
+
+
 v4.0: Extreme (API) makeover
 ----------------------------
 Big makeover with many non-compatible changes (sorry).
