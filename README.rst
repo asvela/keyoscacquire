@@ -52,9 +52,7 @@ Building a local copy of the docs
 .. start-local-copy-documentation-marker
 
 Should you wish to build a local copy of the sphinx docs, make sure the
-necessary packages are installed
-
-.. prompt:: bash
+necessary packages are installed::
 
     pip install sphinx sphinx-prompt furo recommonmark
 
