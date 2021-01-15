@@ -4,3 +4,5 @@ include INSTALL.md
 include LICENSE.md
 include install.bat
 include scripts/*
+include docs/*
+include docs/contents/*
