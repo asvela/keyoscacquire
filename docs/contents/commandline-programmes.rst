@@ -7,9 +7,12 @@ Command line programmes
 
     <br>
 
-keyoscacquire installs command line programmes to find VISA devices, find the path of the :mod:`~keyoscacquire.config` file and obtain single or multiple traces.
+keyoscacquire installs command line programmes to find VISA devices, find the
+path of the :mod:`~keyoscacquire.config` file and obtain single or multiple traces.
 
-For all the trace-obtaining programmes, the filename is checked to ensure no overwrite, if a file exists from before the programme prompts for suffix to the filename. The filename is recursively checked after appending.
+For all the trace-obtaining programmes, the filename is checked to ensure no
+overwrite, if a file exists from before the programme prompts for suffix to the
+filename. The filename is recursively checked after appending.
 
 The file header in the ascii files saved is::
 
@@ -18,7 +21,8 @@ The file header in the ascii files saved is::
     <timestamp>
     time,<chs>
 
-Where ``<id>`` is the :attr:`~keyoscacquire.oscacq.Oscilloscope.id` of the oscilloscope, and ``<chs>`` are the comma separated channels used. For example::
+Where ``<id>`` is the :attr:`~keyoscacquire.oscilloscope.Oscilloscope.id` of the
+oscilloscope, and ``<chs>`` are the comma separated channels used. For example::
 
     # AGILENT TECHNOLOGIES,DSO-X 2024A,MY1234567,12.34.1234567890
     # AVER8

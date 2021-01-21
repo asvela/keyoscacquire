@@ -12,6 +12,7 @@ docs/_*
 # files generated when running the module and others
 __pycache__
 *.csv
+*.npy
 *.png
 Thumbs.db
 .DS_Store

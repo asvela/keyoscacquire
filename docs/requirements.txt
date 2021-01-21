@@ -1,8 +1,10 @@
 sphinx>=2.2
 sphinx-prompt
-sphinx-rtd-theme
+furo
+recommonmark
 pyvisa
 numpy
+pandas
 argparse
 matplotlib
 tqdm

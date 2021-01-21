@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-When module the executed with 'python -m keyoscacquire'
+When the module is executed with 'python -m keyoscacquire':
 obtain and save a single trace.
-
-Andreas Svela // 2019
 """
 
-import keyoscacquire.programmes as acqprog
+import keyoscacquire.programmes as programmes
 
 if __name__ == "__main__":
-    acqprog.get_single_trace()
+    programmes.get_single_trace()

@@ -21,14 +21,15 @@ with open(os.path.join(source_dir, 'keyoscacquire', 'VERSION')) as version_file:
 
 # -- Project information -----------------------------------------------------
 
-project = 'Keysight oscilloscope acquire'
-copyright = '2019, Andreas Svela'
+project = 'keyoscacquire'
+copyright = '2020, Andreas Svela'
 author = 'Andreas Svela'
 
 # The full version, including alpha/beta/rc tags
-version = ver
-release = version
+version = ver.rsplit(".", 1)[0] # get only major.minor
+release = ver
 
+html_title = f"{project} v{version}"
 
 # -- General configuration ---------------------------------------------------
 
@@ -52,7 +53,8 @@ napoleon_numpy_docstring = True
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3', None),
     'pyvisa': ('https://pyvisa.readthedocs.io/en/latest/', None),
-    'numpy':  ('https://docs.scipy.org/doc/numpy/', None)}
+    'numpy':  ('https://docs.scipy.org/doc/numpy/', None),
+    'pandas': ('https://pandas.pydata.org/pandas-docs/stable/', None)}
 # autodoc_default_options = {
 #     'special-members': '__init__',
 # }
@@ -73,12 +75,19 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-#
+
+# Uncomment for standard theme
 # html_theme = 'alabaster'
 
-import sphinx_rtd_theme
-html_theme = "sphinx_rtd_theme"
+# Uncomment for
+# import furo
+html_theme = "furo"
 
+# Uncomment for read the docs theme
+# import sphinx_rtd_theme
+# html_theme = "sphinx_rtd_theme"
+
+# Uncomment for Guzzle theme
 # import guzzle_sphinx_theme
 # html_theme_path = guzzle_sphinx_theme.html_theme_path()
 # html_theme = 'guzzle_sphinx_theme'
@@ -94,4 +103,4 @@ html_theme = "sphinx_rtd_theme"
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+# html_static_path = ['_static']

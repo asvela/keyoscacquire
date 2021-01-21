@@ -18,14 +18,21 @@ with open(os.path.join(current_dir, 'keyoscacquire', 'VERSION')) as version_file
 # Get the contents of readme
 with open(os.path.join(current_dir, "README.rst")) as readme_file:
     README = readme_file.read()
+    # To avoid the parts with sphinx markup:
+    README, _ = README.split(".. API-use-marker")
+    print(README)
 
 if __name__ == '__main__':
     setup(name='keyoscacquire',
           version=__version__,
           description='keyoscacquire is a Python package for acquiring traces from Keysight oscilloscopes through a VISA interface.',
           long_description=README,
-          long_description_content_type="text/x-rst",
-          url='https://github.com/asvela/keyoscacquire.git',
+          long_description_content_type='text/x-rst',
+          # url='https://keyoscacquire.readthedocs.io/',
+          project_urls={
+            "Documentation": "https://keyoscacquire.readthedocs.io/",
+            "Source": "https://github.com/asvela/keyoscacquire",
+          },
           author='Andreas Svela',
           author_email='asvela@ic.ac.uk',
           license='MIT',

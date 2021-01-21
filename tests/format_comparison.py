@@ -1,37 +1,37 @@
 # -*- coding: utf-8 -*-
 """
-Script to test obtaining data with different waveform formats for Keysight DSO2024A
+Script to test obtaining data with different waveform wformat for Keysight DSO2024A
 
 Andreas Svela // 2019
 """
 
 visa_path = 'C:\\Program Files\\IVI Foundation\\VISA\\Win64\\agvisa\\agbin\\visa32.dll'
-visa_address = 'USB0::0x0957::0x1796::MY59125372::INSTR'
+visa_address = 'USB0::0x0957::0x1796::MY56272971::INSTR'
 
 
 import pyvisa
 import numpy as np
 import matplotlib.pyplot as plt
 
-import keyoscacquire.oscacq as koa
+import keyoscacquire as koa
 
 format_dict = {0: "BYTE", 1: "WORD", 4: "ASCii"}
-formats = ['BYTE', 'WORD', 'ASCii']
+wformat = ['BYTE', 'WORD', 'ASCii']
 
 
-print("\n## ~~~~~~~~~~~~~~~~~ KEYOSCAQUIRE ~~~~~~~~~~~~~~~~~~ ##")
+print("\n## ~~~~~~~~~~~~~~~~~ KEYOSCACQUIRE ~~~~~~~~~~~~~~~~~~ ##")
 
 scope = koa.Oscilloscope(address=visa_address)
-scope.set_acquiring_options(num_points=2000)
-sources, sourcesstring, channel_nums = scope.determine_channels(channel_nums=['1'])
-scope.stop()
+scope.num_points = 2000
+scope.set_channels_for_capture(channels=[1])
+# scope.stop()
 
 times, values = [[], []], [[], []]
-for wav_format in formats:
-    print("\nWaveform format", wav_format)
-    scope.set_acquiring_options(wav_format=wav_format)
-    data = scope.capture_and_read(sources, sourcesstring, set_running=False)
-    time, vals = koa.process_data(*data, wav_format, acquire_print=True)
+for wav_format in wformat:
+    print("\nWaveform format: ", wav_format)
+    scope.wav_format = wav_format
+    scope.capture_and_read(set_running=False)
+    time, vals = koa.dataprocessing.process_data(scope._raw, scope._metadata, wav_format, verbose_acquistion=True)
     times[0].append(time)
     values[0].append(vals)
 
@@ -41,16 +41,16 @@ scope.close(set_running=False)
 print("\n## ~~~~~~~~~~~~~~~~~~~ PYVISA ~~~~~~~~~~~~~~~~~~~~~ ##")
 
 # use Keysight VISA and connect to instrument
-rm = pyvisa.ResourceManager(visa_path)
+rm = pyvisa.ResourceManager()#visa_path)
 inst = rm.open_resource(visa_address)
 inst.write('*CLS')  # clears the status data structures, the device-defined error queue, and the Request-for-OPC flag
-id = inst.query('*IDN?').strip() # get the id of the connected device
-print("Connected to\n\t\'%s\'" % id)
+idn = inst.query('*IDN?').strip() # get the id of the connected device
+print(f"Connected to\n\t'{idn}'")
 
 # obtain trace from channel 1
 inst.write(':WAVeform:SOURce CHAN1')
 
-for wav_format in formats:
+for wav_format in wformat:
     inst.write(':WAVeform:FORMat ' +  wav_format) # choose format for the transmitted waveform
     inst.write(':WAVeform:BYTeorder LSBFirst') # MSBF is default, must be overridden for WORD to work
     inst.write(':WAVeform:UNSigned OFF') # make sure the scope is sending signed ints
@@ -94,22 +94,24 @@ for wav_format in formats:
 
 
 # Plotting the signals obtained for visual comparison
-fig, axs = plt.subplots(nrows=len(formats), ncols=2, sharex=True, sharey=True)
+fig, axs = plt.subplots(nrows=len(wformat), ncols=2, sharex=True, sharey=True)
 for i, (time, value, ax) in enumerate(zip(times, values, axs.T)):
-    for j, (t, v, a, format) in enumerate(zip(time, value, ax, formats)):
+    for j, (t, v, a, wformat) in enumerate(zip(time, value, ax, wformat)):
         try:
             a.plot(t, v*1000)
         except ValueError as err:
             print("Could not plot, check dimensions:", err)
-        a.set_title(format)
-        if i == 0: a.set_ylabel("signal [v]")
-        if j == len(axs)-1: a.set_xlabel("time [s]")
+        a.set_title(wformat)
+        if i == 0:
+            a.set_ylabel("signal [v]")
+        if j == len(axs)-1:
+            a.set_xlabel("time [s]")
 fig.suptitle("keyoscacquire      pure pyvisa")
 
-print("\nCalculating the difference between same waveform formats")
+print("\nCalculating the difference between same waveform wformat")
 diffs = [values[0][i].T-values[1][i].T for i in range(3)]
-for diff, format in zip(diffs, formats):
-    print("Difference in "+format+" signals: "+str(sum(sum(diff))))
+for diff, wformat in zip(diffs, wformat):
+    print(f"Difference in {wformat} signals: {sum(sum(diff))}")
 
 plt.show()
 
