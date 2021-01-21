@@ -147,6 +147,7 @@ class Oscilloscope:
         self.verbose_acquistion = verbose
 
     def _information_about_device(self):
+        """Get the IDN of the instrument and parse it"""
         self._id = self.query('*IDN?')
         try:
             maker, self._model, self._serial, _, self._model_series = visa_utils.interpret_visa_id(self._id)
@@ -649,7 +650,7 @@ class Oscilloscope:
         # on the screen and hence don't want to use DIGitize as digitize
         # will obtain a new trace.
         if self.is_running():
-            # DIGitize is a specialized RUN command.
+            # DIGitize is a specialised RUN command.
             # Waveforms are acquired according to the settings of the :ACQuire commands.
             # When acquisition is complete, the instrument is stopped.
             self.write(':DIGitize ' + ", ".join(self._sources))
@@ -999,10 +1000,8 @@ class Oscilloscope:
             _log.info("(!) No trace has been acquired yet, use get_trace()")
 
 
-
-## Module main function ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
-
 def main():
+    """Take a trace using the default settings"""
     fname = sys.argv[1] if len(sys.argv) >= 2 else config._filename
     ext = config._filetype
     with Oscilloscope() as scope:
