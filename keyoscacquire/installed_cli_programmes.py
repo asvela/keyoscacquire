@@ -36,7 +36,8 @@ points_help = f"Use 0 to get the maximum number of points, or set a specific num
 delim_help = f"Delimiter used between filename and filenumber (before filetype). Defaults to '{config._file_delimiter}'."
 
 
-def standard_arguments(parser):
+def _standard_arguements(parser):
+    """Short hand for adding arguments to the parser"""
     connection_gr = parser.add_argument_group('Connection settings')
     connection_gr.add_argument('-v', '--visa_address',
                                nargs='?', default=config._visa_address, help=visa_help)
@@ -61,7 +62,7 @@ def connect_each_time_cli():
     """Function installed on the command line: Obtains and stores multiple traces,
     connecting to the oscilloscope each time."""
     parser = argparse.ArgumentParser(description=programmes.get_traces_connect_each_time_loop.__doc__)
-    trans_gr = standard_arguments(parser)
+    trans_gr = _standard_arguements(parser)
     trans_gr.add_argument('--file_delimiter', nargs='?', help=delim_help, default=config._file_delimiter)
     args = parser.parse_args()
     # Convert channels arg to ints
@@ -81,7 +82,7 @@ def single_connection_cli():
     """Function installed on the command line: Obtains and stores multiple traces,
     keeping a the same connection to the oscilloscope open all the time."""
     parser = argparse.ArgumentParser(description=programmes.get_traces_single_connection_loop.__doc__)
-    trans_gr = standard_arguments(parser)
+    trans_gr = _standard_arguements(parser)
     trans_gr.add_argument('--file_delimiter', nargs='?', help=delim_help, default=config._file_delimiter)
     args = parser.parse_args()
     # Convert channels arg to ints
@@ -100,7 +101,7 @@ def single_connection_cli():
 def single_trace_cli():
     """Function installed on the command line: Obtains and stores a single trace."""
     parser = argparse.ArgumentParser(description=programmes.get_single_trace.__doc__)
-    standard_arguments(parser)
+    _standard_arguements(parser)
     args = parser.parse_args()
     # Convert channels arg to ints
     if args.channels is not None:
@@ -120,7 +121,7 @@ def num_traces_cli():
     # postitional arg
     parser.add_argument('num', help='The number of successive traces to obtain.', type=int)
     # optional args
-    trans_gr = standard_arguments(parser)
+    trans_gr = _standard_arguements(parser)
     trans_gr.add_argument('--file_delimiter', nargs='?', help=delim_help, default=config._file_delimiter)
     args = parser.parse_args()
     # Convert channels arg to ints
