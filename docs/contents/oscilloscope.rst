@@ -30,6 +30,7 @@ Connection and VISA commands
 .. automethod:: Oscilloscope.write
 .. automethod:: Oscilloscope.query
 .. automethod:: Oscilloscope.get_error
+.. automethod:: Oscilloscope.get_full_error_queue
 
 
 Oscilloscope state control
