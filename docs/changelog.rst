@@ -8,7 +8,9 @@ If you require a specific version, for example 3.0.2, use pip::
 
 v4.0: Extreme (API) makeover
 ----------------------------
-Big makeover with many non-compatible changes (sorry).
+Big makeover with a few non-compatible changes, sorry, but I believe they
+should not be too troublesome to make as you most likely relied on methods
+that are still more or less compatible.
 
 When writing the base of this package back in 2019, I had very limited Python
 development experience, and some not so clever choices were made. It was time
